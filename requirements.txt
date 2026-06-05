@@ -7,7 +7,8 @@ tzdata>=2024.2
 
 # HTTP / IO
 requests>=2.31.0
-aiohttp>=3.13.5
+# aiogram 3.28.x: aiohttp>=3.9.0,<3.14 (do not bump to 3.14+ until aiogram allows it)
+aiohttp>=3.9.0,<3.14
 beautifulsoup4>=4.14.3
 
 # Host metrics (CPU / RAM / disk) — core/host_resources.py
