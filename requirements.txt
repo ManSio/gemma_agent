@@ -14,7 +14,7 @@ beautifulsoup4>=4.14.3
 psutil>=7.2.2
 
 # API (api.py, docker profile api)
-fastapi>=0.115.0
+fastapi>=0.136.3
 uvicorn[standard]>=0.30.0
 
 # DB / ORM (core/database.py)
