@@ -1,0 +1,38 @@
+[
+  {
+    "id": "closet_ru_full",
+    "user_text": "план гардеробной, S=4.47 m²",
+    "ocr_text": "S=4.47 м²\nH=3000\nH=2100\n1281\n3457\n2665\n790\n800",
+    "expect_geometry_ready": true,
+    "expect_geometry_mode": "rectangle",
+    "expect_length_mm": 3457,
+    "expect_width_mm": 1281,
+    "expect_render_ok": true
+  },
+  {
+    "id": "closet_ru_area_only",
+    "user_text": "план гардеробной, S=4.47 m²",
+    "ocr_text": "",
+    "expect_geometry_ready": false,
+    "expect_geometry_mode": "incomplete",
+    "expect_render_ok": false
+  },
+  {
+    "id": "corridor_18_1_segments",
+    "user_text": "кв. 18, коридор 18-1: шкаф 600 мм у входа, проход 1370 мм",
+    "ocr_text": "18-1 коридор 12,5\n6,95\n4,01\n1,37",
+    "expect_geometry_ready": true,
+    "expect_geometry_mode": "segments",
+    "expect_render_ok": true
+  },
+  {
+    "id": "laundry_rect",
+    "user_text": "прачечная 2897×1362 мм, S=3.95, H=3000",
+    "ocr_text": "",
+    "expect_geometry_ready": true,
+    "expect_geometry_mode": "rectangle",
+    "expect_length_mm": 2897,
+    "expect_width_mm": 1362,
+    "expect_render_ok": true
+  }
+]

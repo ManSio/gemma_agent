@@ -1,0 +1,15 @@
+{
+  "name": "stable_vision",
+  "type": "library",
+  "version": "1.0.0",
+  "description": "Stable vision processing utilities",
+  "exports": [
+    "analyze_image",
+    "extract_text_from_image"
+  ],
+  "tests": [
+    "test_analyze_image",
+    "test_extract_text"
+  ],
+  "bundled_with": "3.4.0"
+}

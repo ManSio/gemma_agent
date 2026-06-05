@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/ManSio/gemma-agent/blob/main/docs/index.md
+    about: Setup, features, troubleshooting — start here.
+  - name: Contributing Guide
+    url: https://github.com/ManSio/gemma-agent/blob/main/CONTRIBUTING.md
+    about: Read before opening a PR.
+  - name: Security Policy
+    url: https://github.com/ManSio/gemma-agent/blob/main/SECURITY.md
+    about: How to report vulnerabilities privately.

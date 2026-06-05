@@ -1,0 +1,6 @@
+# Dev / QA — не на прод-сервере бота (pip install -r requirements-dev.txt)
+-r requirements.txt
+
+pytest>=8.0.0
+# 2.4.5 — последний стабильный 2.x с setup.cfg; 2.5+/3.x ломают CI (--paths-to-mutate / WSL)
+mutmut==2.4.5

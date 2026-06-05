@@ -1,0 +1,46 @@
+{
+  "name": "group_behavior",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.group_behavior.module:GroupBehaviorModule",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "group",
+    "behavior",
+    "social"
+  ],
+  "prompts": {
+    "system": "Ты модуль группового поведения. Твоя задача — анализировать и воспроизводить социальное поведение в группах."
+  },
+  "commands": [
+    {
+      "name": "handle_message",
+      "trigger": "/handle_group_message",
+      "description": "Обработать сообщение в группе"
+    },
+    {
+      "name": "generate_reply",
+      "trigger": "/generate_group_reply",
+      "description": "Сгенерировать ответ в группе"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "behavior_rules": {
+        "type": "object"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Группы: метаданные для brain (get_group_behavior); slash — только шаблоны",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

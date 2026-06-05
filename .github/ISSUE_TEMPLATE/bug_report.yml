@@ -1,0 +1,54 @@
+name: Bug report
+description: Crash, wrong behavior, regression
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    value: |
+      Check [Troubleshooting](https://github.com/ManSio/gemma-agent/blob/main/docs/user-guide/troubleshooting.md) first.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: e.g. 3.4.0 or git SHA
+    validations:
+      required: false
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux VPS
+        - Linux LAN
+        - Windows (dev)
+        - macOS
+        - Other
+    validations:
+      required: true

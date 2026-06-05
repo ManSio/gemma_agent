@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 120" role="img" aria-label="Gemma pipeline overview">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <style>
+      .box { fill:#1e3a5f; stroke:#38bdf8; stroke-width:1.5; rx:8 }
+      .t { font:600 13px system-ui,sans-serif; fill:#f8fafc }
+      .a { stroke:#64748b; stroke-width:2; fill:none; marker-end:url(#arr) }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="920" height="120" rx="12" fill="url(#bg)"/>
+  <rect class="box" x="16" y="36" width="100" height="48"/>
+  <text class="t" x="66" y="66" text-anchor="middle">Telegram</text>
+  <rect class="box" x="136" y="36" width="110" height="48"/>
+  <text class="t" x="191" y="66" text-anchor="middle">input_layer</text>
+  <rect class="box" x="266" y="36" width="120" height="48"/>
+  <text class="t" x="326" y="66" text-anchor="middle">orchestrator</text>
+  <rect class="box" x="406" y="36" width="110" height="48"/>
+  <text class="t" x="461" y="58" text-anchor="middle">pre_llm</text>
+  <text class="t" x="461" y="74" text-anchor="middle" font-size="11" fill="#94a3b8">plan</text>
+  <rect class="box" x="536" y="36" width="100" height="48"/>
+  <text class="t" x="586" y="66" text-anchor="middle">brain</text>
+  <rect class="box" x="656" y="36" width="110" height="48"/>
+  <text class="t" x="711" y="66" text-anchor="middle">scenario</text>
+  <rect class="box" x="786" y="36" width="118" height="48"/>
+  <text class="t" x="845" y="66" text-anchor="middle">reply</text>
+  <path class="a" d="M116 60 H136"/>
+  <path class="a" d="M246 60 H266"/>
+  <path class="a" d="M386 60 H406"/>
+  <path class="a" d="M516 60 H536"/>
+  <path class="a" d="M636 60 H656"/>
+  <path class="a" d="M766 60 H786"/>
+  <text x="460" y="22" text-anchor="middle" font="600 14px system-ui" fill="#38bdf8">Gemma Agent  one message, one pipeline</text>
+</svg>

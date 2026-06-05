@@ -1,0 +1,16 @@
+[Unit]
+Description=SearXNG (native, без Docker)
+After=network.target
+
+[Service]
+User=searxng
+Group=searxng
+WorkingDirectory=/usr/local/searxng-src
+Environment=PYTHONPATH=/usr/local/searxng-src
+Environment=SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml
+ExecStart=/usr/local/searxng/venv/bin/python3 -m searx.webapp
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

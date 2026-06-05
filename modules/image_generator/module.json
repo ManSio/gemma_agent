@@ -1,0 +1,44 @@
+{
+  "name": "image_generator",
+  "version": "0.1.1",
+  "type": "tool",
+  "description": "/imagine — Nano Banana 2 (IMAGE_GEN_MODEL), фото+текст для перерисовки",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text",
+    "image"
+  ],
+  "capabilities": [
+    "image_generation",
+    "imagine"
+  ],
+  "prompts": {
+    "system": "Ты модуль генерации изображений. Создавай изображение по текстовому описанию и возвращай путь к файлу."
+  },
+  "commands": [
+    {
+      "name": "imagine",
+      "trigger": "/imagine",
+      "description": "Сгенерировать изображение по описанию"
+    }
+  ],
+  "buttons": [
+    {
+      "name": "IMAGINE",
+      "label": "Сгенерировать изображение",
+      "context": "text",
+      "simulate_text": "/imagine"
+    }
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "entrypoint": "modules.image_generator.module:ImageGeneratorModule",
+  "bundled_with": "3.4.0",
+  "gemma_tier": "B",
+  "gemma_evidence": "env IMAGE_GEN"
+}

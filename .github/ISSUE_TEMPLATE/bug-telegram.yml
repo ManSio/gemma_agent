@@ -1,0 +1,44 @@
+name: Telegram behavior bug
+description: Wrong reply, routing, slot stuck, regression in chat
+title: "[TG] "
+labels:
+  - bug
+body:
+  - type: markdown
+    value: |
+      Include **exact** user/bot lines. No tokens in screenshots.
+
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Dialogue (you → bot)
+      placeholder: |
+        You: weather in Minsk
+        Bot: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deploy
+    attributes:
+      label: Where it runs
+      options:
+        - Local dev
+        - VPS / cloud
+        - LAN server
+        - Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra (mode footer, time, version)
+      description: Optional — e.g. gemma:mf tag at bottom of reply

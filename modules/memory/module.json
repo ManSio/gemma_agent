@@ -1,0 +1,49 @@
+{
+  "name": "memory",
+  "version": "0.1.0",
+  "type": "memory",
+  "entrypoint": "modules.memory.module:MemoryModule",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "memory"
+  ],
+  "prompts": {
+    "system": "Ты модуль долговременной памяти. Твоя задача — сохранять, извлекать и удалять факты."
+  },
+  "commands": [
+    {
+      "name": "mem_remember",
+      "trigger": "/mem_remember",
+      "description": "Запомнить факт"
+    },
+    {
+      "name": "mem_recall",
+      "trigger": "/mem_recall",
+      "description": "Вспомнить факты"
+    },
+    {
+      "name": "mem_forget",
+      "trigger": "/mem_forget",
+      "description": "Забыть факт"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "storage_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Slash /mem_* → Mem0 (brain) + резерв facts.json",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

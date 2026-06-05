@@ -1,0 +1,84 @@
+# Словарь условных обозначений: русские/ГОСТ подписи + алиасы vision.
+# type — канонический id для fixtures[] / openings[].kind
+
+walls:
+  kinds:
+    load_bearing:
+      label_ru: несущая стена
+      aliases: [несущ, несущая, bearing, load]
+    partition:
+      label_ru: перегородка
+      aliases: [перегород, partition, p]
+    external:
+      label_ru: наружная стена
+      aliases: [наружн, внешн, external, facade, фасад]
+  directions:
+    north: { label_ru: северная, aliases: [север, north, n, верх, top] }
+    south: { label_ru: южная, aliases: [юг, south, s, низ, bottom] }
+    east: { label_ru: восточная, aliases: [восток, east, e, прав] }
+    west: { label_ru: западная, aliases: [запад, west, w, лев] }
+
+fixtures:
+  stove:
+    label_ru: варочная плита
+    aliases: [плита, варочн, cooktop, hob, пм, варка, kitchen stove, range]
+  oven:
+    label_ru: духовой шкаф
+    aliases: [духовк, oven, дш]
+  sink:
+    label_ru: мойка
+    aliases: [раковин, sink, мойка, wash basin]
+  fridge:
+    label_ru: холодильник
+    aliases: [холодильн, fridge, refrigerator, хол]
+  toilet:
+    label_ru: унитаз
+    aliases: [унитаз, toilet, wc, сортир]
+  shower:
+    label_ru: душ
+    aliases: [душ, shower, душевая кабина, cabin]
+  bathtub:
+    label_ru: ванна
+    aliases: [ванн, bathtub, bath]
+  washer:
+    label_ru: стиральная машина
+    aliases: [стиральн, washer, washing machine, см]
+  dryer:
+    label_ru: сушильная машина
+    aliases: [сушильн, dryer]
+  vent:
+    label_ru: вентиляция / вытяжка
+    aliases: [вентил, вытяжк, vent, exhaust, решетк, grille, кв, приток]
+  radiator:
+    label_ru: радиатор
+    aliases: [радиатор, radiator, отоплен, батарея, heating]
+  hood:
+    label_ru: вытяжка над плитой
+    aliases: [вытяжк, hood, extractor, кухонная вытяжка]
+
+openings:
+  door:
+    label_ru: дверь
+    aliases: [двер, door, д, проем]
+  window:
+    label_ru: окно
+    aliases: [окн, window, о, оконный проем]
+  balcony_door:
+    label_ru: балконный блок
+    aliases: [балкон, лоджи, balcony, french door]
+  ventilation_duct:
+    label_ru: вентиляционный канал
+    aliases: [вентканал, duct, шахта]
+
+swing:
+  inward_left: { label_ru: внутрь влево, aliases: [влево внутрь, left inward] }
+  inward_right: { label_ru: внутрь вправо, aliases: [вправо внутрь, right inward] }
+  outward: { label_ru: наружу, aliases: [outward, наружу] }
+  sliding: { label_ru: раздвижная, aliases: [slide, купе, раздвиж] }
+  unknown: { label_ru: не указано, aliases: [] }
+
+positions:
+  left: { label_ru: слева, aliases: [left, левый] }
+  center: { label_ru: по центру, aliases: [center, centre, центр, середина] }
+  right: { label_ru: справа, aliases: [right, правый] }
+  corner: { label_ru: в углу, aliases: [corner, угол] }

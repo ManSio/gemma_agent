@@ -1,0 +1,45 @@
+{
+  "name": "rag",
+  "version": "0.1.0",
+  "type": "rag",
+  "entrypoint": "modules.rag.module:RAGModule",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "rag",
+    "memory"
+  ],
+  "prompts": {
+    "system": "Ты модуль RAG. Твоя задача — работать с памятью и выполнять семантический поиск."
+  },
+  "commands": [
+    {
+      "name": "store",
+      "trigger": "/store",
+      "description": "Сохранить текст в память RAG"
+    },
+    {
+      "name": "clear",
+      "trigger": "/clear",
+      "description": "Очистить память RAG"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "database_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "RAG slash",
+  "gemma_tier": "B",
+  "gemma_evidence": "OPT"
+}

@@ -1,0 +1,50 @@
+{
+  "name": "vision_describe",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.vision_describe.module:VisionDescribeModule",
+  "input_types": [
+    "image"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "vision",
+    "describe"
+  ],
+  "prompts": {
+    "system": "Ты модуль описания изображений. Твоя задача — описывать содержимое изображений."
+  },
+  "commands": [
+    {
+      "name": "describe",
+      "trigger": "/describe",
+      "description": "Описать изображение"
+    }
+  ],
+  "buttons": [
+    {
+      "name": "DESCRIBE_IMAGE",
+      "label": "Описать изображение",
+      "context": "image",
+      "simulate_text": "/describe"
+    }
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "model": {
+        "type": "string"
+      },
+      "api_key": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Описание картинки",
+  "gemma_tier": "B",
+  "gemma_evidence": "OPT"
+}

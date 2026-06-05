@@ -1,0 +1,31 @@
+token_efficiency:
+  kv_reuse:
+    enabled: true
+    max_age_ms: 86400000
+    max_turns: 100
+
+  delta:
+    enabled: false
+    min_change_chars: 32
+
+  cache:
+    enabled: true
+    ttl_seconds: 900
+    max_entries: 500
+
+  collapse:
+    enabled: false
+    max_prompt_tokens: 8000
+    history_window: 6
+
+  tools:
+    batch_enabled: false
+
+  budget:
+    enabled: true
+    hard_limit_tokens: 12000
+
+    compactor:
+    enabled: true
+    threshold: 0.7
+    max_summary_tokens: 200

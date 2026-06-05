@@ -1,0 +1,17 @@
+id: kitchen
+name_ru: Кухня
+doc_types:
+  - floor_plan
+constraints:
+  min_passage_mm: 900
+  min_counter_depth_mm: 600
+  work_aisle_mm: 1000
+layout_rules:
+  - id: work_triangle
+    description_ru: Мойка — плита — холодильник в разумных расстояниях
+suggestions_ru:
+  - "Рабочий треугольник: мойка — плита — холодильник; столешница ≥600 мм."
+  - "Проход между фасадами ≥900 мм (комфортно 1000–1200)."
+  - "Вытяжка над плитой; холодильник не вплотную к двери."
+render_hints_ru:
+  - "Kitchen layout: sink, stove, fridge work triangle; 900mm aisle; 600mm counters."

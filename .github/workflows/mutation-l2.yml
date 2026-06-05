@@ -1,0 +1,51 @@
+name: mutation-l2
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation-l2:
+    name: mutmut L2 guards
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          # без pip cache — иначе подтягивается mutmut 3.x
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest pydantic
+          pip uninstall -y mutmut 2>/dev/null || true
+          pip install 'mutmut==2.4.5' --no-cache-dir --force-reinstall
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+      - name: Verify mutmut version
+        run: |
+          python -c "import mutmut; v=mutmut.__version__; assert v.startswith('2.4.'), f'expected 2.4.5, got {v}'; print('ok', v)"
+          python -m mutmut --help | head -n 3
+          python -c "
+          import pathlib
+          t = pathlib.Path('scripts/mutation_guard_l2.py').read_text(encoding='utf-8')
+          assert 'f\"--paths-to-mutate={' in t or \"f'--paths-to-mutate={\" in t, 'guard must pass paths-to-mutate for mutmut 2.4.x'
+          print('ok guard source')
+          "
+
+      - name: Quick mutation (profile_route_guard)
+        run: python scripts/mutation_guard_l2.py --quick
+        env:
+          PYTHONPATH: .
+          PYTHONIOENCODING: utf-8
+          MUTATION_L2_MIN_SCORE: "55"

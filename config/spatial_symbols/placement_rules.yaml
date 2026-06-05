@@ -1,0 +1,44 @@
+# Правила расстановки (эвристики по стене/позиции без точных координат).
+rules:
+  - id: stove_not_same_wall_as_door
+    fixture_type: stove
+    conflict_opening: door
+    same_wall: true
+    severity: warning
+    message_ru: Варочная плита на той же стене, что и дверь — лучше перенести (безопасность и проход).
+
+  - id: hood_near_stove
+    fixture_type: hood
+    requires_fixture: stove
+    same_wall_or_adjacent: true
+    severity: suggestion
+    message_ru: Вытяжка над плитой — на той же или соседней стене с плитой.
+
+  - id: vent_prefers_external
+    fixture_type: vent
+    prefers_wall_kind: external
+    fallback_has_external_opening: true
+    severity: warning
+    message_ru: Вентиляция/вытяжка — предпочтительно на наружной стене (или у окна).
+
+  - id: toilet_door_swing_clearance
+    fixture_type: toilet
+    conflict_opening: door
+    same_wall: true
+    severity: warning
+    message_ru: Унитаз на стене с дверью — проверьте, что дверь не бьёт в унитаз при открывании.
+
+  - id: fridge_not_blocking_door
+    fixture_type: fridge
+    conflict_opening: door
+    same_wall: true
+    position_overlap: [center, left, right]
+    severity: warning
+    message_ru: Холодильник у двери на той же стене — может мешать открыванию.
+
+  - id: washer_water_wall
+    fixture_type: washer
+    prefers_near: sink
+    same_wall: true
+    severity: suggestion
+    message_ru: Стиральную лучше на одной стене с мойкой (вода/канализация).

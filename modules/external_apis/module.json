@@ -1,0 +1,22 @@
+{
+  "name": "external_apis",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Пакет-маркер; погода/HTTP — clients.py + core.brain (не slash execute)",
+  "input_types": [],
+  "output_types": [],
+  "commands": [],
+  "capabilities": [
+    "external_apis"
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "entrypoint": "modules.external_apis.module:ExternalApisModule",
+  "bundled_with": "3.4.0",
+  "gemma_tier": "A",
+  "gemma_evidence": "tests/test_external_apis_clients.py"
+}

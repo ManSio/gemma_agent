@@ -1,0 +1,20 @@
+{
+  "pdf_parser": {
+    "enabled": true,
+    "path": "modules/pdf_parser",
+    "version": "1.0.0",
+    "status": "healthy"
+  },
+  "text_cleaner": {
+    "enabled": false,
+    "path": "modules/text_cleaner",
+    "version": "1.2.1",
+    "status": "disabled"
+  },
+  "vision_lib": {
+    "enabled": true,
+    "path": "modules/vision_lib",
+    "version": "2.0.0",
+    "status": "healthy"
+  }
+}

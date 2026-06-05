@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest an improvement (discuss before large PRs)
+title: "[feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    value: |
+      Public build has **19 modules**. Large features need maintainer agreement first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: Docs only
+        - label: Single module / plugin
+        - label: Core pipeline (orchestrator / brain)
+        - label: New external dependency

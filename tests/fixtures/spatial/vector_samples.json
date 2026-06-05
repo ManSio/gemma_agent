@@ -1,0 +1,68 @@
+[
+  {
+    "id": "closet_structure",
+    "vector": {
+      "plan_scope": "room",
+      "room": {"area_m2": 4.47, "ceiling_height_mm": 3000},
+      "walls": [
+        {"id": "w1", "length_mm": 3457},
+        {"id": "w2", "length_mm": 1281},
+        {"id": "w3", "length_mm": 3457},
+        {"id": "w4", "length_mm": 1281}
+      ],
+      "rooms": [
+        {
+          "label": "гардеробная",
+          "area_m2": 4.47,
+          "length_mm": 3457,
+          "width_mm": 1281,
+          "wall_ids": ["w1", "w2", "w3", "w4"]
+        }
+      ],
+      "target_room": {"label": "гардеробная", "area_m2": 4.47, "length_mm": 3457, "width_mm": 1281}
+    },
+    "user_text": "план гардеробной, S=4.47 m²",
+    "expect_length_mm": 3457,
+    "expect_width_mm": 1281,
+    "expect_label": "гардеробная",
+    "expect_geometry_mode": "rectangle"
+  },
+  {
+    "id": "kitchen_structure",
+    "vector": {
+      "plan_scope": "room",
+      "walls": [
+        {"id": "a", "length_mm": 3200},
+        {"id": "b", "length_mm": 2800}
+      ],
+      "rooms": [
+        {"label": "кухня", "area_m2": 9.0, "length_mm": 3200, "width_mm": 2800, "wall_ids": ["a", "b"]}
+      ],
+      "target_room": {"label": "кухня", "area_m2": 9.0, "length_mm": 3200, "width_mm": 2800}
+    },
+    "user_text": "план кухни, расстановка мебели",
+    "expect_length_mm": 3200,
+    "expect_width_mm": 2800,
+    "expect_label": "кухня",
+    "expect_geometry_mode": "rectangle"
+  },
+  {
+    "id": "nursery_structure",
+    "vector": {
+      "plan_scope": "room",
+      "walls": [
+        {"id": "n1", "length_mm": 4000},
+        {"id": "n2", "length_mm": 3500}
+      ],
+      "rooms": [
+        {"label": "детская", "area_m2": 14.0, "length_mm": 4000, "width_mm": 3500, "wall_ids": ["n1", "n2"]}
+      ],
+      "target_room": {"label": "детская", "area_m2": 14.0}
+    },
+    "user_text": "план детской комнаты",
+    "expect_length_mm": 4000,
+    "expect_width_mm": 3500,
+    "expect_label": "детская",
+    "expect_geometry_mode": "rectangle"
+  }
+]

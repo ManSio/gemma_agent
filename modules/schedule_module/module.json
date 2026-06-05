@@ -1,0 +1,46 @@
+{
+  "name": "schedule_module",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.schedule_module.module:ScheduleModule",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "schedule",
+    "timetable",
+    "reminder"
+  ],
+  "prompts": {
+    "system": "Ты модуль расписания. Твоя задача — управлять расписанием и напоминаниями."
+  },
+  "commands": [
+    {
+      "name": "set_schedule",
+      "trigger": "/set_schedule",
+      "description": "Установить расписание"
+    },
+    {
+      "name": "get_schedule",
+      "trigger": "/get_schedule",
+      "description": "Получить расписание"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "storage_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Slash /set_schedule; NL — core.schedule_nl (другой путь)",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

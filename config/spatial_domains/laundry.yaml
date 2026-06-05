@@ -1,0 +1,19 @@
+id: laundry
+name_ru: Прачечная / постирочная
+doc_types:
+  - floor_plan
+constraints:
+  min_passage_mm: 700
+  washer_width_mm: 600
+  washer_depth_mm: 600
+  max_room_width_side_by_side_mm: 1800
+layout_rules:
+  - id: single_wall_laundry
+    description_ru: Вся техника на одной стене
+  - id: stacked_washer_dryer
+    description_ru: При ширине < 1800 мм — стиральная и сушильная столбиком
+equipment:
+  washer_dryer_stack:
+    width_mm: 600
+    depth_mm: 600
+    min_ceiling_mm: 2400

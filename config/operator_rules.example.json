@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "description": "Скопируйте в data/runtime/operator_rules.json (или путь из OPERATOR_RULES_PATH). Перечитывается при изменении файла — код не трогать. Длинные директивы (v3.0: операционный блок + формальное рассуждение) удобнее вынести в отдельный файл: см. config/system_directive_addon_v3.example.txt → data/runtime/system_directive_addon.txt (SYSTEM_DIRECTIVE_ADDON_PATH).",
+  "prefer_general_over_math_globally": false,
+  "force_general_when_text_matches": [
+    "t\\.me/\\+",
+    "https://t\\.me/",
+    "telegram\\.me/"
+  ],
+  "brain_context_addon": "Коротко: не предлагать /calc для t.me-приглашений. Сценарии банк/поездка/лимиты — полный каркас только в system_directive_addon (v3), здесь не повторять, чтобы не раздувать промпт и не конфликтовать формулировками."
+}

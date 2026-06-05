@@ -1,0 +1,18 @@
+id: storage
+name_ru: Гардеробная / кладовая / хранение
+doc_types:
+  - floor_plan
+constraints:
+  min_passage_mm: 700
+  hanging_depth_mm: 600
+  hanging_depth_min_mm: 420
+  shelf_depth_mm: 333
+layout_rules: []
+suggestions_ru:
+  - "Узкая комната: штанги обычно только на одной длинной стене (~600 мм глубиной)."
+  - "Противоположная стена — полки/обувь ~333 мм или пусто; не две линии штанг при ширине <1,9 м."
+render_hints_ru:
+  - "Follow computed storage_layout exactly; respect passage width in mm."
+  - "Do not draw hanging rods on both long walls if layout says single_side_hanging."
+  - "Rectangular closet — never L-shaped corner units; one long wall for rods only."
+  - "Door position from door_layout — not centered if user asked to shift sideways."

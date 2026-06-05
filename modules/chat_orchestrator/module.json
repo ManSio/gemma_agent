@@ -1,0 +1,23 @@
+{
+  "name": "chat-orchestrator",
+  "version": "1.0.0",
+  "type": "orchestrator",
+  "entrypoint": "modules.chat_orchestrator.module:ChatOrchestratorModule",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "general",
+    "dialog",
+    "fallback"
+  ],
+  "commands": [],
+  "buttons": [],
+  "bundled_with": "3.4.0",
+  "description": "Главный диалог → brain",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

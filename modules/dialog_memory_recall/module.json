@@ -1,0 +1,35 @@
+{
+  "name": "dialog_memory_recall",
+  "version": "1.0.0",
+  "type": "module",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "description": "Вспомнить диалог",
+  "capabilities": [
+    "memory",
+    "dialogue"
+  ],
+  "commands": [
+    {
+      "name": "/dialog_recall",
+      "description": "Архив/digest/Mem0; summary | archive | search | когда | llm [подрежим]"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "entrypoint": "modules.dialog_memory_recall.module:DialogMemoryRecallModule",
+  "prompts": {
+    "routing_hint": "При DIALOG_RECALL_NL_ROUTE_ENABLED=true — фразы про переписку без slash идут в этот модуль; иначе только /dialog_recall. Вопросы «вчера/неделю назад» в обычном чате обрабатывает pipeline (external_hint), не обязательно этот модуль."
+  },
+  "bundled_with": "3.4.0",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

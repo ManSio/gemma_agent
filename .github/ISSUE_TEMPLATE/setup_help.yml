@@ -1,0 +1,33 @@
+name: Setup help
+description: Install, SearXNG, Mem0, .env, panel
+title: "[setup] "
+labels:
+  - question
+body:
+  - type: markdown
+    value: |
+      Guides: [Quickstart](https://github.com/ManSio/gemma-agent/blob/main/docs/getting-started/quickstart.md) · [Installation](https://github.com/ManSio/gemma-agent/blob/main/docs/getting-started/installation.md)
+
+  - type: dropdown
+    id: step
+    attributes:
+      label: Where are you stuck?
+      options:
+        - bootstrap / venv / pip
+        - .env / tokens
+        - gemma_panel.sh start
+        - SearXNG
+        - Mem0
+        - Telegram polling / webhook
+        - Voice (Piper/Vosk)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: What you ran and the error (no secrets)
+      description: Redact TELEGRAM_TOKEN and API keys
+    validations:
+      required: true

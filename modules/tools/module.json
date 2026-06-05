@@ -1,0 +1,66 @@
+{
+  "name": "tools",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.tools.module:ToolsModule",
+  "input_types": [
+    "text",
+    "file"
+  ],
+  "output_types": [
+    "text",
+    "file"
+  ],
+  "capabilities": [
+    "tools"
+  ],
+  "prompts": {
+    "system": "Ты утилитный модуль. Работа с файлами и текстом в data/tools: /read_file, /save_file. ZIP: /zip_list (вложение или имя в data/tools), /zip_read — прочитать файл внутри архива (диагностика: bundle.json, КАК_ЧИТАТЬ_ДИАГНОСТИКУ.txt), /zip_pack — собрать несколько файлов из data/tools в один .zip."
+  },
+  "commands": [
+    {
+      "name": "read_file",
+      "trigger": "/read_file",
+      "description": "Прочитать файл"
+    },
+    {
+      "name": "save_file",
+      "trigger": "/save_file",
+      "description": "Сохранить текст в файл"
+    },
+    {
+      "name": "zip_list",
+      "trigger": "/zip_list",
+      "description": "Список файлов в ZIP (вложение или из data/tools)"
+    },
+    {
+      "name": "zip_read",
+      "trigger": "/zip_read",
+      "description": "Прочитать текст из файла внутри ZIP"
+    },
+    {
+      "name": "zip_pack",
+      "trigger": "/zip_pack",
+      "description": "Запаковать файлы из data/tools в ZIP"
+    },
+    {
+      "name": "parse",
+      "trigger": "/parse",
+      "description": "Парсить текст"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "storage_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Пакет slash-утилит",
+  "gemma_tier": "B",
+  "gemma_evidence": "slash"
+}

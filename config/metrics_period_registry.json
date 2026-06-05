@@ -1,0 +1,120 @@
+{
+  "schema_version": 2,
+  "description": "Реестр метрик scripts/metrics_period_report.py — добавляйте поля в layers.*.daily без смены schema_version, для breaking — bump version.",
+  "layers": {
+    "agent": {
+      "label": "Внутри агента (orchestrator → ответ)",
+      "sources": [
+        "data/runtime/ops_trace.jsonl",
+        "data/runtime/turns.jsonl"
+      ],
+      "metrics": {
+        "turns_n": "Число ходов (ops_trace type=turn)",
+        "latency_ms_median": "Медиана полного времени хода",
+        "latency_ms_p95": "p95 времени хода",
+        "ok_pct": "Доля ходов без issues",
+        "fast_path_pct": "Доля fast_path (reasoning.reason)",
+        "no_llm_module_pct": "Доля ходов math/light без brain (plan_steps)",
+        "issues_per_turn": "Среднее число issues на ход",
+        "math_module_pct": "Доля plan_steps с math"
+      }
+    },
+    "llm": {
+      "label": "Вызовы OpenRouter (ИИ)",
+      "sources": [
+        "data/runtime/llm_usage.jsonl",
+        "data/llm_usage.jsonl"
+      ],
+      "metrics": {
+        "calls_n": "Число завершённых вызовов",
+        "latency_ms_median": "Медиана latency_ms по всем вызовам",
+        "latency_ms_p95": "p95 latency_ms",
+        "latency_sum_ms_median_per_turn_window": "Медиана суммы LLM ms в окне ±120с от хода",
+        "prompt_tokens_sum": "Сумма prompt_tokens",
+        "brain_first_median_prompt": "Медиана prompt brain_first",
+        "brain_first_latency_p95": "p95 latency brain_first",
+        "router_n": "Вызовы router_classifier",
+        "brain_second_n": "Вызовы brain_second",
+        "kv_cache_token_pct": "cached/prompt %"
+      },
+      "tags": [
+        "brain_first",
+        "brain_second",
+        "router_classifier",
+        "brain_translation"
+      ]
+    },
+    "pipeline": {
+      "label": "Сравнение агент vs LLM",
+      "metrics": {
+        "llm_share_of_turn_pct": "median(llm_sum/agent_turn) — доля времени в LLM",
+        "overhead_ms_median": "median(agent - llm_sum) — код, IO, Telegram",
+        "turns_with_correlation_n": "Ходов с сопоставлением"
+      }
+    },
+    "quality": {
+      "label": "Качество",
+      "sources": [
+        "data/runtime/cdc_turn_outcomes.jsonl",
+        "data/runtime/user_feedback.jsonl"
+      ],
+      "metrics": {
+        "cdc_ok_pct": "CDC outcome ok %",
+        "feedback_neg": "Отрицательные оценки"
+      }
+    }
+  },
+  "product_phases": [
+    {
+      "id": "bootstrap",
+      "start": "2026-05-02",
+      "end": "2026-05-14",
+      "label": "Старт / базовый пайплайн"
+    },
+    {
+      "id": "heavy_prompt",
+      "start": "2026-05-15",
+      "end": "2026-05-17",
+      "label": "Тяжёлый промпт (15–17 мая)"
+    },
+    {
+      "id": "slim_rollout",
+      "start": "2026-05-17",
+      "end": "2026-05-19",
+      "label": "Slim prompt, узкие дорожки"
+    },
+    {
+      "id": "incident_parallel",
+      "start": "2026-05-20",
+      "end": "2026-05-20",
+      "label": "Инцидент: parallel в личке"
+    },
+    {
+      "id": "stabilization",
+      "start": "2026-05-21",
+      "end": "2026-05-22",
+      "label": "Route guard, corrections, serial lock"
+    },
+    {
+      "id": "current",
+      "start": "2026-05-23",
+      "end": "2099-12-31",
+      "label": "Product finish / эвристики v1"
+    }
+  ],
+  "reference_overrides": {
+    "brain_first_median_prompt": {
+      "2026-05-15": 10255,
+      "2026-05-16": 10440,
+      "2026-05-17": 4063,
+      "2026-05-18": 3636,
+      "2026-05-19": 3134
+    },
+    "agent_latency_ms_p95": {
+      "2026-05-20": 15759
+    },
+    "cdc_ok_pct": {
+      "2026-05-19": 90
+    }
+  }
+}

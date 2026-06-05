@@ -1,0 +1,22 @@
+{
+  "name": "skills",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Пакет-маркер; skills — router/registry + brain HINT (не slash execute)",
+  "input_types": [],
+  "output_types": [],
+  "commands": [],
+  "capabilities": [
+    "skills"
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "entrypoint": "modules.skills.module:SkillsModule",
+  "bundled_with": "3.4.0",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

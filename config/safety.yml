@@ -1,0 +1,10 @@
+safety:
+  tool_guard_enabled: true
+  context_reset_enabled: true
+  reasoning_reset_enabled: true
+  subject_decay_enabled: true
+  memory_recall_guard_enabled: true
+  kv_session_reset_enabled: true
+  fast_path_safety_enabled: true
+  max_reasoning_ms: 5000
+  noise_sequence_limit: 15
