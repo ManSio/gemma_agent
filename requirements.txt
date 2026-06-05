@@ -3,7 +3,7 @@ aiogram>=3.28.2
 python-dotenv>=1.2.2
 pydantic>=2.13.4
 # IANA tz on Windows (zoneinfo); on Linux optional if system tzdata present
-tzdata>=2024.2
+tzdata>=2026.2
 
 # HTTP / IO
 requests>=2.31.0
