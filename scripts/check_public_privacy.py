@@ -71,6 +71,8 @@ ALLOW_PATH_SUBSTR = (
     "privacy_blocklist.local.example",
     "privacy_history_replacements.local.example",
 )
+# Maintainer audit script — intentional PII regex samples, not leaks.
+SKIP_REL_PATHS = frozenset({"scripts/audit_public_build.py"})
 
 
 def _git_tracked_files() -> list[Path] | None:
@@ -96,6 +98,8 @@ def _path_blocked(rel: str) -> bool:
     if "PRIVATE.local" in rel:
         return True
     if any(x in rel for x in ALLOW_PATH_SUBSTR):
+        return True
+    if rel in SKIP_REL_PATHS:
         return True
     return False
 
@@ -146,8 +150,6 @@ def _load_private_blocklist() -> list[tuple[str, re.Pattern[str]]]:
 
 def _telegram_id_hits(rel: str, text: str) -> list[str]:
     if "tests/fixtures/telegram_test_ids.py" in rel:
-        return []
-    if rel.endswith("scripts/audit_public_build.py"):
         return []
     hits: list[str] = []
     for m in re.finditer(r"\b[1-9]\d{8,9}\b", text):
