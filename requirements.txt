@@ -6,7 +6,7 @@ pydantic>=2.13.4
 tzdata>=2024.2
 
 # HTTP / IO
-requests>=2.31.0
+requests>=2.34.2
 # aiogram 3.28.x: aiohttp>=3.9.0,<3.14 (do not bump to 3.14+ until aiogram allows it)
 aiohttp>=3.9.0,<3.14
 beautifulsoup4>=4.14.3
