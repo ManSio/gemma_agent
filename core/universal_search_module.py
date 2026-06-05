@@ -28,7 +28,7 @@ _search_timeout = max(5.0, float(os.getenv("UNIVERSAL_SEARCH_TIMEOUT_SEC", "20")
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=_search_timeout)
 UA = os.getenv(
     "HTTP_USER_AGENT",
-    "GemmaAgent/1.0 (+https://github.com/gemma-agent/gemma-agent; universal search)",
+    "GemmaAgent/1.0 (+https://github.com/ManSio/gemma_agent; universal search)",
 )
 
 

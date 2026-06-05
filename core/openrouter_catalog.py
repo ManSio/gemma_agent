@@ -146,7 +146,7 @@ async def openrouter_completion_benchmark(
     headers = {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/gemma-agent/gemma-agent",
+        "HTTP-Referer": "https://github.com/ManSio/gemma_agent",
         "X-Title": "Gemma Agent Benchmark",
     }
     t0 = time.perf_counter()

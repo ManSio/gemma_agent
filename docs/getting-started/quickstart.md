@@ -23,7 +23,7 @@ From zero to a responding Telegram bot in about 15 minutes.
 ### 1. Clone and bootstrap
 
 ```bash
-git clone https://github.com/ManSio/gemma-agent.git /opt/gemma_agent
+git clone https://github.com/ManSio/gemma_agent.git /opt/gemma_agent
 cd /opt/gemma_agent
 bash scripts/agent_bootstrap.sh
 ```

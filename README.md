@@ -8,11 +8,9 @@
 
 <p align="center">
   <a href="docs/index.md"><img src="https://img.shields.io/badge/Docs-readme-0ea5e9?style=for-the-badge" alt="Docs"></a>
-  <a href="https://github.com/ManSio/gemma-agent"><img src="https://img.shields.io/badge/GitHub-ManSio-181717?style=for-the-badge&logo=github" alt="GitHub"></a>
+  <a href="https://github.com/ManSio/gemma_agent"><img src="https://img.shields.io/badge/GitHub-ManSio-181717?style=for-the-badge&logo=github" alt="GitHub"></a>
   <a href="README.ru.md"><img src="https://img.shields.io/badge/Lang-Русский-red?style=for-the-badge" alt="RU"></a>
 </p>
-
-Replace `ManSio` when the repo is published — see [docs/PUBLISH_CHECKLIST.md](docs/PUBLISH_CHECKLIST.md).
 
 ---
 
@@ -31,7 +29,7 @@ Replace `ManSio` when the repo is published — see [docs/PUBLISH_CHECKLIST.md](
 ## Quick install
 
 ```bash
-git clone https://github.com/ManSio/gemma-agent.git /opt/gemma_agent
+git clone https://github.com/ManSio/gemma_agent.git /opt/gemma_agent
 cd /opt/gemma_agent
 bash scripts/agent_bootstrap.sh
 # edit .env — TELEGRAM_TOKEN, OPENROUTER_API_KEY, ADMIN_USER_IDS

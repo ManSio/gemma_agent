@@ -13,20 +13,21 @@ Use when creating the public repository (Hermes-style presentation).
 ```json
 {
   "github_org": "YourOrg",
-  "github_repo": "gemma-agent",
-  "github_url": "https://github.com/YourOrg/gemma-agent",
-  "docs_site_url": "https://YourOrg.github.io/gemma-agent/",
-  "issues_url": "https://github.com/YourOrg/gemma-agent/issues"
+  "github_repo": "gemma_agent",
+  "default_branch": "master",
+  "github_url": "https://github.com/YourOrg/gemma_agent",
+  "docs_site_url": "https://YourOrg.github.io/gemma_agent/",
+  "issues_url": "https://github.com/YourOrg/gemma_agent/issues"
 }
 ```
 
-## 3. Replace placeholders
+## 3. Rewrite stale URLs
 
 ```bash
 python scripts/apply_repo_links.py
 ```
 
-Or search-replace `ManSio` in README, CONTRIBUTING, SECURITY, `.github/`.
+Fixes `REPLACE_ORG`, old `gemma-agent` paths, and `/blob/main/` when the default branch is `master`.
 
 ## 4. Repository About (right sidebar)
 

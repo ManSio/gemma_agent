@@ -8,7 +8,7 @@
 
 <p align="center">
   <a href="docs/index.ru.md"><img src="https://img.shields.io/badge/Документация-index-0ea5e9?style=for-the-badge" alt="Docs"></a>
-  <a href="https://github.com/ManSio/gemma-agent"><img src="https://img.shields.io/badge/GitHub-ManSio-181717?style=for-the-badge&logo=github" alt="GitHub"></a>
+  <a href="https://github.com/ManSio/gemma_agent"><img src="https://img.shields.io/badge/GitHub-ManSio-181717?style=for-the-badge&logo=github" alt="GitHub"></a>
   <a href="README.md"><img src="https://img.shields.io/badge/Lang-English-blue?style=for-the-badge" alt="EN"></a>
 </p>
 
@@ -31,7 +31,7 @@
 ## Быстрая установка
 
 ```bash
-git clone https://github.com/ManSio/gemma-agent.git /opt/gemma_agent
+git clone https://github.com/ManSio/gemma_agent.git /opt/gemma_agent
 cd /opt/gemma_agent
 bash scripts/agent_bootstrap.sh
 # .env — TELEGRAM_TOKEN, OPENROUTER_API_KEY, ADMIN_USER_IDS

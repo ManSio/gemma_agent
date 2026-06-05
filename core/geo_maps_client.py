@@ -29,7 +29,7 @@ def geo_maps_enabled() -> bool:
 
 
 def _http_headers() -> Dict[str, str]:
-    ua = (os.getenv("GEO_HTTP_USER_AGENT") or "gemma_bot/1.0 (+https://github.com/gemma-agent/gemma-agent)").strip()
+    ua = (os.getenv("GEO_HTTP_USER_AGENT") or "gemma_bot/1.0 (+https://github.com/ManSio/gemma_agent)").strip()
     return {"User-Agent": ua, "Accept": "application/json"}
 
 

@@ -23,4 +23,4 @@ python scripts/check_public_privacy.py --ci
 
 ## Публикация репозитория
 
-[PUBLISH_CHECKLIST.md](../PUBLISH_CHECKLIST.md) — описание, topics, `REPLACE_ORG` → `python scripts/apply_repo_links.py`
+[PUBLISH_CHECKLIST.md](../PUBLISH_CHECKLIST.md) — описание, topics; URL — `python scripts/apply_repo_links.py`

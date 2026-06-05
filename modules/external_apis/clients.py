@@ -14,7 +14,7 @@ import aiohttp
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=12)
 USER_AGENT = os.getenv(
     "HTTP_USER_AGENT",
-    "GemmaAgent/1.0 (+https://github.com/gemma-agent/gemma-agent; keyless external facts)",
+    "GemmaAgent/1.0 (+https://github.com/ManSio/gemma_agent; keyless external facts)",
 )
 
 _WMO_LABELS: Dict[int, str] = {

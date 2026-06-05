@@ -6,7 +6,7 @@ labels:
 body:
   - type: markdown
     value: |
-      Check [Troubleshooting](https://github.com/ManSio/gemma-agent/blob/main/docs/user-guide/troubleshooting.md) first.
+      Check [Troubleshooting](https://github.com/ManSio/gemma_agent/blob/master/docs/user-guide/troubleshooting.md) first.
 
   - type: textarea
     id: what

@@ -10,7 +10,7 @@ Gemma Agent is a **single-tenant Telegram bot** for a small trusted circle — n
 
 After the repository is public:
 
-1. Prefer **[GitHub Security Advisories](https://github.com/ManSio/gemma-agent/security/advisories/new)** (private report).
+1. Prefer **[GitHub Security Advisories](https://github.com/ManSio/gemma_agent/security/advisories/new)** (private report).
 2. Do **not** open public issues with exploit steps, tokens, or user data dumps.
 
 Include:

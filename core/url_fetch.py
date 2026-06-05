@@ -17,7 +17,7 @@ import aiohttp
 
 logger = logging.getLogger(__name__)
 
-_FALLBACK_BOT_UA = "GemmaAgent/1.0 (+https://github.com/gemma-agent/gemma-agent; url fetch)"
+_FALLBACK_BOT_UA = "GemmaAgent/1.0 (+https://github.com/ManSio/gemma_agent; url fetch)"
 _DEFAULT_BROWSER_UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"

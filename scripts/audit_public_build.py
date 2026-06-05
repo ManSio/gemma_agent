@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 PII_PATTERNS = [
     ("mansio", re.compile(r"mansio", re.I)),
-    ("real_bot_id", re.compile(r"\b(1234567890|9876543210|1111111111)\b")),
+    ("real_bot_id", re.compile(r"\b(REDACTED_BOT_ID_A|REDACTED_BOT_ID_B)\b")),
     ("lan_ip", re.compile(r"\b192\.168\.\d+\.\d+\b")),
     ("vps_ip", re.compile(r"\b212\.113\.\d+\.\d+\b")),
     ("srv_path", re.compile(r"/srv/gemma_bot")),

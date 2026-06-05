@@ -33,7 +33,7 @@ def _truthy_env(name: str, default: bool = True) -> bool:
 def _default_probe_headers() -> Dict[str, str]:
     ua = (os.getenv("HTTP_USER_AGENT") or "").strip()
     if not ua:
-        ua = "GemmaAgent/1.0 (+https://github.com/gemma-agent/gemma-agent; connectivity-probe)"
+        ua = "GemmaAgent/1.0 (+https://github.com/ManSio/gemma_agent; connectivity-probe)"
     return {"User-Agent": ua}
 
 

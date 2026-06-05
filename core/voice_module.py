@@ -245,7 +245,7 @@ class VoiceModule:
 
         headers: Dict[str, str] = {"Authorization": f"Bearer {key}"}
         if "openrouter.ai" in url:
-            headers["HTTP-Referer"] = os.getenv("OPENROUTER_HTTP_REFERER", "https://github.com/gemma-agent/gemma-agent")
+            headers["HTTP-Referer"] = os.getenv("OPENROUTER_HTTP_REFERER", "https://github.com/ManSio/gemma_agent")
             headers["X-Title"] = os.getenv("OPENROUTER_X_TITLE", "Gemma Agent")
 
         try:
@@ -307,7 +307,7 @@ class VoiceModule:
         headers = {
             "Authorization": f"Bearer {key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": os.getenv("OPENROUTER_HTTP_REFERER", "https://github.com/gemma-agent/gemma-agent"),
+            "HTTP-Referer": os.getenv("OPENROUTER_HTTP_REFERER", "https://github.com/ManSio/gemma_agent"),
             "X-Title": os.getenv("OPENROUTER_X_TITLE", "Gemma Agent"),
         }
 

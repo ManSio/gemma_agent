@@ -424,7 +424,7 @@ class ImageGeneratorModule:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/gemma-agent/gemma-agent",
+            "HTTP-Referer": "https://github.com/ManSio/gemma_agent",
             "X-Title": "Gemma Agent Image Generator",
         }
         body: Dict[str, Any] = {
@@ -460,7 +460,7 @@ class ImageGeneratorModule:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/gemma-agent/gemma-agent",
+            "HTTP-Referer": "https://github.com/ManSio/gemma_agent",
             "X-Title": "Gemma Agent Image Generator",
         }
         refs = reference_paths or []

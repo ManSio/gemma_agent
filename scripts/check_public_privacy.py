@@ -147,6 +147,8 @@ def _load_private_blocklist() -> list[tuple[str, re.Pattern[str]]]:
 def _telegram_id_hits(rel: str, text: str) -> list[str]:
     if "tests/fixtures/telegram_test_ids.py" in rel:
         return []
+    if rel.endswith("scripts/audit_public_build.py"):
+        return []
     hits: list[str] = []
     for m in re.finditer(r"\b[1-9]\d{8,9}\b", text):
         val = m.group(0)

@@ -450,7 +450,7 @@ class OpenRouterProvider:
                 headers = {
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "https://github.com/gemma-agent/gemma-agent",
+                    "HTTP-Referer": "https://github.com/ManSio/gemma_agent",
                     "X-Title": "Gemma Agent",
                     "X-OpenRouter-Title": "Gemma Agent",
                 }
@@ -785,7 +785,7 @@ class OpenRouterProvider:
             headers = {
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/gemma-agent/gemma-agent",
+                "HTTP-Referer": "https://github.com/ManSio/gemma_agent",
                 "X-Title": "Gemma Agent",
                 "X-OpenRouter-Title": "Gemma Agent",
             }

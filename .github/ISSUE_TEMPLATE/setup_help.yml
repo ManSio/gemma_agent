@@ -6,7 +6,7 @@ labels:
 body:
   - type: markdown
     value: |
-      Guides: [Quickstart](https://github.com/ManSio/gemma-agent/blob/main/docs/getting-started/quickstart.md) · [Installation](https://github.com/ManSio/gemma-agent/blob/main/docs/getting-started/installation.md)
+      Guides: [Quickstart](https://github.com/ManSio/gemma_agent/blob/master/docs/getting-started/quickstart.md) · [Installation](https://github.com/ManSio/gemma_agent/blob/master/docs/getting-started/installation.md)
 
   - type: dropdown
     id: step

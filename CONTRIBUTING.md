@@ -44,8 +44,8 @@ Details: [docs/getting-started/public-build.md](docs/getting-started/public-buil
 ### Clone and install
 
 ```bash
-git clone https://github.com/ManSio/gemma-agent.git
-cd gemma-agent
+git clone https://github.com/ManSio/gemma_agent.git
+cd gemma_agent
 bash scripts/agent_bootstrap.sh
 ```
 

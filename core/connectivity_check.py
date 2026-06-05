@@ -247,7 +247,7 @@ async def check_openrouter_api(
     headers = {
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/gemma-agent/gemma-agent",
+        "HTTP-Referer": "https://github.com/ManSio/gemma_agent",
         "X-Title": "Gemma Agent Connectivity Check",
         "X-OpenRouter-Title": "Gemma Agent Connectivity Check",
     }

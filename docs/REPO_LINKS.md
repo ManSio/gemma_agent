@@ -1,31 +1,22 @@
-# Repository links (fill before publish)
+# Repository links (single source of truth)
 
-Edit `config/repo_links.json` and search-replace `REPLACE_ORG` in README files.
-
-| Placeholder | Set to |
-|-------------|--------|
-| `REPLACE_ORG` | GitHub org or username |
-| `github_url` | `https://github.com/<org>/gemma-agent` |
-| `docs_site_url` | GitHub Pages or future docs host (optional) |
-| `issues_url` | GitHub Issues URL |
-
-After the repo exists:
+Edit [`config/repo_links.json`](../config/repo_links.json), then:
 
 ```bash
-# Example: update badges in README.md
-# [![GitHub](https://img.shields.io/github/stars/ORG/gemma-agent)](https://github.com/ORG/gemma-agent)
+python scripts/apply_repo_links.py
 ```
 
-## GitHub About (sidebar)
+| Field | Example (this repo) |
+|-------|---------------------|
+| `github_org` | `ManSio` |
+| `github_repo` | `gemma_agent` |
+| `default_branch` | `master` |
+| `github_url` | `https://github.com/ManSio/gemma_agent` |
 
-Copy from `config/repo_links.json`:
+The script rewrites stale URLs (`gemma-agent`, `ManSio`, `/blob/master/` on `master` branch) across docs, `.github/`, code defaults, and `.env.example`.
 
-- **Description:** `about_description`
-- **Website:** `docs_site_url` or link to `docs/index.md`
-- **Topics:** `github_topics` array
+Badge example:
 
-Enables automatic links: Contributing → `CONTRIBUTING.md`, Security → `SECURITY.md`, License → `LICENSE`.
-
-Full steps: [PUBLISH_CHECKLIST.md](PUBLISH_CHECKLIST.md)
-
-Docs: [index.md](index.md) · [index.ru.md](index.ru.md)
+```markdown
+[![GitHub](https://img.shields.io/github/stars/ManSio/gemma_agent)](https://github.com/ManSio/gemma_agent)
+```
