@@ -73,4 +73,6 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 |-----|--------|
 | [environment-variables.md](reference/environment-variables.md) | Key `.env` vars |
 | [scripts-cli.md](reference/scripts-cli.md) | CLI scripts |
+| [PLUGIN_AUTHOR_HANDBOOK_RU.md](PLUGIN_AUTHOR_HANDBOOK_RU.md) | Plugin author guide (SelfProgramming) |
+| [PLUGIN_AI_CRITICAL_BRIEF.md](PLUGIN_AI_CRITICAL_BRIEF.md) | Short LLM brief for plugins |
 | [assets/README.md](assets/README.md) | Diagram assets |
