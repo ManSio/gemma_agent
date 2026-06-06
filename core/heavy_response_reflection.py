@@ -49,6 +49,37 @@ def _critical_pre_send_actions() -> frozenset:
     )
 
 
+def _is_fast_chitchat_turn(
+    user_text: str,
+    profile: str = "",
+    output_meta: Optional[Mapping[str, Any]] = None,
+) -> bool:
+    """Короткий читчат — не третий LLM-pass reflection_heavy."""
+    if isinstance(output_meta, dict) and output_meta.get("brain_fast_chitchat"):
+        return True
+    prof = (profile or "").strip().lower()
+    if prof != "short":
+        return False
+    ut = (user_text or "").strip()
+    if not ut:
+        return False
+    try:
+        from core.prompt_routing import is_pure_chitchat_private
+
+        if is_pure_chitchat_private(ut):
+            return True
+    except Exception as e:
+        logger.debug("heavy_reflection chitchat probe: %s", e)
+    try:
+        from core.brain.user_facing_contract import classify_short_user_turn
+
+        if classify_short_user_turn(ut) == "chitchat":
+            return True
+    except Exception as e:
+        logger.debug("heavy_reflection short_turn probe: %s", e)
+    return False
+
+
 def should_skip_heavy_reflection_for_meta(
     output_meta: Optional[Mapping[str, Any]] = None,
 ) -> bool:
@@ -80,9 +111,11 @@ def should_reflect_heavy_turn(
     rep = (reply or "").strip()
     if not ut or not rep:
         return False
+    prof = (profile or "standard").strip().lower()
+    if _is_fast_chitchat_turn(ut, prof, output_meta):
+        return False
     if rep == _EMPTY_FALLBACK or len(rep) < 12:
         return True
-    prof = (profile or "standard").strip().lower()
     if prof in _heavy_profiles():
         return True
     tier = (task_tier or "").strip().lower()

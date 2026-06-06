@@ -21,6 +21,24 @@ class TestHeavyResponseReflection(unittest.TestCase):
             )
         )
 
+    def test_short_profile_tiny_reply_no_reflect(self):
+        self.assertFalse(
+            should_reflect_heavy_turn(
+                user_text="привет",
+                reply="Привет!",
+                profile="short",
+            )
+        )
+
+    def test_short_profile_tiny_reply_reflects_without_short_profile(self):
+        self.assertTrue(
+            should_reflect_heavy_turn(
+                user_text="привет",
+                reply="Привет!",
+                profile="standard",
+            )
+        )
+
     def test_long_user_reflect(self):
         self.assertTrue(
             should_reflect_heavy_turn(

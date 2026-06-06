@@ -138,6 +138,17 @@ async def try_recover_empty_general_reply(
     if not effective_bool("BRAIN_GENERAL_EMPTY_RETRY", default=True):
         return dwg_cad_domain_fallback(user_text, recent_dialogue=recent_dialogue)
 
+    try:
+        from core.prompt_routing import is_pure_chitchat_private
+        from core.brain.text_helpers import natural_fallback_response
+
+        if prof in ("short", "standard") and is_pure_chitchat_private(user_text):
+            fb = natural_fallback_response("empty_llm", "recovery", user_text)
+            if (fb or "").strip():
+                return fb.strip()
+    except Exception as e:
+        logger.debug("general_recovery chitchat fallback: %s", e)
+
     domain_fb = dwg_cad_domain_fallback(user_text, recent_dialogue=recent_dialogue)
 
     usage = first_result.get("usage_detail") or {}

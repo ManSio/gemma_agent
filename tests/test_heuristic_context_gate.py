@@ -58,6 +58,16 @@ class HeuristicContextGateTests(unittest.TestCase):
         r = shortcut_allowed("chitchat_fast_eligible", ctx)
         self.assertEqual(r.verdict, "allowed")
 
+    def test_chitchat_fast_allowed_greeting_with_pending_correction(self) -> None:
+        ctx = TurnDecisionContext(
+            user_text="привет",
+            text_len=6,
+            pending_correction=True,
+        )
+        r = shortcut_allowed("chitchat_fast_eligible", ctx)
+        self.assertEqual(r.verdict, "allowed")
+        self.assertEqual(r.reason, "ok")
+
     def test_news_direct_allowed(self) -> None:
         ctx = build_turn_decision_context("что нового в новостях")
         r = shortcut_allowed("news_direct", ctx)

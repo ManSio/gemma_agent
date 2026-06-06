@@ -290,6 +290,16 @@ def _check_block_flag(flag: str, ctx: TurnDecisionContext, rule: Dict[str, Any])
             logger.debug("gate reminder_prose_skip: %s", e)
     elif flag == "pending_correction":
         if ctx.pending_correction:
+            # Старая коррекция от 👎 не должна гонять «привет» через тяжёлый brain.
+            rid = str(rule.get("id") or "").strip()
+            if rid == "chitchat_fast_eligible":
+                try:
+                    from core.prompt_routing import is_pure_chitchat_private
+
+                    if is_pure_chitchat_private(ctx.user_text):
+                        return None
+                except Exception as e:
+                    logger.debug("gate pending_correction chitchat exempt: %s", e)
             return "pending_correction"
     elif flag == "assistant_expects_reply":
         try:
