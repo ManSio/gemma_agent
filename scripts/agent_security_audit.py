@@ -36,6 +36,14 @@ SECRET_PATTERNS = [
     ("bearer_jwt", re.compile(r"\beyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b")),
 ]
 
+RECOMMENDATIONS = [
+    "Keep .env chmod 600; never commit secrets.",
+    "Run this audit before each release: python scripts/agent_security_audit.py",
+    "Production: USER_ACCESS_APPROVAL_REQUIRED=true, narrow ADMIN_USER_IDS.",
+    "Use real Mem0 or cloud with auth — not stub — if memory must be isolated.",
+    "Rotate provider tokens if ever leaked in chat or git.",
+]
+
 LIMITATIONS = [
     "LLM output is not cryptographically verified — prompt injection remains possible.",
     "Mem0 stub stores memories in plain JSON on disk — not for multi-tenant production.",
@@ -120,6 +128,7 @@ def check_required_secrets_set(*, ci: bool = False) -> Dict[str, Any]:
     for key in ("TELEGRAM_TOKEN", "OPENROUTER_API_KEY"):
         if not (os.getenv(key) or "").strip():
             missing.append(key)
+    missing_count = len(missing)
     admin = (os.getenv("ADMIN_USER_IDS") or "").strip()
     guest_open = os.getenv("USER_ACCESS_APPROVAL_REQUIRED", "true").strip().lower() in {
         "0",
@@ -128,13 +137,13 @@ def check_required_secrets_set(*, ci: bool = False) -> Dict[str, Any]:
         "off",
     }
     notes = []
-    if missing:
-        notes.append(f"Unset in .env: {', '.join(missing)}")
+    if missing_count:
+        notes.append(f"Required provider keys unset in .env ({missing_count})")
     if not admin:
         notes.append("ADMIN_USER_IDS empty — admin commands disabled")
     if guest_open:
         notes.append("USER_ACCESS_APPROVAL_REQUIRED=false — open access to any Telegram user")
-    return {"ok": not missing, "notes": notes, "open_access": guest_open}
+    return {"ok": missing_count == 0, "notes": notes, "open_access": guest_open}
 
 
 def check_security_tests(quick: bool) -> Dict[str, Any]:
@@ -168,13 +177,7 @@ def build_report(*, quick: bool, ci: bool = False) -> Dict[str, Any]:
         "failed_checks": failed,
         "checks": checks,
         "limitations": LIMITATIONS,
-        "recommendations": [
-            "Keep .env chmod 600; never commit secrets.",
-            "Run this audit before each release: python scripts/agent_security_audit.py",
-            "Production: USER_ACCESS_APPROVAL_REQUIRED=true, narrow ADMIN_USER_IDS.",
-            "Use real Mem0 or cloud with auth — not stub — if memory must be isolated.",
-            "Rotate TELEGRAM_TOKEN / OPENROUTER_API_KEY if ever leaked in chat or git.",
-        ],
+        "recommendations": list(RECOMMENDATIONS),
     }
 
 
@@ -187,26 +190,28 @@ def main() -> int:
 
     report = build_report(quick=args.quick, ci=args.ci)
 
+    from core.sensitive_export import security_audit_public_report
+
     if args.json:
-        print(json.dumps(report, ensure_ascii=False, indent=2))
+        print(json.dumps(security_audit_public_report(report), ensure_ascii=False, indent=2))
     else:
         print("=== Gemma Agent security audit (honest) ===")
-        print(f"Root: {report['root']}")
+        print("Root: gemma_agent (public build)")
         for name, data in report["checks"].items():
             mark = "OK" if data.get("ok") or data.get("skipped") else "FAIL"
             print(f"\n[{mark}] {name}")
             for line in data.get("notes") or []:
-                print(f"  - {line}")
+                print(f"  - {str(line)[:280]}")
             detail = data.get("detail") or []
             if detail and not data.get("notes"):
                 print(f"  - detail_lines={len(detail)} (use --json for full output)")
             if data.get("skipped"):
                 print("  - skipped")
         print("\n--- Known limitations (not bugs) ---")
-        for line in report["limitations"]:
+        for line in LIMITATIONS:
             print(f"  - {line}")
         print("\n--- Recommendations ---")
-        for line in report["recommendations"]:
+        for line in RECOMMENDATIONS:
             print(f"  - {line}")
         print()
         print("PASS" if report["passed"] else "FAIL — fix items above")

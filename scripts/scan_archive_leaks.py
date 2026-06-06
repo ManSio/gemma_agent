@@ -117,7 +117,7 @@ def main() -> int:
     from core.sensitive_export import scan_report_public
 
     rep = scan_report_public(scan_archives(root))
-    text = json.dumps(rep, ensure_ascii=False, indent=2)
+    text = json.dumps(rep, ensure_ascii=False, indent=2, sort_keys=True)
     if args.json_out:
         out = Path(args.json_out)
         if not out.is_absolute():

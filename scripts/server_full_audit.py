@@ -295,14 +295,9 @@ def main() -> int:
     rep = audit_host(root, host_label=args.host_label, days=args.days)
     rep["ts"] = datetime.now(timezone.utc).isoformat()
     out_doc = {"ts": rep["ts"], "hosts": [rep]}
-    from core.sensitive_export import scan_report_public
+    from core.sensitive_export import audit_document_public
 
-    safe_doc = dict(out_doc)
-    for host in safe_doc.get("hosts") or []:
-        if isinstance(host, dict) and isinstance(host.get("archives"), dict):
-            arch = host["archives"]
-            if "findings" in arch:
-                host["archives"] = scan_report_public(arch)
+    safe_doc = audit_document_public(out_doc)
     text = json.dumps(safe_doc, ensure_ascii=False, indent=2)
     if args.json_out:
         p = Path(args.json_out)
@@ -314,7 +309,7 @@ def main() -> int:
     else:
         print(text[:12000])
     if args.md_out:
-        md = render_md(out_doc)
+        md = render_md(safe_doc)
         mp = Path(args.md_out)
         if not mp.is_absolute():
             mp = root / mp

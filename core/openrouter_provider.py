@@ -436,11 +436,11 @@ class OpenRouterProvider:
                 else 0
             )
             logger.debug(
-                "openrouter payload snapshot model=%s messages=%s system_chars=%s provider=%s session_id_len=%s",
-                payload.get("model"),
+                "openrouter payload snapshot model_len=%s messages=%s system_chars=%s provider_set=%s session_id_len=%s",
+                len(str(payload.get("model") or "")),
                 _msg_count,
                 _sys_chars,
-                payload.get("provider"),
+                1 if payload.get("provider") else 0,
                 len(_session_id or ""),
             )
 

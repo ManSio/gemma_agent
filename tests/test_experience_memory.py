@@ -222,7 +222,9 @@ def test_append_experience_with_skill():
 
 class TestBuildHintForContext(unittest.TestCase):
     def setUp(self):
-        self.p = tempfile.mktemp(suffix=".jsonl")
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False)
+        self._tmp.close()
+        self.p = self._tmp.name
         self.env = {
             "GEMMA_EXPERIENCE_PATH": self.p,
             "EXPERIENCE_MEMORY_ENABLED": "true",
@@ -258,7 +260,9 @@ class TestBuildHintForContext(unittest.TestCase):
 
 class TestFindHints(unittest.TestCase):
     def setUp(self):
-        self.p = tempfile.mktemp(suffix=".jsonl")
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False)
+        self._tmp.close()
+        self.p = self._tmp.name
         self.env = {
             "GEMMA_EXPERIENCE_PATH": self.p,
             "EXPERIENCE_MEMORY_ENABLED": "true",
