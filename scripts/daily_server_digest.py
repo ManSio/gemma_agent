@@ -58,6 +58,42 @@ def _render_md(hosts: list, *, stamp: str) -> str:
     )
 
 
+def _hosts_for_md(hosts: list) -> list:
+    """Strict allowlist for markdown output to avoid persisting secret-like content."""
+    out: list = []
+    for h in hosts:
+        if not isinstance(h, dict):
+            continue
+        turns = h.get("turns") if isinstance(h.get("turns"), dict) else {}
+        archives = h.get("archives") if isinstance(h.get("archives"), dict) else {}
+        errors = h.get("errors") if isinstance(h.get("errors"), dict) else {}
+        host_row = {
+            "host": str(h.get("host") or "?")[:64],
+            "git_head": str(h.get("git_head") or "")[:160],
+            "turns": {
+                "count": int(turns.get("count") or 0),
+                "latency_ms_p50": turns.get("latency_ms_p50"),
+                "latency_ms_p90": turns.get("latency_ms_p90"),
+                "outcomes": turns.get("outcomes") if isinstance(turns.get("outcomes"), dict) else {},
+                "issues_top": turns.get("issues_top") if isinstance(turns.get("issues_top"), list) else [],
+                "suspect_incomplete_excerpt": int(turns.get("suspect_incomplete_excerpt") or 0),
+                "long_q_short_a": int(turns.get("long_q_short_a") or 0),
+                "with_brain_recent_limit": int(turns.get("with_brain_recent_limit") or 0),
+                "samples_incomplete": [],
+            },
+            "archives": {
+                "leaks": int(archives.get("leaks") or 0),
+                "messages": int(archives.get("messages") or 0),
+            },
+            "errors": {
+                "count": int(errors.get("count") or 0),
+                "top": errors.get("top") if isinstance(errors.get("top"), list) else [],
+            },
+        }
+        out.append(host_row)
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=str(_ROOT))
@@ -84,9 +120,10 @@ def main() -> int:
     safe_doc = audit_document_public(out_doc)
     json_path = Path(args.json_out or root / "data/benchmarks" / f"daily_digest_{stamp.replace('-', '')}.json")
     md_path = Path(args.md_out or root / "docs" / "archive" / f"DAILY_OPS_{stamp}_RU.md")
+    md_hosts = _hosts_for_md(safe_doc.get("hosts") or [])
     json_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps(safe_doc, ensure_ascii=False, indent=2), encoding="utf-8")
-    md_path.write_text(_render_md(safe_doc.get("hosts") or [], stamp=stamp), encoding="utf-8")
+    md_path.write_text(_render_md(md_hosts, stamp=stamp), encoding="utf-8")
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")
     return 0
