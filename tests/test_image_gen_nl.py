@@ -84,6 +84,13 @@ def test_scene_from_photografii_and_swat_followup():
     assert not prose_wants_image_pending_followup("что на фото?")
 
 
+def test_prose_rejects_abstract_change_not_image_edit():
+    assert not prose_wants_image_edit("что мы можем изменить в мире?")
+    assert not prose_wants_image_edit("как изменить жизнь к лучшему")
+    assert prose_wants_image_edit("изменить фон на фото")
+    assert prose_wants_image_edit("перерисуй в акварели")
+
+
 def test_route_disabled_via_env(monkeypatch):
     monkeypatch.setenv("IMAGE_GEN_NL_ROUTE", "false")
     assert image_gen_nl_route_enabled() is False

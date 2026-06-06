@@ -220,17 +220,33 @@ def prose_wants_image_composite(text: str) -> bool:
 
 
 # Редактирование / перерисовка приложенного фото (Nano Banana 2 и др.).
-_IMG_EDIT_PROSE: Final[re.Pattern[str]] = re.compile(
+# «изменить» без фото/картинки — не image_edit («что мы можем изменить в мире»).
+_IMG_EDIT_STRONG: Final[re.Pattern[str]] = re.compile(
     r"(?is)"
     r"(?:"
-    r"\b(?:перерисуй|перерисовать|переделай|переделать|измени|изменить|отредактируй|отредактировать|"
-    r"дорисуй|дорисовать|стилизуй|стилизовать|преобразуй|преобразовать|обработай|обработать|"
-    r"замени|заменить|вставь|вставить)\b"
+    r"\b(?:перерисуй|перерисовать|переделай|переделать|отредактируй|отредактировать|"
+    r"дорисуй|дорисовать|стилизуй|стилизовать|преобразуй|преобразовать|обработай|обработать)\b"
     r"|"
     r"\b(?:edit|redraw|repaint|restyle|transform|remix)\b"
     r"(?:\s+(?:this|the|my))?\s+(?:image|photo|picture)\b"
     r"|"
     r"\b(?:make\s+it|turn\s+it\s+into)\b"
+    r")"
+)
+_IMG_EDIT_WEAK: Final[re.Pattern[str]] = re.compile(
+    r"(?is)\b(?:измени|изменить|замени|заменить|вставь|вставить)\b"
+)
+_IMG_EDIT_REF: Final[re.Pattern[str]] = re.compile(
+    r"(?is)\b(?:"
+    r"фото|снимок|картинк|изображен|иллюстрац|рисунк|"
+    r"image|photo|picture|screenshot|скрин"
+    r")\w*\b"
+)
+_IMG_EDIT_ABSTRACT: Final[re.Pattern[str]] = re.compile(
+    r"(?is)"
+    r"(?:"
+    r"\bв\s+мире\b|\bв\s+жизни\b|\bв\s+обществе\b|\bв\s+стране\b|"
+    r"\bчто\s+мы\s+можем\b|\bкак\s+изменить\s+мир\b"
     r")"
 )
 
@@ -239,7 +255,13 @@ def prose_wants_image_edit(text: str) -> bool:
     t = normalize_image_request_text(text)
     if not t or t.startswith("/"):
         return False
-    return bool(_IMG_EDIT_PROSE.search(t))
+    if _IMG_EDIT_ABSTRACT.search(t):
+        return False
+    if _IMG_EDIT_STRONG.search(t):
+        return True
+    if _IMG_EDIT_WEAK.search(t) and _IMG_EDIT_REF.search(t):
+        return True
+    return False
 
 
 def prose_wants_image_style_transform(text: str) -> bool:
