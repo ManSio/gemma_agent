@@ -147,6 +147,7 @@ python scripts/release_guard.py --smoke   # = CI smoke job
 | Цикл агента | [docs/AGENT_LOOP.md](docs/AGENT_LOOP.md) |
 | Архитектура | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Cursor agent | [`.cursor/README.md`](.cursor/README.md) |
+| Замена на public VPS | [migrate-from-private.ru.md](docs/getting-started/migrate-from-private.ru.md) |
 | Память STM/MTM/LTM | [docs/MEMORY.md](docs/MEMORY.md) |
 | Самоисцеление | [docs/SELF_HEALING.md](docs/SELF_HEALING.md) |
 | Критерии приёмки | [docs/ACCEPTANCE_CRITERIA.md](docs/ACCEPTANCE_CRITERIA.md) |

@@ -118,6 +118,16 @@ Details: [features/memory.md](features/memory.md)
 
 ---
 
+## Replace private fork with public build (same VPS)
+
+Low RAM — one instance only. Full rollback: [migrate-from-private.md](getting-started/migrate-from-private.md)
+
+```bash
+systemctl stop gemma_bot.service
+bash scripts/migrate_private_to_public.sh --bot-dir /opt/gemma_agent --dry-run
+bash scripts/migrate_private_to_public.sh --bot-dir /opt/gemma_agent
+```
+
 ## Backups
 
 ```bash
