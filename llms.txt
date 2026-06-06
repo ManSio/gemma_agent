@@ -10,5 +10,5 @@
 - docs/REPO_MAP.md
 - docs/PRODUCTION_EVIDENCE_REPORT.md
 - SECURITY.md
-- https://raw.githubusercontent.com/ManSio/gemma_agent/main/SECURITY.md
-- https://raw.githubusercontent.com/ManSio/gemma_agent/main/CHATGPT_PASTE.md
+- https://raw.githubusercontent.com/ManSio/gemma_agent/master/SECURITY.md
+- https://raw.githubusercontent.com/ManSio/gemma_agent/master/CHATGPT_PASTE.md

@@ -9,6 +9,6 @@ alwaysApply: true
 - **Dates:** public GitHub **2026-06-06**; prod **2026-05-02+** — not "new repo".
 - **Scores in docs:** maintainer **self-assessment**, not external consensus.
 - **Note:** pytest≠TG; prod jsonl private.
-- **Raw branch:** `main` (mirrors `master`).
+- **Default branch:** `master`.
 
 Skill + prompts: `.cursor/README.md`

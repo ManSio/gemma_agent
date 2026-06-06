@@ -5,7 +5,7 @@ Entry point for humans and tools working in this repository.
 **Cursor (IDE):** [.cursor/README.md](.cursor/README.md) — rules, skills, prompts.  
 **Offline context:** [CHATGPT_PASTE.md](CHATGPT_PASTE.md) · [RU](CHATGPT_PASTE.ru.md)  
 **Positioning & limits:** [docs/HONEST_POSITIONING.md](docs/HONEST_POSITIONING.md)  
-**Raw GitHub:** branch `main` or `master` — e.g. `raw.githubusercontent.com/ManSio/gemma_agent/main/SECURITY.md`
+**Raw GitHub:** branch `master` — e.g. `raw.githubusercontent.com/ManSio/gemma_agent/master/SECURITY.md`
 
 ---
 

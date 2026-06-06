@@ -35,7 +35,7 @@ python -m pytest tests/ --collect-only -q
 | Plugins (public) | 19 |
 | Hot path | `input_layer` → `orchestrator` → `brain/pipeline` |
 
-Raw files: branch **`main`** or **`master`** (e.g. `.../main/SECURITY.md`).
+Raw files: branch **`master`** (e.g. `.../master/SECURITY.md`).
 
 ---
 

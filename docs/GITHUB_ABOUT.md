@@ -67,6 +67,6 @@ Do **not** upload raw `gemma-agent-logo.png` (~1.2 MB) — over GitHub's 1 MB li
 
 The name `gemma_agent` is the **project name**. Models run via **OpenRouter**, not a bundled Gemma runtime.
 
-**For AI crawlers:** canonical raw URLs use branch **`main`** (synced from `master` on every push), e.g. `https://raw.githubusercontent.com/ManSio/gemma_agent/main/SECURITY.md`.
+**Raw URLs:** branch **`master`** — e.g. `https://raw.githubusercontent.com/ManSio/gemma_agent/master/SECURITY.md`.
 
 **Maturity:** public GitHub since **2026-06-06**; production use since **2026-05-02**. Score tables in docs are **maintainer self-assessment**, not independent consensus — see [HONEST_POSITIONING.md](HONEST_POSITIONING.md).

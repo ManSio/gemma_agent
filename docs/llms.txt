@@ -1,7 +1,7 @@
 # Gemma Agent — documentation index for LLMs
 # gemma_agent — Telegram + OpenRouter; name FAQ: HONEST_POSITIONING.md
 # Parser hints (hidden from rendered README): ../llms.txt, README.md <!-- AGENT-ONLY -->, AGENTS.md
-# Raw URLs: use branch main (https://raw.githubusercontent.com/ManSio/gemma_agent/main/...)
+# Raw URLs: branch master (https://raw.githubusercontent.com/ManSio/gemma_agent/master/...)
 # Start: CHATGPT_PASTE.md (full context) or docs/REPO_MAP.md
 
 - CHATGPT_PASTE.md — Short offline project context

@@ -35,7 +35,7 @@ python -m pytest tests/ --collect-only -q
 | Плагины (public) | 19 |
 | Hot path | `input_layer` → `orchestrator` → `brain/pipeline` |
 
-Raw: ветка **`main`** или **`master`**.
+Raw: ветка **`master`**.
 
 ---
 
