@@ -56,6 +56,12 @@ def test_classify_ok():
     assert classify_turn_outcome(outputs, user_text="привет") == "ok"
 
 
+def test_classify_chitchat_reciprocal_question_is_ok():
+    """«Как дела» + ответ с «Как сам?» — не clarify."""
+    outputs = [SimpleNamespace(type="text", payload="Привет! У меня всё отлично. Как сам?")]
+    assert classify_turn_outcome(outputs, user_text="как дела") == "ok"
+
+
 def test_classify_clarify_question():
     """Ответ с уточняющим вопросом (эвристика _CLARIFY_HINT_RE) → clarify."""
     payload = "Что именно вы имеете в виду — A или B?"
@@ -216,8 +222,7 @@ def test_append_experience_with_skill():
 
 class TestBuildHintForContext(unittest.TestCase):
     def setUp(self):
-        fd, self.p = tempfile.mkstemp(suffix=".jsonl")
-        os.close(fd)
+        self.p = tempfile.mktemp(suffix=".jsonl")
         self.env = {
             "GEMMA_EXPERIENCE_PATH": self.p,
             "EXPERIENCE_MEMORY_ENABLED": "true",
@@ -253,8 +258,7 @@ class TestBuildHintForContext(unittest.TestCase):
 
 class TestFindHints(unittest.TestCase):
     def setUp(self):
-        fd, self.p = tempfile.mkstemp(suffix=".jsonl")
-        os.close(fd)
+        self.p = tempfile.mktemp(suffix=".jsonl")
         self.env = {
             "GEMMA_EXPERIENCE_PATH": self.p,
             "EXPERIENCE_MEMORY_ENABLED": "true",

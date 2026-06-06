@@ -444,6 +444,13 @@ def _assistant_text_suggests_clarify(joined: str, *, user_text: str = "") -> boo
     if not _env_truthy("TURN_OUTCOME_CLARIFY_HEURISTIC", True):
         return False
     ut = (user_text or "").strip()
+    try:
+        from core.prompt_routing import is_pure_chitchat_private
+
+        if is_pure_chitchat_private(ut):
+            return False
+    except Exception as e:
+        logger.debug("clarify heuristic chitchat skip: %s", e)
     t = (joined or "").strip()
     if len(t) < 14:
         return False

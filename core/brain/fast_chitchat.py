@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import re
@@ -135,6 +136,29 @@ def _sanitize_chitchat_reply(text: str) -> str:
     return cleaned
 
 
+def deterministic_pure_chitchat_reply(user_text: str, user_id: str) -> str:
+    """Мгновенный ответ без LLM на чистый читчат (привет / как дела)."""
+    from core.prompt_routing import is_pure_chitchat_private
+
+    if not is_pure_chitchat_private(user_text):
+        return ""
+    ut = (user_text or "").strip().lower()
+    if any(x in ut for x in ("как дела", "как жизнь", "как ты", "как настроение", "что делаешь")):
+        opts = (
+            "Нормально, спасибо! А у тебя как?",
+            "Всё хорошо, на связи. Как сам?",
+            "Отлично, спасибо что спросил! Чем помочь?",
+        )
+    elif ut.startswith(("спасибо", "благодар")):
+        opts = ("Пожалуйста!", "Рад помочь!", "Обращайся!")
+    else:
+        from core.brain.text_helpers import natural_fallback_response
+
+        return natural_fallback_response("empty_llm", user_id, user_text)
+    idx = int(hashlib.sha256(f"{user_id}:{ut[:32]}".encode()).hexdigest(), 16)
+    return opts[idx % len(opts)]
+
+
 async def brain_fast_chitchat_reply(
     *,
     user_text: str,
@@ -150,6 +174,18 @@ async def brain_fast_chitchat_reply(
     brain_profile: str = "chitchat",
 ) -> str:
     """Один короткий вызов LLM без инструментов и skills — как лёгкий диалог в GENESIS."""
+    if env_flag("BRAIN_FAST_CHITCHAT_DETERMINISTIC", default=True):
+        det = deterministic_pure_chitchat_reply(user_text, user_id)
+        if (det or "").strip():
+            out = strip_chat_markdown_for_telegram(det.strip())
+            try:
+                if not skip_memory_writes:
+                    await _memory.on_after_response(user_id, out)
+            except Exception as e:
+                logger.debug("fast_chitchat deterministic persist: %s", e)
+            MONITOR.inc("brain_fast_chitchat_total")
+            MONITOR.inc("brain_fast_chitchat_deterministic_total")
+            return out
     try:
         from core.telegram_progress import telegram_progress_pulse
 

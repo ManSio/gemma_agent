@@ -11,6 +11,7 @@ from typing import Any, Dict, FrozenSet, List
 _FEEDBACK_SUBSTR: FrozenSet[str] = frozenset(
     {
         "не то",
+        "нето",
         "не так",
         "неправильно",
         "ты неправ",
