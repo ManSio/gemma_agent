@@ -1,0 +1,22 @@
+{
+  "_comment": "Replace placeholders when the public GitHub repo is created. Used by docs and README badges.",
+  "github_org": "ManSio",
+  "github_repo": "gemma_agent",
+  "default_branch": "main",
+  "github_url": "https://github.com/ManSio/gemma_agent",
+  "docs_site_url": "https://ManSio.github.io/gemma_agent/",
+  "issues_url": "https://github.com/ManSio/gemma_agent/issues",
+  "discussions_url": "https://github.com/ManSio/gemma_agent/discussions",
+  "github_topics": [
+    "telegram-bot",
+    "ai-agent",
+    "openrouter",
+    "python",
+    "llm",
+    "chatbot",
+    "searxng",
+    "mem0",
+    "aiogram"
+  ],
+  "about_description": "Telegram assistant for a small trusted circle — memory, routing, tools when needed."
+}

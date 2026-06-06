@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "_comment": "Скопировать в heuristic_shortcuts.local.json (gitignore). Merge поверх heuristic_shortcuts.json.",
+  "rules": [
+    {
+      "id": "geo_nearby",
+      "negative_patterns": [
+        "рядом с зуб",
+        "пломб",
+        "пульпит"
+      ]
+    }
+  ]
+}

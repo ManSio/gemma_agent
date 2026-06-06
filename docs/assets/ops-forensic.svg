@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 200" role="img" aria-label="Ops and forensic flow">
+  <defs>
+    <style>
+      .n { fill:#14532d; stroke:#4ade80; stroke-width:1.5; rx:8 }
+      .o { fill:#422006; stroke:#fbbf24; stroke-width:1.5; rx:8 }
+      .b { fill:#1e3a5f; stroke:#38bdf8; stroke-width:1.5; rx:8 }
+      .t { font:600 12px system-ui,sans-serif; fill:#f8fafc }
+      .s { font:500 11px system-ui,sans-serif; fill:#cbd5e1 }
+      .a { stroke:#94a3b8; stroke-width:2; fill:none; marker-end:url(#m) }
+    </style>
+    <marker id="m" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="720" height="200" rx="12" fill="#0f172a"/>
+  <text x="360" y="24" text-anchor="middle" font="600 14px system-ui" fill="#4ade80">Forensic &amp; operator autonomy</text>
+  <rect class="n" x="24" y="48" width="120" height="56"/>
+  <text class="t" x="84" y="72" text-anchor="middle">Telegram</text>
+  <text class="s" x="84" y="90" text-anchor="middle">user / admin</text>
+  <rect class="b" x="180" y="48" width="140" height="56"/>
+  <text class="t" x="250" y="72" text-anchor="middle">turns.jsonl</text>
+  <text class="s" x="250" y="90" text-anchor="middle">ops_trace</text>
+  <rect class="o" x="356" y="48" width="120" height="56"/>
+  <text class="t" x="416" y="72" text-anchor="middle">/diag</text>
+  <text class="s" x="416" y="90" text-anchor="middle">gemma_status</text>
+  <rect class="o" x="512" y="48" width="180" height="56"/>
+  <text class="t" x="602" y="72" text-anchor="middle">turns_search</text>
+  <text class="s" x="602" y="90" text-anchor="middle">release_guard · ACC</text>
+  <path class="a" d="M144 76 H180"/>
+  <path class="a" d="M320 76 H356"/>
+  <path class="a" d="M476 76 H512"/>
+  <rect class="b" x="120" y="130" width="480" height="44" rx="8" fill="#172554" stroke="#38bdf8"/>
+  <text class="s" x="360" y="157" text-anchor="middle">Prod: VPS_PROD MS Bot · Lab: HOST_LAN VPNTEST1 · DEV_DIARY before push</text>
+</svg>

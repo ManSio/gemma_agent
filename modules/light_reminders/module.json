@@ -1,0 +1,45 @@
+{
+  "name": "light_reminders",
+  "version": "1.0.0",
+  "type": "module",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "reminders",
+    "schedule",
+    "notify"
+  ],
+  "commands": [
+    {
+      "name": "/radd",
+      "description": "Напоминание через N минут: /radd N текст"
+    },
+    {
+      "name": "/rlist",
+      "description": "Список активных напоминаний"
+    },
+    {
+      "name": "/rdel",
+      "description": "Удалить по номеру из /rlist: /rdel 2"
+    },
+    {
+      "name": "/rnow",
+      "description": "Что уже пора (или просрочено)"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "entrypoint": "modules.light_reminders.module:LightRemindersModule",
+  "bundled_with": "3.4.0",
+  "description": "Напоминания /radd",
+  "gemma_tier": "A",
+  "gemma_evidence": "tests/test_reminder*.py"
+}

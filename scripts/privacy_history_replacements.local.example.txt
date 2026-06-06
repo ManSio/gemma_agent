@@ -1,0 +1,5 @@
+# Локально: privacy_history_replacements.local.txt (gitignore) для git filter-repo.
+# Формат: старое==>новое (реальные значения только в local-файле, не в git).
+#
+# 192.168.x.x==>HOST_LAN
+# OWNER_UID==>OWNER_UID

@@ -1,0 +1,33 @@
+{
+  "name": "error_memory",
+  "version": "1.0.0",
+  "type": "tool",
+  "entrypoint": "modules.error_memory.module:ErrorMemoryModule",
+  "description": "Журнал ошибок",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "reasoning_audit",
+    "error_prevention"
+  ],
+  "commands": [
+    {
+      "name": "error_memory",
+      "trigger": "/error_memory",
+      "description": "Record/check known error patterns"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "gemma_tier": "B",
+  "gemma_evidence": "slash"
+}

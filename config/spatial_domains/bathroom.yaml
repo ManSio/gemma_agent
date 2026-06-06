@@ -1,0 +1,15 @@
+id: bathroom
+name_ru: Санузел / ванная
+doc_types:
+  - floor_plan
+constraints:
+  min_passage_mm: 700
+  min_shower_mm: 800
+  washer_width_mm: 600
+layout_rules:
+  - id: wet_zone
+    description_ru: Душ/ванна отдельно от зоны раковины
+suggestions_ru:
+  - "Сантехника по одной стене или в углу; проход ≥700 мм."
+  - "Стиральная — если ширина стены ≥650 мм; иначе вынести в постирочную."
+  - "Дверь не должна упираться в унитаз при открывании."

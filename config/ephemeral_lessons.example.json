@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "lessons": [
+    {
+      "id": "example12ab",
+      "trigger": "t.me/+",
+      "instruction": "Не предлагай /calc: это приглашение в чат, ответь по смыслу ссылки.",
+      "match": "contains",
+      "force_general_when_math_probe": true,
+      "active": true,
+      "created_ts": 0,
+      "updated_ts": 0,
+      "hit_count": 1,
+      "dedupe_key": ""
+    }
+  ]
+}

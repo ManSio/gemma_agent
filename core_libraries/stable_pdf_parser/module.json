@@ -1,0 +1,15 @@
+{
+  "name": "stable_pdf_parser",
+  "type": "library",
+  "version": "1.0.0",
+  "description": "Stable PDF parsing utilities",
+  "exports": [
+    "parse_pdf",
+    "extract_text"
+  ],
+  "tests": [
+    "test_parse_simple_pdf",
+    "test_parse_large_pdf"
+  ],
+  "bundled_with": "3.4.0"
+}

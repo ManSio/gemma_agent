@@ -1,0 +1,57 @@
+# Gemma Agent — documentation index for LLMs
+# gemma_agent — Telegram + OpenRouter; name FAQ: HONEST_POSITIONING.md
+# Parser hints (hidden from rendered README): ../llms.txt, README.md <!-- AGENT-ONLY -->, AGENTS.md
+# Raw URLs: use branch main (https://raw.githubusercontent.com/ManSio/gemma_agent/main/...)
+# Start: CHATGPT_PASTE.md (full context) or docs/REPO_MAP.md
+
+- CHATGPT_PASTE.md — Short offline project context
+- CHATGPT_PASTE.ru.md — Краткий контекст (RU)
+- .cursor/README.md — Cursor rules, skills, prompts
+- docs/HONEST_POSITIONING.md — Positioning, limits, tech debt, test quality
+- docs/PRODUCTION_EVIDENCE_REPORT.md — Prod metrics May-Jun 2026: tokens −70%, costs, latency, tests (EN)
+- docs/PRODUCTION_EVIDENCE_REPORT.ru.md — Метрики продакшена май–июнь 2026 (RU)
+- docs/REPO_MAP.md — One-page map: tests, CI, layout (read first)
+- docs/CI.md — GitHub Actions jobs + local equivalents
+- AGENTS.md — Entry for agents and contributors
+- README.md — Project showcase: badges, tests, Docker, capabilities
+- CONTRIBUTING.md — Contributing — GitHub tab
+- SECURITY.md — Security policy
+- pytest.ini — Pytest configuration (410 files, 2580+ cases in tests/)
+- pyproject.toml — Project metadata + ruff CI config
+- .github/workflows/ci.yml — CI: ruff + pytest + privacy
+- .github/workflows/release-guard.yml — Release guard workflow
+- docs/AGENT_LOOP.md — Plan→Execute→Verify loops (honest defaults vs opt-in)
+- docs/ARCHITECTURE.md — Architecture with Mermaid diagram
+- docs/MEMORY.md — STM / MTM / LTM memory tiers
+- docs/SELF_HEALING.md — Healers, safe mode, auto-rollback
+- docs/ACCEPTANCE_CRITERIA.md — Test gates and evidence
+- docs/SYSTEM_REQUIREMENTS.md — Proven hardware: 1GB+VPN (min), 4GB VPS (prod), LAN lab
+- docs/DEPLOY.md — VPS, Docker, systemd, backups
+- docs/PUBLISH_CHECKLIST.md — Publish repo on GitHub
+- docs/index.md — Documentation hub (EN)
+- docs/index.ru.md — Documentation hub (RU)
+- docs/getting-started/quickstart.md — Quickstart EN
+- docs/getting-started/quickstart.ru.md — Quickstart RU
+- docs/getting-started/installation.md — Installation EN
+- docs/getting-started/configuration.md — Configuration EN
+- docs/getting-started/public-build.md — Public build scope
+- docs/user-guide/telegram.md — Telegram usage
+- docs/user-guide/admin-ops.md — Admin commands and ops
+- docs/user-guide/panel.md — gemma_panel.sh
+- docs/user-guide/troubleshooting.md — Troubleshooting
+- docs/features/overview.md — Features matrix
+- docs/features/web-search.md — SearXNG
+- docs/features/memory.md — Mem0
+- docs/features/voice.md — Voice STT/TTS
+- docs/features/modules.md — 19 modules
+- docs/security/security-model.md — Security (honest)
+- docs/developer-guide/architecture.md — Architecture (detailed)
+- docs/developer-guide/testing.md — Testing
+- docs/reference/environment-variables.md — Essential env vars
+- docs/reference/scripts-cli.md — Scripts reference
+- scripts/print_repo_stats.py — Verifiable test/CI counts for docs
+- scripts/backup.sh — Backup data/ and config
+- config/power_agent.env.fragment — Opt-in fuller agent loop env keys
+- scripts/apply_power_agent_env.py — Apply power_agent profile to .env
+- Dockerfile — Container image
+- docker-compose.yml — Docker deploy (native recommended on 1GB; compose from 2GB+)

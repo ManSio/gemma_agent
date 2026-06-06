@@ -1,0 +1,17 @@
+---
+description: Load gemma-agent skill — Opus discipline for all tasks
+alwaysApply: true
+---
+
+# Agent workflow
+
+**Full workflow:** read `.cursor/skills/gemma-agent/SKILL.md` (and `reference.md` for verify matrix).
+
+Every task: **orient → trace flow → investigate → act → verify → report**.
+
+- Minimal diff; read before write; user correction wins.
+- Never declare done without verify (pytest / smoke / grep).
+- Never commit unless user explicitly asks.
+- Audits: skill `gemma-deep-audit` + `.cursor/prompts/audit.md`.
+
+Hub: `.cursor/README.md`

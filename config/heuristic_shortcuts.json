@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "_comment": "Реестр shortcut с gate (см. docs/HEURISTIC_SHORTCUTS_PHASE2_RU.md).",
+  "rules": [
+    {
+      "id": "geo_nearby",
+      "tier": "hard_direct",
+      "domain": "geo",
+      "description": "Прямой ответ «что рядом» без LLM",
+      "block_if": ["prose_over_chars", "relational_ryadom_without_explicit_geo"],
+      "requires": ["explicit_geo_nearby"]
+    },
+    {
+      "id": "weather_direct",
+      "tier": "hard_direct",
+      "domain": "weather",
+      "description": "Прогноз погоды без полного brain/LLM (Open-Meteo / wttr)",
+      "block_if": ["prose_over_chars"],
+      "requires": ["explicit_weather_query"]
+    },
+    {
+      "id": "news_direct",
+      "tier": "hard_direct",
+      "domain": "news",
+      "description": "Дайджест новостей без полного brain/LLM (RSS / поиск)",
+      "block_if": ["prose_over_chars", "article_context"],
+      "requires": ["explicit_news_headlines_request"]
+    },
+    {
+      "id": "news_item_pick",
+      "tier": "hard_direct",
+      "domain": "news",
+      "description": "Пункт дайджеста по номеру («2») без полного brain/LLM",
+      "block_if": ["prose_over_chars", "article_context"],
+      "requires": ["news_item_pick_after_digest"]
+    },
+    {
+      "id": "reminder_cancel",
+      "tier": "hard_direct",
+      "domain": "reminder",
+      "description": "Отмена напоминания по NL",
+      "block_if": ["prose_over_chars"],
+      "requires": ["explicit_reminder_cancel"]
+    },
+    {
+      "id": "reminder_schedule",
+      "tier": "hard_direct",
+      "domain": "reminder",
+      "description": "Создание напоминания или weekly schedule по NL",
+      "block_if": ["prose_over_chars", "reminder_prose_skip"],
+      "requires": ["explicit_reminder_setup"]
+    },
+    {
+      "id": "fast_path_tool",
+      "tier": "hard_direct",
+      "domain": "tools",
+      "description": "Короткая императива → tool без полного reasoning",
+      "block_if": ["prose_over_chars", "pending_correction", "assistant_expects_reply"],
+      "requires": ["fast_path_candidate"]
+    },
+    {
+      "id": "router_bypass_short",
+      "tier": "route_only",
+      "domain": "routing",
+      "description": "Ультра-короткая реплика → profile short",
+      "block_if": ["pending_correction", "assistant_expects_reply", "substantive_short_turn"],
+      "requires": ["ultra_short_text"]
+    },
+    {
+      "id": "profile_math_substring",
+      "tier": "route_only",
+      "domain": "math",
+      "description": "profile_from_text → math_solve только при явной математике, не на простыне",
+      "block_if": ["prose_over_chars", "prose_narrative", "article_context"],
+      "requires": ["explicit_math_request"],
+      "fallback": "quick_explain"
+    },
+    {
+      "id": "profile_code_debug_word",
+      "tier": "route_only",
+      "domain": "code",
+      "description": "«ошибка» в нарративе → не code_debug",
+      "block_if": ["prose_over_chars", "prose_narrative", "code_debug_word_only"],
+      "requires": ["explicit_code_debug"],
+      "fallback": "quick_explain"
+    },
+    {
+      "id": "profile_legal_substring",
+      "tier": "route_only",
+      "domain": "legal",
+      "description": "«закон/статья N» в статье → не legal",
+      "block_if": ["prose_over_chars", "article_context"],
+      "requires": ["explicit_legal_query"],
+      "fallback": "quick_explain"
+    },
+    {
+      "id": "profile_news_headlines",
+      "tier": "route_only",
+      "domain": "news",
+      "description": "profile_from_text → news_brief только на запрос дайджеста, не на paste статьи",
+      "block_if": ["prose_over_chars", "article_context"],
+      "requires": ["explicit_news_headlines_request"]
+    },
+    {
+      "id": "profile_translation_prefix",
+      "tier": "route_only",
+      "domain": "translation",
+      "description": "«переведи» в начале строки → translation, не на простыне",
+      "block_if": ["prose_over_chars", "prose_narrative", "article_context"],
+      "requires": ["explicit_translation_prefix"]
+    },
+    {
+      "id": "profile_summarization_substring",
+      "tier": "route_only",
+      "domain": "summarization",
+      "description": "«резюме/суммариз» только как явный запрос, не в теле статьи",
+      "block_if": ["prose_over_chars", "prose_narrative", "article_context"],
+      "requires": ["explicit_summarization_request"],
+      "fallback": "quick_explain"
+    },
+    {
+      "id": "profile_research_substring",
+      "tier": "route_only",
+      "domain": "research",
+      "description": "«исследуй/найди информацию» не на простыне без явного запроса",
+      "block_if": ["prose_over_chars", "prose_narrative", "article_context"],
+      "requires": ["explicit_research_request"],
+      "fallback": "quick_explain"
+    },
+    {
+      "id": "profile_troubleshooting_substring",
+      "tier": "route_only",
+      "domain": "troubleshooting",
+      "description": "troubleshooting только при явной проблеме бота/сервиса",
+      "block_if": ["prose_over_chars", "prose_narrative", "article_context"],
+      "requires": ["explicit_troubleshooting_request"],
+      "fallback": "quick_explain"
+    },
+    {
+      "id": "profile_quick_explain_substring",
+      "tier": "route_only",
+      "domain": "routing",
+      "description": "«объясни/почему» в начале или коротко — не на вставке статьи",
+      "block_if": ["prose_over_chars", "prose_narrative", "article_context"],
+      "requires": ["explicit_quick_explain_request"],
+      "fallback": "standard"
+    },
+    {
+      "id": "telegram_location_ack",
+      "tier": "hard_direct",
+      "domain": "geo",
+      "description": "Подтверждение геометки Telegram",
+      "block_if": [],
+      "requires": ["has_telegram_location"]
+    },
+    {
+      "id": "router_heuristic_prose_guard",
+      "tier": "route_only",
+      "domain": "routing",
+      "description": "Keyword fallback router: risky profile → quick_explain на prose",
+      "block_if": ["prose_over_chars", "prose_narrative"],
+      "requires": [],
+      "fallback": "quick_explain"
+    },
+    {
+      "id": "batch_detector",
+      "tier": "route_only",
+      "domain": "routing",
+      "description": "Несколько вопросов/команд в одном сообщении → profile batch",
+      "block_if": ["prose_narrative", "article_context"],
+      "requires": ["batch_message_candidate"]
+    },
+    {
+      "id": "chitchat_fast_eligible",
+      "tier": "route_only",
+      "domain": "routing",
+      "description": "Короткий читчат в личке → brain_fast_chitchat без тяжёлого конвейера",
+      "block_if": ["pending_correction", "assistant_expects_reply", "substantive_short_turn"],
+      "requires": ["chitchat_fast_private_candidate"]
+    }
+  ]
+}

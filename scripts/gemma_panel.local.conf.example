@@ -1,0 +1,17 @@
+# cp scripts/gemma_panel.local.conf.example scripts/gemma_panel.local.conf
+# Or run: bash scripts/agent_bootstrap.sh (creates conf with stub Mem0)
+
+BOT_DIR=/opt/gemma_agent
+MEM0_DIR=/opt/mem0_local
+SERVICE=gemma_bot.service
+MEM0_PORT=8001
+
+# Dev / small circle — Mem0 stub from repo (no separate /opt/mem0_local):
+GEMMA_MEM0_USE_STUB=true
+
+# Full local Mem0 server — comment stub, set MEM0_DIR, run apply_mem0_local_server.sh:
+# GEMMA_MEM0_USE_STUB=false
+# MEM0_DIR=/opt/mem0_local
+
+# MEM0_HEALTH_URL=http://127.0.0.1:8001/docs
+# GEMMA_START_BOT_ENSURE_MEM0=true

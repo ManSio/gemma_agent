@@ -1,0 +1,55 @@
+{
+  "name": "security_layer",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.security_layer.module:SecurityLayerModule",
+  "input_types": [
+    "text",
+    "file"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "security",
+    "encryption",
+    "privacy"
+  ],
+  "prompts": {
+    "system": "Ты слой безопасности. Твоя задача — обеспечивать шифрование и защиту данных."
+  },
+  "commands": [
+    {
+      "name": "encrypt",
+      "trigger": "/encrypt",
+      "description": "Зашифровать данные"
+    },
+    {
+      "name": "decrypt",
+      "trigger": "/decrypt",
+      "description": "Расшифровать данные"
+    },
+    {
+      "name": "policy_check",
+      "trigger": "/policy_check",
+      "description": "Проверка политики доступа (роль ресурс действие)"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "encryption_key": {
+        "type": "string"
+      },
+      "log_encrypted": {
+        "type": "boolean"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Шифрование и приватность",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

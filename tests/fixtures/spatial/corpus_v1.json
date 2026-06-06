@@ -1,0 +1,51 @@
+[
+  {
+    "id": "laundry_2897x1362",
+    "user_text": "прачечная 2897×1362 мм, S=3.95, H=3000, стиралка столбиком на одной стене",
+    "expect_room_mm": [2897, 1362],
+    "expect_domain": "laundry",
+    "expect_area_m2": 3.95
+  },
+  {
+    "id": "kitchen_meters",
+    "user_text": "кухня 2,9 м × 1,36 м, плита на восточной стене",
+    "expect_room_mm": [2900, 1360],
+    "expect_domain": "kitchen"
+  },
+  {
+    "id": "apartment_scale",
+    "user_text": "план квартиры масштаб 1:50, кухня 12.5 м²",
+    "expect_plan_scope": "apartment",
+    "expect_scale": 50
+  },
+  {
+    "id": "bathroom_door",
+    "user_text": "санузел 2500×1800, дверь 800 мм",
+    "expect_room_mm": [2500, 1800],
+    "expect_domain": "bathroom",
+    "expect_openings_min": 1
+  },
+  {
+    "id": "guard_weak_fixture",
+    "project": {
+      "room": {"length_mm": 3000, "width_mm": 2000},
+      "fixtures": [{"type": "stove", "wall": "unknown", "confidence": 0.3}],
+      "openings": []
+    },
+    "expect_fixtures_after_guard": 0,
+    "expect_uncertain_min": 1
+  },
+  {
+    "id": "guard_strong_door",
+    "project": {
+      "room": {"length_mm": 3000, "width_mm": 2000},
+      "openings": [
+        {"kind": "door", "width_mm": 800, "wall": "south"},
+        {"kind": "door", "width_mm": 700, "wall": "north"},
+        {"kind": "window", "width_mm": 1200, "wall": "east", "external": true}
+      ],
+      "fixtures": []
+    },
+    "expect_opening_counts": {"door": 2, "window": 1}
+  }
+]

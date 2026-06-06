@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "fixes": [
+    {
+      "id": "currency_rub",
+      "patterns": ["курс руб", "курс рубл", "курс usd", "курс eur", "конверт", "валют"],
+      "hint": "Запрос про валюту: используй task_facts.currency и external_hint; не выдумывай курс — если API пуст, скажи честно.",
+      "intent": "general"
+    },
+    {
+      "id": "news_no_hallucination",
+      "patterns": ["новост", "что в мире", "последние событ", "сводк новост", "дайджест"],
+      "hint": "Новости: только факты из external_hint (поиск). Без данных — не придумывай заголовки и даты.",
+      "intent": "news"
+    },
+    {
+      "id": "weather_facts",
+      "patterns": ["погод", "температур", "осадк", "прогноз"],
+      "hint": "Погода: опирайся на сводку Open-Meteo/wttr в external_hint; не говори «нет доступа», если блок погоды уже есть.",
+      "intent": "general"
+    },
+    {
+      "id": "translate_direct",
+      "patterns": ["переведи", "translate", "перевод на", "translation"],
+      "hint": "Перевод: выдай только готовый перевод текста пользователя. Не пиши про TOOL_CALL и не добавляй примечаний.",
+      "intent": "translation"
+    },
+    {
+      "id": "timezone_wall_clock",
+      "patterns": ["который час", "сколько времени", "какое время", "what time"],
+      "hint": "Время: clock_hint и timezone из user_facts; не выдумывай часовой пояс.",
+      "intent": "general"
+    }
+  ]
+}

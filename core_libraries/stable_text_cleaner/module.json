@@ -1,0 +1,15 @@
+{
+  "name": "stable_text_cleaner",
+  "type": "library",
+  "version": "1.0.0",
+  "description": "Stable text cleaning utilities",
+  "exports": [
+    "clean_text",
+    "normalize_spaces"
+  ],
+  "tests": [
+    "test_clean_text",
+    "test_normalize_spaces"
+  ],
+  "bundled_with": "3.4.0"
+}

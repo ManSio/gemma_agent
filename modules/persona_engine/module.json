@@ -1,0 +1,56 @@
+{
+  "name": "persona_engine",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.persona_engine.module:PersonaEngineModule",
+  "input_types": [
+    "text"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "persona",
+    "style",
+    "teacher_persona.active"
+  ],
+  "prompts": {
+    "system": "Ты движок персона. Твоя задача — адаптировать стиль общения ассистента под роль и контекст."
+  },
+  "commands": [
+    {
+      "name": "personas",
+      "trigger": "/personas",
+      "description": "Список режимов персонажа и справка по командам"
+    },
+    {
+      "name": "list_personas",
+      "trigger": "/list_personas",
+      "description": "То же, что /personas"
+    },
+    {
+      "name": "get_persona",
+      "trigger": "/get_persona",
+      "description": "Текущий персонаж (без аргументов — для этого чата)"
+    },
+    {
+      "name": "set_persona",
+      "trigger": "/set_persona",
+      "description": "Выбрать персонаж: /set_persona friend_mode или /set_persona user_id friend_mode"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "persona_rules": {
+        "type": "object"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Персона и стиль",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

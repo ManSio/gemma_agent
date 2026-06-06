@@ -1,0 +1,10 @@
+id: generic_room
+name_ru: Помещение (универсальный пакет)
+doc_types:
+  - floor_plan
+constraints:
+  min_passage_mm: 700
+layout_rules: []
+render_hints_ru:
+  - "Расстановка по стенам плана; проход ≥700 мм."
+  - "Не показывать другие комнаты квартиры — только целевую зону."

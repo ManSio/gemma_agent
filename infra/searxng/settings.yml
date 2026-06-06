@@ -1,0 +1,50 @@
+# SearXNG в Docker (VPS_PROD gemma-searxng, LAN тест).
+# Документация: https://docs.searxng.org/admin/settings/
+
+use_default_settings: true
+
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  secret_key: "change-me-on-prod-use-openssl-rand-hex-32"
+  limiter: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "ru-RU"
+  # json обязателен для /search?format=json (бот, network_probe); иначе HTTP 403
+  formats:
+    - html
+    - json
+  # VPS IP: DDG/startpage часто timeout/CAPTCHA при 3s (см. scripts/searx_fix_news_engines.sh)
+  request_timeout: 8.0
+  max_request_timeout: 20.0
+
+# Переопределения по name (merge с default settings)
+engines:
+  - name: duckduckgo
+    disabled: true
+  - name: duckduckgo news
+    disabled: true
+  - name: duckduckgo images
+    disabled: true
+  - name: duckduckgo videos
+    disabled: true
+  - name: google news
+    disabled: true
+  - name: startpage
+    disabled: true
+  - name: startpage news
+    disabled: true
+  - name: brave
+    disabled: true
+  - name: yandex
+    disabled: false
+    timeout: 12.0
+  - name: bing
+    disabled: false
+    timeout: 12.0
+  - name: google
+    disabled: false
+    timeout: 12.0

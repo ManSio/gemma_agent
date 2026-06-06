@@ -1,0 +1,50 @@
+{
+  "name": "vision_ocr",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.vision_ocr.module:VisionOCRModule",
+  "input_types": [
+    "image"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "vision",
+    "ocr"
+  ],
+  "prompts": {
+    "system": "Ты модуль OCR. Твоя задача — извлекать текст с изображений."
+  },
+  "commands": [
+    {
+      "name": "ocr",
+      "trigger": "/ocr",
+      "description": "Распознать текст на изображении"
+    }
+  ],
+  "buttons": [
+    {
+      "name": "OCR_IMAGE",
+      "label": "Распознать текст",
+      "context": "image",
+      "simulate_text": "/ocr"
+    }
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "provider": {
+        "type": "string"
+      },
+      "api_key": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "OCR tesseract/API",
+  "gemma_tier": "B",
+  "gemma_evidence": "OPT"
+}

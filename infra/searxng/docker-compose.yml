@@ -1,0 +1,18 @@
+# Legacy: SearXNG в Docker. На проде (VPS/LAN) — systemd: scripts/searxng_install_native.sh
+# Docker только если явно INSTALL_DOCKER_FOR_SEARX=1 при vps_gemma_stack_install.sh
+#
+#   cd infra/searxng
+#   docker compose up -d
+# В .env бота: SEARXNG_INSTANCE_URL=http://127.0.0.1:8080
+
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: gemma-searxng
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./settings.yml:/etc/searxng/settings.yml:ro
+    environment:
+      - SEARXNG_BASE_URL=http://127.0.0.1:8080/

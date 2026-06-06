@@ -1,0 +1,14 @@
+# Gemma Agent — LLM entry point
+# OpenRouter Telegram bot · docs/HONEST_POSITIONING.md
+# Cursor dev: .cursor/README.md
+
+- .cursor/README.md
+- AGENTS.md
+- CHATGPT_PASTE.md
+- CHATGPT_PASTE.ru.md
+- docs/HONEST_POSITIONING.md
+- docs/REPO_MAP.md
+- docs/PRODUCTION_EVIDENCE_REPORT.md
+- SECURITY.md
+- https://raw.githubusercontent.com/ManSio/gemma_agent/main/SECURITY.md
+- https://raw.githubusercontent.com/ManSio/gemma_agent/main/CHATGPT_PASTE.md

@@ -1,0 +1,10 @@
+# Скопируй в config/privacy_blocklist.local.txt (в .gitignore).
+# Одна строка = подстрока (без учёта регистра) или regex:... / literal:...
+#
+# Примеры (замени на свои значения только в .local.txt, не в git):
+#
+# literal:YourDisplayName
+# literal:your_test_bot
+# regex:\b123456789\b
+# regex:\b10\.0\.0\.\d+\b
+# regex:example\.com

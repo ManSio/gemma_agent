@@ -1,0 +1,125 @@
+# Для Docker Swarm / Portainer Stack см. docker-stack.yml (там нет build/env_file — только image + volumes).
+#
+# Малый VPS (1 GB + VPN): на legacy бот шёл через native venv, не этот compose.
+#   SearXNG мог быть в отдельном Docker-контейнере; swap обязателен.
+#   Полный compose — комфортнее от 2 GB RAM. См. docs/DEPLOY.md и SYSTEM_REQUIREMENTS.md
+services:
+  app:
+    build: .
+    container_name: universal-assistant
+    # На 1 GB VPS можно раскомментировать лимит (опционально):
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 384M
+    # Весь .env с хоста → процесс внутри контейнера (OPENROUTER_*, ADMIN_*, RESILIENCE_*, …).
+    # Иначе только ключи из списка environment ниже; остальное os.getenv не увидит.
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./modules:/app/modules
+    # В режиме bot процесс не слушает HTTP (только Telegram). Порт проброшен на будущее / ручной API;
+    # живой REST — отдельный сервис `api` (profile api), см. ниже.
+    ports:
+      - "8000:8000"
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      # Секунды на один HTTP-запрос к api.telegram.org (очередь апдейтов + медленный канал)
+      - TELEGRAM_HTTP_TIMEOUT=${TELEGRAM_HTTP_TIMEOUT:-240}
+      # get_me для фильтра в группах — короткий лимит, чтобы текстовый чат не ждал 240 с при обрыве сети
+      - TELEGRAM_GET_ME_TIMEOUT_SEC=${TELEGRAM_GET_ME_TIMEOUT_SEC:-25}
+      # Прокси для Bot API (socks5://… или http://…) при ClientConnectorError к api.telegram.org
+      - TELEGRAM_PROXY=${TELEGRAM_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - LOG_LEVEL=${LOG_LEVEL}
+      # Подробные docker logs: LOG_FORMAT=json и GEMMA_CORE_LOG_FULL=true (см. .env.example)
+      - LOG_FORMAT=${LOG_FORMAT:-console}
+      - GEMMA_CORE_LOG_FULL=${GEMMA_CORE_LOG_FULL:-}
+      - GEMMA_VERBOSE_CORE=${GEMMA_VERBOSE_CORE:-}
+      - GEMMA_LLM_AUDIT_LOG=${GEMMA_LLM_AUDIT_LOG:-}
+      - LATENCY_TRACE_LOG=${LATENCY_TRACE_LOG:-}
+      - MODULES_PATH=${MODULES_PATH}
+      - RAG_DATABASE_PATH=${RAG_DATABASE_PATH}
+      - CACHE_PATH=${CACHE_PATH}
+      - MODELS_PATH=${MODELS_PATH}
+      - DATABASE_PATH=${DATABASE_PATH}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - MEM0_API_URL=${MEM0_API_URL}
+      - MEM0_API_KEY=${MEM0_API_KEY}
+      - SECURITY_AES_KEY=${SECURITY_AES_KEY}
+      - SECURITY_SALT=${SECURITY_SALT}
+      - API_ENABLED=${API_ENABLED}
+      - API_HOST=${API_HOST}
+      - API_PORT=${API_PORT}
+      - API_TOKEN=${API_TOKEN}
+      - APP_ENV=${APP_ENV}
+      - APP_MODE=bot
+      - HEAVY_WORKER_ENABLED=true
+      - HEAVY_WORKER_CONCURRENCY=2
+      - HEAVY_WORKER_QUEUE_MAX=100
+      - HEAVY_WORKER_TIMEOUT_SEC=60
+      # KV-cache OpenRouter: X-Session-Id для переиспользования prefix-кэша (уменьшает latency и стоимость)
+      - OPENROUTER_SESSION_HEADERS_ENABLED=${OPENROUTER_SESSION_HEADERS_ENABLED:-true}
+      # Локальный STT: VOICE_STT_LOCAL_ONLY=true не даёт уйти в OpenAI/OpenRouter из‑за ключей чата
+      - VOICE_STT_LOCAL_ONLY=${VOICE_STT_LOCAL_ONLY:-false}
+      - VOICE_ENABLED=${VOICE_ENABLED:-false}
+      - VOICE_STT_ENABLED=${VOICE_STT_ENABLED:-false}
+      - VOICE_STT_BACKEND=${VOICE_STT_BACKEND:-}
+      - VOICE_STT_MODEL_PATH=${VOICE_STT_MODEL_PATH:-}
+      - VOICE_STT_FALLBACK_BACKEND=${VOICE_STT_FALLBACK_BACKEND:-}
+    restart: unless-stopped
+    # Раньше: curl /api/v1/health — в режиме bot сервера на :8000 нет, контейнер всегда «unhealthy».
+    healthcheck:
+      disable: true
+
+  api:
+    build:
+      context: .
+      args:
+        APP_MODE: api
+    container_name: universal-assistant-api
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./modules:/app/modules
+    ports:
+      - "8001:8000"
+    environment:
+      - APP_MODE=api
+      - API_ENABLED=true
+      - API_PORT=8000
+      - API_TOKEN=${API_TOKEN}
+      - APP_ENV=${APP_ENV}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FORMAT=${LOG_FORMAT:-console}
+      - GEMMA_CORE_LOG_FULL=${GEMMA_CORE_LOG_FULL:-}
+      - GEMMA_VERBOSE_CORE=${GEMMA_VERBOSE_CORE:-}
+      - GEMMA_LLM_AUDIT_LOG=${GEMMA_LLM_AUDIT_LOG:-}
+      - LATENCY_TRACE_LOG=${LATENCY_TRACE_LOG:-}
+      - MODULES_PATH=${MODULES_PATH}
+    restart: unless-stopped
+    profiles: ["api"]
+
+  # Portainer CE — веб-UI для Docker (логи, рестарт, стеки). Не часть кода бота.
+  # Документация: https://docs.portainer.io/start/install-ce
+  # Запуск: docker compose --profile portainer up -d
+  # UI: http://localhost:9000 (или https://localhost:9443). Первый вход — задать пароль админа.
+  # Внимание: доступ к docker.sock = полный контроль над хостовым Docker; не выставляйте порты в интернет.
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: gemma-bot-portainer
+    restart: unless-stopped
+    profiles: ["portainer"]
+    ports:
+      - "${PORTAINER_HTTP_PORT:-9000}:9000"
+      - "${PORTAINER_HTTPS_PORT:-9443}:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+volumes:
+  portainer_data:

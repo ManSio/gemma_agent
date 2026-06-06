@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "updated": "public-export",
+  "tier_legend": {
+    "A": "hot path — каждый ход / brain",
+    "B": "OPT — медиа, RAG, по событию или env",
+    "C": "HEUR/TOOL — slash по запросу",
+    "D": "dormant — denylist по умолчанию",
+    "DEV": "только тесты / лаборатория"
+  },
+  "default_denylist": [],
+  "modules": {
+    "books_rag": {
+      "folder": "books_rag",
+      "tier": "B",
+      "description_ru": "Книги RAG",
+      "evidence": "OPT",
+      "routable_default": true,
+      "type": "rag"
+    },
+    "chat-orchestrator": {
+      "folder": "chat_orchestrator",
+      "tier": "A",
+      "description_ru": "Главный диалог → brain",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "orchestrator"
+    },
+    "dialog_memory_recall": {
+      "folder": "dialog_memory_recall",
+      "tier": "A",
+      "description_ru": "Вспомнить диалог",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "module"
+    },
+    "error_memory": {
+      "folder": "error_memory",
+      "tier": "B",
+      "description_ru": "Журнал ошибок",
+      "evidence": "slash",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "external_apis": {
+      "folder": "external_apis",
+      "tier": "A",
+      "description_ru": "Погода и внешние API",
+      "evidence": "tests/test_external_apis_clients.py",
+      "routable_default": true,
+      "type": "module"
+    },
+    "group_behavior": {
+      "folder": "group_behavior",
+      "tier": "A",
+      "description_ru": "Группы и социальный контур",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "image_generator": {
+      "folder": "image_generator",
+      "tier": "B",
+      "description_ru": "Генерация картинок",
+      "evidence": "env IMAGE_GEN",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "imaging": {
+      "folder": "imaging",
+      "tier": "B",
+      "description_ru": "OCR/цвет/SR по медиа",
+      "evidence": "tests/test_geo_maps.py",
+      "routable_default": true,
+      "type": "module"
+    },
+    "light_reminders": {
+      "folder": "light_reminders",
+      "tier": "A",
+      "description_ru": "Напоминания /radd",
+      "evidence": "tests/test_reminder*.py",
+      "routable_default": true,
+      "type": "module"
+    },
+    "memory": {
+      "folder": "memory",
+      "tier": "A",
+      "description_ru": "Slash /mem_* + Mem0 в brain",
+      "evidence": "tests/test_memory_plugin_module.py",
+      "routable_default": true,
+      "type": "memory"
+    },
+    "persona_engine": {
+      "folder": "persona_engine",
+      "tier": "A",
+      "description_ru": "Персона и стиль",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "rag": {
+      "folder": "rag",
+      "tier": "B",
+      "description_ru": "RAG slash",
+      "evidence": "OPT",
+      "routable_default": true,
+      "type": "rag"
+    },
+    "schedule_module": {
+      "folder": "schedule_module",
+      "tier": "A",
+      "description_ru": "Расписание slash",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "security_layer": {
+      "folder": "security_layer",
+      "tier": "A",
+      "description_ru": "Шифрование и приватность",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "skills": {
+      "folder": "skills",
+      "tier": "A",
+      "description_ru": "33 builtin skills + translator",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "module"
+    },
+    "tools": {
+      "folder": "tools",
+      "tier": "B",
+      "description_ru": "Пакет slash-утилит",
+      "evidence": "slash",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "user_system": {
+      "folder": "user_system",
+      "tier": "A",
+      "description_ru": "Профиль пользователя",
+      "evidence": "release_guard",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "vision_describe": {
+      "folder": "vision_describe",
+      "tier": "B",
+      "description_ru": "Описание картинки",
+      "evidence": "OPT",
+      "routable_default": true,
+      "type": "tool"
+    },
+    "vision_ocr": {
+      "folder": "vision_ocr",
+      "tier": "B",
+      "description_ru": "OCR tesseract/API",
+      "evidence": "OPT",
+      "routable_default": true,
+      "type": "tool"
+    }
+  }
+}

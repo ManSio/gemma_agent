@@ -1,0 +1,79 @@
+# Docker Swarm / Portainer «Stack» — отличия от `docker compose up`:
+#   • нет сборки из Dockerfile внутри deploy: сначала соберите образ на хосте;
+#   • env_file не подхватывается — переменные задайте в UI стека (Portainer) или экспортируйте в shell;
+#   • container_name игнорируется — не используем;
+#   • profiles не поддерживаются — только сервис bot; API поднимайте отдельно (compose) или вторым стеком.
+#
+# Сборка и деплой (одна нода, Linux):
+#   docker build -t gemma-bot:latest .
+#   set -a && source .env && set +a   # или вставьте ключи в Environment стека в Portainer
+#   docker stack deploy -c docker-stack.yml gemma
+#
+# Образ по умолчанию — gemma-bot:latest; переопределение: GEMMA_BOT_IMAGE=registry.example.com/gemma-bot:1.2.3
+#
+# Поле version в Compose v2 не нужно (Portainer/Docker пишут warning, если оно указано).
+
+services:
+  app:
+    image: ${GEMMA_BOT_IMAGE:-gemma-bot:latest}
+    ports:
+      - target: 8000
+        published: 8000
+        protocol: tcp
+        mode: ingress
+    volumes:
+      # Только данные на volume; код и modules берутся из образа (как в Dockerfile COPY).
+      - gemma_data:/app/data
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - TELEGRAM_HTTP_TIMEOUT=${TELEGRAM_HTTP_TIMEOUT:-240}
+      - TELEGRAM_GET_ME_TIMEOUT_SEC=${TELEGRAM_GET_ME_TIMEOUT_SEC:-25}
+      - TELEGRAM_PROXY=${TELEGRAM_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FORMAT=${LOG_FORMAT:-console}
+      - GEMMA_CORE_LOG_FULL=${GEMMA_CORE_LOG_FULL:-}
+      - GEMMA_VERBOSE_CORE=${GEMMA_VERBOSE_CORE:-}
+      - GEMMA_LLM_AUDIT_LOG=${GEMMA_LLM_AUDIT_LOG:-}
+      - LATENCY_TRACE_LOG=${LATENCY_TRACE_LOG:-}
+      - MODULES_PATH=${MODULES_PATH:-/app/modules}
+      - RAG_DATABASE_PATH=${RAG_DATABASE_PATH}
+      - CACHE_PATH=${CACHE_PATH}
+      - MODELS_PATH=${MODELS_PATH}
+      - DATABASE_PATH=${DATABASE_PATH}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - MEM0_API_URL=${MEM0_API_URL}
+      - MEM0_API_KEY=${MEM0_API_KEY}
+      - SECURITY_AES_KEY=${SECURITY_AES_KEY}
+      - SECURITY_SALT=${SECURITY_SALT}
+      - API_ENABLED=${API_ENABLED}
+      - API_HOST=${API_HOST}
+      - API_PORT=${API_PORT}
+      - API_TOKEN=${API_TOKEN}
+      - APP_ENV=${APP_ENV}
+      - APP_MODE=bot
+      - HEAVY_WORKER_ENABLED=true
+      - HEAVY_WORKER_CONCURRENCY=2
+      - HEAVY_WORKER_QUEUE_MAX=100
+      - HEAVY_WORKER_TIMEOUT_SEC=60
+      - VOICE_STT_LOCAL_ONLY=${VOICE_STT_LOCAL_ONLY:-false}
+      - VOICE_ENABLED=${VOICE_ENABLED:-false}
+      - VOICE_STT_ENABLED=${VOICE_STT_ENABLED:-false}
+      - VOICE_STT_BACKEND=${VOICE_STT_BACKEND:-}
+      - VOICE_STT_MODEL_PATH=${VOICE_STT_MODEL_PATH:-}
+      - VOICE_STT_FALLBACK_BACKEND=${VOICE_STT_FALLBACK_BACKEND:-}
+      - RESILIENCE_RUNTIME_DIR=${RESILIENCE_RUNTIME_DIR:-/app/data/runtime}
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 10s
+
+volumes:
+  gemma_data:

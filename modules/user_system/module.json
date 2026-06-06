@@ -1,0 +1,47 @@
+{
+  "name": "user_system",
+  "version": "0.1.0",
+  "type": "tool",
+  "entrypoint": "modules.user_system.module:UserSystemModule",
+  "input_types": [
+    "text",
+    "file"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "user-management",
+    "profile",
+    "group"
+  ],
+  "prompts": {
+    "system": "Ты модуль управления пользователями и профилями. Твоя задача — управлять профилями пользователей, группами и их связями."
+  },
+  "commands": [
+    {
+      "name": "get_user",
+      "trigger": "/get_user",
+      "description": "Получить информацию о пользователе"
+    },
+    {
+      "name": "update_user",
+      "trigger": "/update_user",
+      "description": "Обновить информацию о пользователе"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "storage_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Профиль пользователя",
+  "gemma_tier": "A",
+  "gemma_evidence": "release_guard"
+}

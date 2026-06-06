@@ -1,0 +1,14 @@
+---
+description: Gemma Agent facts — scope, dates, traps
+alwaysApply: true
+---
+
+# Ground truth
+
+- **Product:** Telegram assistant, 3–8 users, **OpenRouter** (not Google Gemma).
+- **Dates:** public GitHub **2026-06-06**; prod **2026-05-02+** — not "new repo".
+- **Scores in docs:** maintainer **self-assessment**, not external consensus.
+- **Note:** pytest≠TG; prod jsonl private.
+- **Raw branch:** `main` (mirrors `master`).
+
+Skill + prompts: `.cursor/README.md`

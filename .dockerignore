@@ -1,0 +1,28 @@
+# Данные рантайма на хосте (часто root:root) — иначе build context: permission denied
+data/
+
+# Секреты не попадают в слои образа; в рантайме — env_file / environment в compose
+.env
+.env.*
+!.env.example
+
+# Объём и мусор
+.git
+.gitignore
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+.venv
+venv
+*.egg-info
+.mypy_cache
+.ruff_cache
+.cursor
+terminals
+
+# Локальные модели монтируются томом; в контекст сборки не нужны
+models/
+
+# Документация и CI в образе не обязательны
+docs/
+.github/

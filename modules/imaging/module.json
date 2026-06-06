@@ -1,0 +1,22 @@
+{
+  "name": "imaging",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Медиа: OCR/SR; colorize — API или OpenCV fallback (не full neural colorization)",
+  "input_types": [],
+  "output_types": [],
+  "commands": [],
+  "capabilities": [
+    "imaging"
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  },
+  "entrypoint": "modules.imaging.module:ImagingModule",
+  "bundled_with": "3.4.0",
+  "gemma_tier": "B",
+  "gemma_evidence": "tests/test_geo_maps.py"
+}

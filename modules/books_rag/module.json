@@ -1,0 +1,50 @@
+{
+  "name": "books_rag",
+  "version": "0.1.0",
+  "type": "rag",
+  "entrypoint": "modules.books_rag.module:BooksRAGModule",
+  "input_types": [
+    "text",
+    "file"
+  ],
+  "output_types": [
+    "text"
+  ],
+  "capabilities": [
+    "books",
+    "library",
+    "reading"
+  ],
+  "prompts": {
+    "system": "Ты книжный RAG. Твоя задача — работать с книгами и предоставлять информацию по текстам."
+  },
+  "commands": [
+    {
+      "name": "add_book",
+      "trigger": "/add_book",
+      "description": "Добавить книгу"
+    },
+    {
+      "name": "search_book",
+      "trigger": "/search_book",
+      "description": "Искать по книге"
+    }
+  ],
+  "buttons": [],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "storage_path": {
+        "type": "string"
+      },
+      "library_path": {
+        "type": "string"
+      }
+    },
+    "required": []
+  },
+  "bundled_with": "3.4.0",
+  "description": "Книги RAG",
+  "gemma_tier": "B",
+  "gemma_evidence": "OPT"
+}

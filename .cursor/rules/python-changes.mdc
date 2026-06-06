@@ -1,0 +1,20 @@
+---
+description: Python edits — hot path, security, tests (see gemma-agent skill)
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python
+
+Skill: `.cursor/skills/gemma-agent/SKILL.md`
+
+**Hot path:** `input_layer` → `orchestrator` → `call_brain` → `response_adapter` — tests required if changed.
+
+| Pattern | Location |
+|---------|----------|
+| Paths | `core/safe_paths.py` |
+| Access | `core/access_gate.py` |
+| Env | `.env.example` comment |
+| Plugin | `module.json` + `test_plugin_contract.py` |
+
+Orchestrator ~4256 LOC — **surgical** edits only. Prompt: `.cursor/prompts/implement.md`
