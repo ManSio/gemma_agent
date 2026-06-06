@@ -6,7 +6,9 @@ Telegram assistant for a **small trusted circle** — dialogue memory, smart rou
 |---|---|
 | Version | `3.4.0` (see [VERSION](../VERSION)) |
 | Modules (public build) | **19** active plugins |
-| Tests | `pytest tests/` — run [release_guard](../scripts/release_guard.py) before release |
+| Tests | **407** files · **2573+** cases — [CI.md](CI.md) |
+| CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — every push/PR |
+| First visit | [REPO_MAP.md](REPO_MAP.md) · [AGENTS.md](../AGENTS.md) |
 | Repo | Set URLs in [REPO_LINKS.md](REPO_LINKS.md) |
 
 <p align="center">
@@ -33,7 +35,16 @@ Telegram assistant for a **small trusted circle** — dialogue memory, smart rou
 | [Voice](features/voice.md) | STT/TTS (Piper, Vosk) |
 | [Modules](features/modules.md) | 19 plugins in public build |
 | [Security](security/security-model.md) | What is protected — and what is not |
-| [Architecture](developer-guide/architecture.md) | Code layout, message path |
+| [Repo map](REPO_MAP.md) | Read this first — tests, CI, layout |
+| [CI & tests](CI.md) | GitHub Actions jobs + local commands |
+| [Agent loop](AGENT_LOOP.md) | Plan → Execute → Verify (honest) |
+| [Architecture](ARCHITECTURE.md) | Layers + Mermaid diagram |
+| [Memory tiers](MEMORY.md) | STM / MTM / LTM |
+| [Self-healing](SELF_HEALING.md) | Healers, safe mode, fallbacks |
+| [Acceptance criteria](ACCEPTANCE_CRITERIA.md) | Test gates and evidence |
+| [System requirements](SYSTEM_REQUIREMENTS.md) | Proven hardware (VPS + LAN) |
+| [Deployment](DEPLOY.md) | VPS, Docker, backups |
+| [Architecture (detailed)](developer-guide/architecture.md) | Code layout, message path |
 | [Testing](developer-guide/testing.md) | pytest, release_guard, smoke |
 | [Contributing](../CONTRIBUTING.md) | PR process (GitHub Contributing tab) |
 | [Publish checklist](PUBLISH_CHECKLIST.md) | Create repo, About, topics, releases |

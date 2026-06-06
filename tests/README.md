@@ -1,18 +1,22 @@
 # Test suite
 
-Gemma Agent public build: **2500+** pytest tests.
+Gemma Agent public build: **2573+** pytest cases in **407** files.
+
+Config: [`pytest.ini`](../pytest.ini) · CI: [CI.md](../docs/CI.md) · Criteria: [ACCEPTANCE_CRITERIA.md](../docs/ACCEPTANCE_CRITERIA.md)
 
 ## Run
 
 ```bash
+python scripts/print_repo_stats.py          # verify counts
 python -m pytest tests/ -q
+python -m pytest tests/ --collect-only -q   # exact count
 python -m pytest tests/test_security_layer.py -q
 ```
 
 ## Release gates
 
 ```bash
-python scripts/release_guard.py           # smoke + anti-regression (~86 tests)
+python scripts/release_guard.py           # smoke + anti-regression (90 tests)
 python scripts/release_guard.py --full      # entire suite
 ```
 

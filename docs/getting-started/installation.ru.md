@@ -6,8 +6,13 @@
 |-----------|--------|
 | Python | 3.11+ |
 | ОС | Linux (рекомендуется), macOS, Git Bash |
-| Диск | ~500 MB venv + рост `data/` |
+| CPU | 1 ядро (2 для dev) |
+| RAM | **1 GB + swap** (впритык, +VPN), **4 GB рекомендуется** |
+| Диск | 5 GB мин., **10+ GB** на VPS с логами |
+| GPU | **Не нужен** — LLM через OpenRouter |
 | Сеть | HTTPS до OpenRouter; LAN для SearXNG/Mem0 при необходимости |
+
+**Проверено на реальном железе:** VPS 1 GB + VPN, VPS 4 GB (прод), LAN lab 3.5 GB — [Системные требования](../SYSTEM_REQUIREMENTS.md).
 
 ## Автоустановка
 

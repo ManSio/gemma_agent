@@ -8,6 +8,22 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 | Russian hub | [index.ru.md](index.ru.md) |
 | Repo URLs | [REPO_LINKS.md](REPO_LINKS.md) |
 | Publish steps | [PUBLISH_CHECKLIST.md](PUBLISH_CHECKLIST.md) |
+| **Repo map (read first)** | [REPO_MAP.md](REPO_MAP.md) |
+| **CI & tests proof** | [CI.md](CI.md) |
+
+---
+
+## Architecture & operations
+
+| Doc | Topic |
+|-----|--------|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Layers + Mermaid diagram |
+| [AGENT_LOOP.md](AGENT_LOOP.md) | Plan → Execute → Verify (honest defaults) |
+| [MEMORY.md](MEMORY.md) | STM / MTM / LTM tiers |
+| [SELF_HEALING.md](SELF_HEALING.md) | Healers, safe mode, rollback |
+| [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) | Test gates and evidence |
+| [SYSTEM_REQUIREMENTS.md](SYSTEM_REQUIREMENTS.md) | Proven hardware (1 GB–4 GB) |
+| [DEPLOY.md](DEPLOY.md) | VPS, Docker, systemd, backups |
 
 ---
 

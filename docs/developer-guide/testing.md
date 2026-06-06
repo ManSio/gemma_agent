@@ -1,17 +1,21 @@
 # Testing
 
+**CI proof:** [CI.md](../CI.md) · **Counts:** `python scripts/print_repo_stats.py`
+
 ## Quick run
 
 ```bash
+python scripts/print_repo_stats.py        # 407 files, 2573+ cases
 python -m pytest tests/ -q
 ```
 
-Public build target: **2500+** tests green (see release_guard).
+Public build target: **2573+** tests green (see release_guard).
 
 ## Gates before release
 
 ```bash
-python scripts/release_guard.py           # smoke + anti-regression
+python scripts/release_guard.py --smoke   # = CI smoke job (~1 min)
+python scripts/release_guard.py           # smoke + 90 anti-regression tests
 python scripts/release_guard.py --full    # + full pytest
 python scripts/check_public_privacy.py --ci
 python scripts/agent_security_audit.py

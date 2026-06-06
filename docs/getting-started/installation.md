@@ -6,8 +6,13 @@
 |-----------|---------|
 | Python | 3.11+ |
 | OS | Linux (recommended), macOS, Git Bash on Windows |
-| Disk | ~500 MB venv + `data/` growth |
+| CPU | 1 core (2 recommended for dev) |
+| RAM | **1 GB + swap** (tight, +VPN), **4 GB recommended** |
+| Disk | 5 GB min, **10+ GB** on VPS with logs |
+| GPU | **Not required** — LLM via OpenRouter |
 | Network | HTTPS to OpenRouter; optional LAN for SearXNG/Mem0 |
+
+**Proven on real hardware:** 1 GB VPS + VPN (legacy), 4 GB VPS (prod), 3.5 GB LAN lab — see [System requirements](../SYSTEM_REQUIREMENTS.md).
 
 ## Automated bootstrap
 

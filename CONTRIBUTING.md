@@ -98,27 +98,32 @@ Deep dive: [docs/developer-guide/architecture.md](docs/developer-guide/architect
 ## Local checks (required before PR)
 
 ```bash
-python -m pytest tests/ -q
-python scripts/release_guard.py
+python scripts/print_repo_stats.py          # verify test count matches docs
+python scripts/release_guard.py --smoke     # fast gate (~1 min) — same as CI smoke job
+python -m pytest tests/ -q                  # full suite (2573+)
+bash scripts/pip_audit.sh
 python scripts/check_public_privacy.py --ci
-python scripts/agent_security_audit.py --quick
+python scripts/agent_security_audit.py
 ```
 
 | Gate | Command | When |
 |------|---------|------|
-| Smoke + anti-regression | `release_guard.py` | Every PR |
+| Smoke | `release_guard.py --smoke` | Every PR (CI `ci.yml` smoke job) |
+| Full pytest | `pytest tests/ -q` | Every PR (CI `ci.yml` full job) |
+| Anti-regression | `release_guard.py` | Large changes (90 targeted tests) |
 | Privacy scan | `check_public_privacy.py --ci` | Every PR |
-| Full suite | `release_guard.py --full` | Large changes |
 | Security audit | `agent_security_audit.py` | Security-related PRs |
 
-CI runs `release-guard` workflow on push/PR — see [.github/workflows/release-guard.yml](.github/workflows/release-guard.yml).
+CI runs on every push/PR — see [docs/CI.md](docs/CI.md):
+- Primary: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — ruff + smoke + full pytest + privacy
+- Also: [`.github/workflows/release-guard.yml`](.github/workflows/release-guard.yml)
 
 ---
 
 ## Pull request process
 
 1. **Open an issue** for non-trivial changes (or link existing).
-2. **Branch** from `main`: `fix/weather-slot`, `docs/panel`, `feat/reminder-…`
+2. **Branch** from `master`: `fix/weather-slot`, `docs/panel`, `feat/reminder-…`
 3. **Small diff** — one logical change per PR.
 4. **Conventional Commits** encouraged: `fix(dialogue): clear weather slot`, `docs: update panel`
 5. **Fill PR template** — reproduction, tests, checklist.

@@ -1,5 +1,5 @@
 """
-Hermes-style Layer 1: старые «простыни» tool output в recent_messages → placeholder.
+Layer 1: старые «простыни» tool output в recent_messages → placeholder.
 
 Без LLM. Последние N реплик ассистента с tool-blob остаются целиком.
 """

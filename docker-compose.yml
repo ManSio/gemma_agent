@@ -1,8 +1,17 @@
 # Для Docker Swarm / Portainer Stack см. docker-stack.yml (там нет build/env_file — только image + volumes).
+#
+# Малый VPS (1 GB + VPN): на legacy бот шёл через native venv, не этот compose.
+#   SearXNG мог быть в отдельном Docker-контейнере; swap обязателен.
+#   Полный compose — комфортнее от 2 GB RAM. См. docs/DEPLOY.md и SYSTEM_REQUIREMENTS.md
 services:
   app:
     build: .
     container_name: universal-assistant
+    # На 1 GB VPS можно раскомментировать лимит (опционально):
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 384M
     # Весь .env с хоста → процесс внутри контейнера (OPENROUTER_*, ADMIN_*, RESILIENCE_*, …).
     # Иначе только ключи из списка environment ниже; остальное os.getenv не увидит.
     env_file:

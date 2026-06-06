@@ -1,8 +1,23 @@
 # Gemma Agent — documentation index for LLMs
-# Generated from gemma_agent
+# Read docs/REPO_MAP.md + AGENTS.md first — avoids false "no tests / no CI" reviews
 
+- docs/REPO_MAP.md — One-page map: tests, CI, layout (read first)
+- docs/CI.md — GitHub Actions jobs + local equivalents
+- AGENTS.md — For AI reviewers: evidence checklist, common false criticisms
+- README.md — Project showcase: badges, tests, Docker, capabilities
 - CONTRIBUTING.md — Contributing — GitHub tab
 - SECURITY.md — Security policy
+- pytest.ini — Pytest configuration (407 files, 2573+ cases in tests/)
+- pyproject.toml — Project metadata + ruff CI config
+- .github/workflows/ci.yml — CI: ruff + pytest + privacy
+- .github/workflows/release-guard.yml — Release guard workflow
+- docs/AGENT_LOOP.md — Plan→Execute→Verify loops (honest defaults vs opt-in)
+- docs/ARCHITECTURE.md — Architecture with Mermaid diagram
+- docs/MEMORY.md — STM / MTM / LTM memory tiers
+- docs/SELF_HEALING.md — Healers, safe mode, auto-rollback
+- docs/ACCEPTANCE_CRITERIA.md — Test gates and evidence
+- docs/SYSTEM_REQUIREMENTS.md — Proven hardware: 1GB+VPN (min), 4GB VPS (prod), LAN lab
+- docs/DEPLOY.md — VPS, Docker, systemd, backups
 - docs/PUBLISH_CHECKLIST.md — Publish repo on GitHub
 - docs/index.md — Documentation hub (EN)
 - docs/index.ru.md — Documentation hub (RU)
@@ -21,7 +36,13 @@
 - docs/features/voice.md — Voice STT/TTS
 - docs/features/modules.md — 19 modules
 - docs/security/security-model.md — Security (honest)
-- docs/developer-guide/architecture.md — Architecture
+- docs/developer-guide/architecture.md — Architecture (detailed)
 - docs/developer-guide/testing.md — Testing
 - docs/reference/environment-variables.md — Essential env vars
 - docs/reference/scripts-cli.md — Scripts reference
+- scripts/print_repo_stats.py — Verifiable test/CI counts for docs
+- scripts/backup.sh — Backup data/ and config
+- config/power_agent.env.fragment — Opt-in fuller agent loop env keys
+- scripts/apply_power_agent_env.py — Apply power_agent profile to .env
+- Dockerfile — Container image
+- docker-compose.yml — Docker deploy (native recommended on 1GB; compose from 2GB+)

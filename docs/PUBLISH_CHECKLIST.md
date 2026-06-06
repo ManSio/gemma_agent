@@ -1,6 +1,6 @@
 # GitHub publish checklist
 
-Use when creating the public repository (Hermes-style presentation).
+Use when creating the public repository on GitHub.
 
 ## 1. Create repo
 

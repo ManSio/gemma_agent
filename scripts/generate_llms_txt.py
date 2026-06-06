@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate docs/llms.txt — curated index for LLM agents (Hermes-style)."""
+"""Generate docs/llms.txt — curated documentation index for LLM agents."""
 from __future__ import annotations
 
 from pathlib import Path

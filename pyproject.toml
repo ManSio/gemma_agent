@@ -1,0 +1,19 @@
+[project]
+name = "gemma-agent"
+version = "3.4.0"
+description = "Telegram assistant for a small trusted circle"
+readme = "README.md"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["core", "modules", "scripts", "tests", "api.py", "main.py"]
+
+# CI: syntax errors only (E9). Full style lint: ruff check --select E,F locally
+[tool.ruff.lint]
+select = ["E9"]

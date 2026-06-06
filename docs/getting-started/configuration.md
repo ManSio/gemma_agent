@@ -75,6 +75,16 @@ GEMMA_MEM0_USE_STUB=true
 MEM0_PORT=8001
 ```
 
+## Env profiles
+
+| Profile | Command | When |
+|---------|---------|------|
+| **Default** (`.env.example`) | — | Chat-first, stable for 3–8 users |
+| **power_agent** | `python scripts/apply_power_agent_env.py` | Multi-step goals + self-verify + quality loop |
+| **personal_prod** | `python scripts/apply_personal_prod_env.py` | Disable noisy autonomy for family prod |
+
+Fragment reference: `config/power_agent.env.fragment` — see [Agent loop](../AGENT_LOOP.md).
+
 ## Reference
 
 [Environment variables](../reference/environment-variables.md)

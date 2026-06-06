@@ -17,7 +17,7 @@ Include:
 
 - Description and severity
 - Affected file paths and versions
-- Reproduction on current `main`
+- Reproduction on current `master`
 - Which trust boundary (below) is crossed
 
 We do **not** operate a paid bug bounty program.
@@ -80,7 +80,7 @@ Reports that only demonstrate the above **limitations** are out of scope for pri
 
 | Version | Supported |
 |---------|-----------|
-| Latest release on `main` | yes |
+| Latest release on `master` | yes |
 | Older tags | best effort |
 | Private forks | operator responsibility |
 

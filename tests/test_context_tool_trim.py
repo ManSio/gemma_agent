@@ -1,4 +1,4 @@
-"""Hermes L1: trim old tool blobs in dialogue history."""
+"""Layer 1: trim old tool blobs in dialogue history."""
 from __future__ import annotations
 
 import os
