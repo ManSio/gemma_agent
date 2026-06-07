@@ -456,9 +456,10 @@ class AdminModule:
         sid = kv_debug_session(user_id=user_id, group_id=group_id)
         rows = recent_rows(days=30.0)
         target_sid = str(sid.get("session_id") or "")
+        base_sid = target_sid.split('.')[0] if '.' in target_sid else target_sid
         matched = [
             r for r in rows
-            if isinstance(r, dict) and str(r.get("session_id") or "") == target_sid
+            if isinstance(r, dict) and str(r.get("session_id") or "").startswith(base_sid)
         ]
         matched.sort(key=lambda r: str(r.get("ts") or ""), reverse=True)
         last = matched[0] if matched else {}
