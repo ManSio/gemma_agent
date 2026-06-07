@@ -51,11 +51,28 @@ def _audit_local(root: Path, host_label: str, days: int) -> dict:
 
 
 def _render_md(hosts: list, *, stamp: str) -> str:
-    from scripts.server_full_audit import render_md
-
-    return render_md({"ts": datetime.now(timezone.utc).isoformat(), "hosts": hosts}).replace(
-        "# Server audit", f"# Суточный ops-дайджест ({stamp})"
-    )
+    lines = [f"# Суточный ops-дайджест ({stamp})", ""]
+    for host in hosts:
+        if not isinstance(host, dict):
+            continue
+        turns = host.get("turns") if isinstance(host.get("turns"), dict) else {}
+        archives = host.get("archives") if isinstance(host.get("archives"), dict) else {}
+        errors = host.get("errors") if isinstance(host.get("errors"), dict) else {}
+        lines += [
+            f"## {str(host.get('host') or '?')[:64]} (`{str(host.get('git_head') or '')[:160]}`)",
+            "",
+            f"- turns (window): **{int(turns.get('count') or 0)}**",
+            f"- latency p50: **{turns.get('latency_ms_p50')}** ms, p90: **{turns.get('latency_ms_p90')}** ms",
+            f"- outcomes: {turns.get('outcomes') if isinstance(turns.get('outcomes'), dict) else {}}",
+            f"- issues: {turns.get('issues_top') if isinstance(turns.get('issues_top'), list) else []}",
+            f"- incomplete (excerpt heuristic): **{int(turns.get('suspect_incomplete_excerpt') or 0)}**",
+            f"- long Q / short A: **{int(turns.get('long_q_short_a') or 0)}**",
+            f"- turns with brain_recent_limit: **{int(turns.get('with_brain_recent_limit') or 0)}**",
+            f"- archive leaks: **{int(archives.get('leaks') or 0)}** / msgs {int(archives.get('messages') or 0)}",
+            f"- errors (window): **{int(errors.get('count') or 0)}** top {errors.get('top') if isinstance(errors.get('top'), list) else []}",
+            "",
+        ]
+    return "\n".join(lines)
 
 
 def _hosts_for_md(hosts: list) -> list:
