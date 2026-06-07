@@ -196,28 +196,11 @@ def _recent_has_pasted_article(recent_dialogue: Any, *, lookback: int = 10) -> b
             continue
         if str(row.get("role") or "") == "user" and looks_like_pasted_news_article(text):
             return True
+        # assistant: только явные отсылки к разбору/обсуждению статьи,
+        # не триггериться на новые статьи/новости бота (см. залипание article_thread)
         if str(row.get("role") or "") == "assistant" and len(text) >= 120:
             low = text.lower()
-            if any(
-                m in low
-                for m in (
-                    "коммерсант",
-                    "персидск",
-                    "стать",
-                    "сообщает",
-                    "отмечает",
-                    "источник",
-                    "аэропорт",
-                    "мюнхен",
-                    "munich",
-                    "беспилотник",
-                    "дрон",
-                    "закрыт",
-                    "перенаправ",
-                    "bild",
-                    "nato",
-                )
-            ):
+            if any(m in low for m in ("коммерсант", "bild", "nato", "статья (продолжение)")):
                 return True
     return False
 
@@ -509,6 +492,10 @@ def on_assistant_reply(
         return
     at = (assistant_text or "").strip()
     ut = (user_text or "").strip()
+    # Если диалог только что очищен (/new), не ставить слоты — контекст пуст
+    recent = rec.get("recent_messages")
+    if not isinstance(recent, list) or not recent:
+        return
     if _ASSISTANT_ASK_CITY_RE.search(at):
         set_slot(rec, SLOT_WEATHER_CITY, {}, turns=_weather_slot_turns())
         return

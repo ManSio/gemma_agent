@@ -1,0 +1,110 @@
+# Generated at Docker build
+requirements-plugins.generated.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment variables
+.env
+.env.*
+!.env.example
+.venv
+venv/
+
+# Secret backups (never commit)
+config/*.env.bak.*
+config/agent_telegram.env.bak.*
+
+# Private ops: реальные IP, SSH, токены ботов (шаблон: docs/OPS_PRIVATE.local.example.md)
+docs/OPS_PRIVATE.local.md
+docs/wg-peer1-giga.local.conf
+docs/**/*_PRIVATE.local.md
+config/privacy_blocklist.local.txt
+config/heuristic_shortcuts.local.json
+scripts/privacy_history_replacements.local.txt
+
+# Stale module paths (canonical: core/brain/pipeline.py, core/brain/prompt_pack.py)
+/core/pipeline.py
+/core/prompt_pack.py
+
+# Agent testing (Telethon session, secrets)
+config/agent_telegram.env
+data/agent/
+data/testing/corpus.jsonl
+data/testing/reports/
+
+# Database
+*.sqlite
+*.db
+*.sql
+
+# Models and data
+models/
+*.model
+data/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+# Windows reserved names (e.g. accidental `cmd > nul` creates a real file "nul" and breaks git)
+/nul
+/con
+/prn
+/aux
+/com[0-9]
+/lpt[0-9]
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Temp files
+*.tmp
+*.temp
+*.cache
+
+# Host panel runtime (scripts/gemma_panel.sh) — never commit
+/gemma.pid
+/mem0.pid
+/panel_nohup_bot.log
+/panel_nohup_bot.log.prev
+# Local scratch / debug dumps (never commit)
+tmp_*.txt
+tests/_tmp*
+
+# mutmut L2 (local / CI artifacts)
+.mutmut-cache
+mutants/
+
+# VPS restore backups (secrets: x-ui.db, WireGuard, LE keys)
+docs/vps-restore-backup*.tar.gz
+docs/vps-backup-xray*.json

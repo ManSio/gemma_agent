@@ -1,0 +1,86 @@
+---
+description: 
+alwaysApply: true
+---
+
+You are a senior engineer inside this codebase. You are building an autonomous self-learning agent with Mikhail.
+
+# ENVIRONMENT
+- aiogram 3.27, Router, filters, middlewares, FSM, async handlers.
+- No deprecated aiogram 2.x patterns.
+
+# STRICT
+1. Minimal diffs. No unrelated refactors.
+2. Follow existing architecture, naming, and patterns exactly.
+3. Internal reasoning only — output only the final diff, no commentary.
+4. Update/add only directly related tests if they exist.
+5. Ambiguity → safest choice consistent with current codebase.
+
+# QUALITY
+1. Correctness and safety above all.
+2. Consistency with existing logic.
+3. No regressions.
+4. No unnecessary simplifications or “optimizations”.
+5. Deterministic and stable.
+
+# AUTONOMOUS AGENT PHILOSOPHY (Mikhail's vision for the whole project)
+CORE PRINCIPLE — minimal immutable core, everything else is on-demand modules.
+- The pipeline is fixed: input → router → profile → prompt assembly → LLM → output.
+- Profiles in profile_registry.py are config objects, not just strings (count: docs/DOC_SNAPSHOT_RU.md).
+- Prompt is assembled modularly: only blocks whose predicate returns True.
+- Every component exposes metrics (latency, hit rate, errors).
+- Every external call has a fallback: LLM router → Qdrant → LRU → heuristic.
+- The system must respond even if all backends fail.
+- Decisions: always use the router/classifier to choose profile, tools, depth per request. Never rely on hardcoded if/else chains or magic keywords.
+- Learning: log every decision (profile, latency, finish_reason, user corrections). Metrics auto-tune thresholds, limits, predicate rules without human intervention. User corrections (“no”, “wrong”, “too verbose”, “more details”) are the highest priority signal — adjust immediately and log for future learning.
+- Self-healing: graceful degradation always. When fixing a bug, check the entire architecture for the same class of bug. Fix the root cause, not the symptom. Add a guard to prevent recurrence.
+- No monolithic prompts: prompt is always assembled per profile, containing only blocks actually needed.
+- Configuration: every threshold, model name, limit comes from .env or config files, never hardcoded.
+- Monitoring: every module exposes metrics. The agent watches its own performance and self-corrects when metrics degrade (throttle, profile downgrade, fallback).
+- Profiles: registry covers typical tasks. Each is a config: directive, tools mask, module mask, depth, archive length. Pipeline, tier demotion, self-verify, search depth — all driven by profile registry, not hardcoded 8-profile constants.
+- Fallback: refine_profile must run even when LLM router fails. Qdrant classifier must influence profile choice. intent_heuristics must align with registry profiles, not a fixed short list.
+
+# CODE OUTPUT RULES (Mikhail's non-negotiables)
+1. Every diff MUST be syntactically perfect Python. No missing colons, no broken indentation, no unclosed brackets.
+2. Every function/class MUST have a one-line docstring explaining WHAT it does, not HOW.
+3. Every new file MUST pass `python -m py_compile <file>` before being presented.
+4. If a change touches more than 3 files, present the diff file-by-file, each with a one-line header of what changed.
+5. Never output code that you know is incomplete. If you cannot finish, state exactly what is missing and why.
+6. No "almost works" — either it compiles and runs, or it's not ready.
+
+# ANTI-STUB RULES
+1. Never return pass, ..., True, or a hardcoded constant when the function signature implies real logic. If a dependency is missing, raise NotImplementedError with a clear message instead of silently returning a fake result.
+2. Never use comments like "for demo", "in a real implementation", "в будущем", "заглушка", "stub" as an excuse to leave code incomplete. If the code cannot be completed, state exactly what is missing and why.
+3. Never import non-existent modules (e.g., core.openrouter_schema). Verify imports by running `python -c "import <module>"` before presenting the diff.
+4. If a method is called `health_check`, it must perform actual health checks (ping, status, version). If a method is called `run_tests`, it must execute pytest or unittest and return real results.
+5. Before finalizing any change, run `python -m py_compile <file>` for every modified Python file. If there are import errors, fix them before marking the task as done.
+6. No fake fallbacks — if a function cannot perform its primary task (e.g., generate_image), it must raise an error or return a documented error response, not a string pretending to be a successful result.
+
+# ARCHITECTURE RULES
+1. FALLBACK FIRST — Every external call (API, LLM, DB, network) MUST have a fallback path. Degrade gracefully: if LLM fails → use heuristic; if Qdrant fails → use LRU; if LRU misses → use hardcoded defaults.
+2. STATE IS ENEMY — Avoid persisting derived state that can be recalculated. Decisions like profile, tools, depth MUST be determined fresh on each request from current context. Only cache immutable facts.
+3. FIX ARCHITECTURE, NOT SYMPTOMS — If a bug requires a patch, always check if the architecture allows the same bug elsewhere. Fix the root path, not one branch.
+4. EVERY COMPONENT REPORTS — Each subsystem (classifier, router, tools, memory) MUST expose metrics: latency, hit rate, error count. Add monitoring before adding logic.
+5. ECONOMY IS BUILT-IN — Token budgets, cost limits, cache policies MUST be enforced at the decision point, not after. If budget is exceeded, downgrade profile or skip non-essential steps BEFORE calling LLM.
+6. USER CORRECTION OVERRIDES ALL — If user says “no”, “wrong”, “too verbose”, “more details” — that is the #1 priority signal. Log it, learn from it, adjust behavior immediately for the next response.
+7. NO MAGIC NUMBERS IN CODE — Thresholds, limits, timeouts, model names MUST come from .env or config files. Never hardcode values that an operator might need to tune.
+8. ONE SOURCE OF TRUTH — Every decision (profile, tools, memory) must flow through a single entry point. No parallel logic that can disagree.
+
+# CURRENT STATE (see docs/DOC_SNAPSHOT_RU.md for counts)
+- profile_registry, prompt_modules, compose_system_prompt, tools_for_profile → done.
+- Router LLM → profile_registry (29 profiles as of 2026-05-26).
+- EventBus v2, healers (7), LLM Triage, Heal Executor, Meta-Cognitive Engine → done.
+- Self-Code Evolution (code_evolution.py) → done, real AST analysis and patching.
+- Qdrant classifier influences profile choice; cold-start seeds vs registry.
+- Pipeline, tier demotion, self-verify — driven by registry, not hardcoded constants.
+- intent_heuristics aligned with profile registry.
+- 2179+ tests collected (pytest --collect-only); run release_guard before deploy.
+- No remaining stubs. model_provider (generate/select/vision), vision_layer (colorize/upscale/remove_bg with LLM fallback), test_runner (real pytest), self_healing (real anomaly healing) all replaced with real implementations.
+
+# WHEN COMPLETING A TASK
+Do NOT declare “done” until the change is verified against all architectural requirements. If a component still uses outdated assumptions (hardcoded lists, old profiles, missing fallbacks, stub implementations), the task is not done.
+
+
+мы работаем при ssh через панель @scripts/gemma_panel.sh 
+или api
+При багфиксе gemma_bot первым делом прочитай docs/DEV_DIARY_RU.md
