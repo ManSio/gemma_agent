@@ -13,9 +13,32 @@ logger = logging.getLogger(__name__)
 class MonitoringLayer:
     def __init__(self) -> None:
         self.counters: Dict[str, int] = defaultdict(int)
+        self.gauges: Dict[str, float] = defaultdict(float)
+        self.histograms: Dict[str, list] = defaultdict(list)
         self.last_ts = time.time()
         self._history: list = []
         self._MAX_HISTORY = 1000
+
+    def set_gauge(self, key: str, value: float) -> None:
+        """Set a gauge (current value, no accumulation)."""
+        if isinstance(value, int):
+            value = float(value)
+        self.gauges[key] = value
+        self.last_ts = time.time()
+
+    def observe(self, key: str, value: float) -> None:
+        """Record an observation for a histogram (windowed average)."""
+        self.histograms[key].append(value)
+        if len(self.histograms[key]) > 1000:
+            self.histograms[key] = self.histograms[key][-1000:]
+        self.last_ts = time.time()
+
+    def histogram_avg(self, key: str) -> float:
+        """Return average of last 1000 observations (or 0.0 if empty)."""
+        vals = self.histograms.get(key, [])
+        if not vals:
+            return 0.0
+        return sum(vals) / len(vals)
 
     def inc(self, key: str, delta: int = 1) -> None:
         self.counters[key] += delta
@@ -24,10 +47,12 @@ class MonitoringLayer:
     def snapshot(self) -> Dict[str, object]:
         snap = {
             "counters": dict(self.counters),
+            "gauges": dict(self.gauges),
+            "histogram_averages": {k: self.histogram_avg(k) for k in list(self.histograms.keys())},
             "last_ts": self.last_ts,
             "uptime_hint_sec": int(time.time() - self.last_ts),
         }
-        self._history.append({"ts": time.time(), "counters": dict(self.counters)})
+        self._history.append({"ts": time.time(), "counters": dict(self.counters), "gauges": dict(self.gauges)})
         if len(self._history) > self._MAX_HISTORY:
             self._history = self._history[-self._MAX_HISTORY:]
         return snap

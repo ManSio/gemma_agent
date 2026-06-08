@@ -1152,6 +1152,7 @@ def format_news_from_search(
     user_query: str = "",
     country: str = "",
     world_feed: bool = False,
+    sources: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     """Форматирует сводку веб-поиска без LLM — с теми же фильтрами, что и search digest."""
     body = (summary or "").strip()
@@ -1165,11 +1166,18 @@ def format_news_from_search(
             rows, user_query=user_query, country=country, world_feed=world_feed
         )
         if displayed:
-            return format_news_from_displayed(displayed, user_query=user_query)
+            result = format_news_from_displayed(displayed, user_query=user_query)
+            if result and sources:
+                try:
+                    from core.news_disclaimer import format_news_with_disclaimer
+                    result = format_news_with_disclaimer(result, sources)
+                except Exception:
+                    pass
+            return result
     return ""
 
 
-def format_news_loose_from_summary(summary: str, *, user_query: str = "") -> str:
+def format_news_loose_from_summary(summary: str, *, user_query: str = "", sources: Optional[List[Dict[str, Any]]] = None) -> str:
     """Brain prefetch / repair: сводка без strict collect (отказ LLM, tool leak)."""
     body = (summary or "").strip()
     if not body or _summary_looks_like_reference_blob(body):
@@ -1214,7 +1222,14 @@ def format_news_loose_from_summary(summary: str, *, user_query: str = "") -> str
     if not blocks:
         return ""
     head = _news_digest_header(user_query)
-    return _finish_news_digest(head + "\n\n".join(blocks))
+    result = _finish_news_digest(head + "\n\n".join(blocks))
+    if result and sources:
+        try:
+            from core.news_disclaimer import format_news_with_disclaimer
+            result = format_news_with_disclaimer(result, sources)
+        except Exception:
+            pass
+    return result
 
 
 def trim_hallucinated_news_bullets(text: str, *, max_items: Optional[int] = None) -> str:

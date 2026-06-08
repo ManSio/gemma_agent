@@ -1,3 +1,27 @@
+## [2026-06-08] — v3.5.0: News Reliability Hardening (source attribution + verification)
+
+### Добавлено
+- **Source Attribution Layer:** `core/news_article_model.py` — `NewsArticle`/`NewsSource` TypedDict с обязательным URL, timestamp, domain, confidence
+- **Fetch Validation:** `core/news_validator.py` — `NewsValidator.validate_fetch()` проверяет HTTP status, Content-Type, Cloudflare/Captcha, длину текста; `fallback_fetch()` — regex-извлечение при пустом парсинге
+- **Logging:** `core/llm_usage_store.py` — `news_generation_log()` логирует каждый новостной ответ в `llm_usage.jsonl` (sources, confidence, self_verify, fetch_methods)
+- **Self-Verify с источниками:** `core/brain/self_verify_pass.py` — `run_self_verify()` принимает `source_context`; для новостей промпт проверяет что факты есть в источниках
+- **Disclaimer Generator:** `core/news_disclaimer.py` — `NewsDisclaimerGenerator` выдаёт дисклеймер в зависимости от качества источников (HIGH/MEDIUM/LOW)
+- **Consistency Checker:** `core/news_consistency_checker.py` — `NewsConsistencyChecker` выявляет противоречия (разные даты одного события) между turn'ами
+- **Monitoring:** `core/monitoring.py` — `set_gauge()`, `observe()`/`histogram_avg()` для news-метрик (fetch success, self-verify fix rate, parsing confidence avg)
+- **Tests:** 37 тестов в `tests/test_news_*.py` (source attribution, validator, disclaimer, consistency)
+
+### Изменения
+- `format_news_from_search()` и `format_news_loose_from_summary()` — добавлена поддержка `sources` параметра для дисклеймера
+- Каждый новостной ответ теперь включает обязательную атрибуцию источника
+
+### Документация
+- `docs/NEWS_RELIABILITY_GUIDE.md` — runbook по мониторингу и troubleshooting
+- `docs/PROD_NEWS_ALERTS.md` — production alerts и dashboard
+
+**Deploy:** после push — `python -m pytest tests/test_news_*.py -v`; проверить `llm_usage.jsonl` на наличие записей `news_generation`
+
+---
+
 ## [2026-06-05] — v3.4.0: spatial_design v1 (план → сверка → визуализация)
 
 ### Добавлено

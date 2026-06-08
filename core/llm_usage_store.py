@@ -12,9 +12,91 @@ import os
 import threading
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from core.report_timezone import get_report_tz
+
+# ── News logging schema ──────────────────────────────────────────────
+
+class NewsSourceLog(TypedDict):
+    """Один источник в логе генерации новостного ответа."""
+    url: str
+    domain: str
+    fetch_method: str  # "rss" | "web_search" | "urlfetch"
+    fetch_success: bool
+    text_length: int
+    parsing_confidence: float  # 0.0–1.0
+
+class NewsGenerationLog(TypedDict, total=False):
+    """Схема записи в llm_usage.jsonl для новостных ответов."""
+    type: str  # "news_generation"
+    timestamp: str  # ISO 8601 UTC
+    user_id: str
+    query: str  # что пользователь спросил (truncated 500)
+    sources: List[NewsSourceLog]
+    reply: str  # первые 500 символов ответа
+    llm_model: str
+    self_verify_run: bool
+    self_verify_result: str  # "ok" | "fix:..." | "N/A"
+    fetch_methods_used: List[str]
+    total_sources: int
+    avg_confidence: float
+    trusted_domain_count: int
+
+
+def news_generation_log(
+    *,
+    user_id: str = "",
+    query: str = "",
+    sources: Optional[List[Dict[str, Any]]] = None,
+    reply: str = "",
+    llm_model: str = "",
+    self_verify_run: bool = False,
+    self_verify_result: str = "N/A",
+) -> Dict[str, Any]:
+    """Собрать строку лога новостного ответа."""
+    from datetime import datetime, timezone
+
+    src_list: List[Dict[str, Any]] = []
+    total_conf = 0.0
+    trusted = 0
+    methods: set = set()
+    for s in (sources or []):
+        if isinstance(s, dict):
+            src_list.append({
+                "url": str(s.get("url", ""))[:300],
+                "domain": str(s.get("domain", "")),
+                "fetch_method": str(s.get("fetch_method", "unknown")),
+                "fetch_success": bool(s.get("fetch_success", True)),
+                "text_length": int(s.get("text_length", 0)),
+                "parsing_confidence": float(s.get("parsing_confidence", 0.0)),
+            })
+            total_conf += float(s.get("parsing_confidence", 0.0))
+            methods.add(str(s.get("fetch_method", "unknown")))
+            if s.get("domain") in _TRUSTED_DOMAINS:
+                trusted += 1
+    n = len(src_list) or 1
+    return {
+        "type": "news_generation",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "user_id": str(user_id)[:100],
+        "query": (query or "")[:500],
+        "sources": src_list,
+        "reply": (reply or "")[:500],
+        "llm_model": llm_model,
+        "self_verify_run": self_verify_run,
+        "self_verify_result": self_verify_result,
+        "fetch_methods_used": sorted(methods),
+        "total_sources": len(src_list),
+        "avg_confidence": round(total_conf / n, 3),
+        "trusted_domain_count": trusted,
+    }
+
+_TRUSTED_DOMAINS = frozenset({
+    "reuters.com", "bbc.com", "bbc.co.uk", "ap.org", "apnews.com",
+    "tass.ru", "interfax.ru", "kommersant.ru", "rbc.ru", "ria.ru",
+    "unian.ua", "pravda.com.ua",
+})
 
 logger = logging.getLogger(__name__)
 
