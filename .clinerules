@@ -20,8 +20,7 @@ You are a senior engineer inside this codebase. You are building an autonomous s
 1. Correctness and safety above all.
 2. Consistency with existing logic.
 3. No regressions.
-4. No unnecessary simplifications or “optimizations”.
-5. Deterministic and stable.
+4. No unnecessary simplifications or "optimizations".
 
 # AUTONOMOUS AGENT PHILOSOPHY (Mikhail's vision for the whole project)
 CORE PRINCIPLE — minimal immutable core, everything else is on-demand modules.
@@ -32,9 +31,8 @@ CORE PRINCIPLE — minimal immutable core, everything else is on-demand modules.
 - Every external call has a fallback: LLM router → Qdrant → LRU → heuristic.
 - The system must respond even if all backends fail.
 - Decisions: always use the router/classifier to choose profile, tools, depth per request. Never rely on hardcoded if/else chains or magic keywords.
-- Learning: log every decision (profile, latency, finish_reason, user corrections). Metrics auto-tune thresholds, limits, predicate rules without human intervention. User corrections (“no”, “wrong”, “too verbose”, “more details”) are the highest priority signal — adjust immediately and log for future learning.
+- Learning: log every decision (profile, latency, finish_reason, user corrections). Metrics auto-tune thresholds, limits, predicate rules without human intervention. User corrections ("no", "wrong", "too verbose", "more details") are the highest priority signal — adjust immediately and log for future learning.
 - Self-healing: graceful degradation always. When fixing a bug, check the entire architecture for the same class of bug. Fix the root cause, not the symptom. Add a guard to prevent recurrence.
-- No monolithic prompts: prompt is always assembled per profile, containing only blocks actually needed.
 - Configuration: every threshold, model name, limit comes from .env or config files, never hardcoded.
 - Monitoring: every module exposes metrics. The agent watches its own performance and self-corrects when metrics degrade (throttle, profile downgrade, fallback).
 - Profiles: registry covers typical tasks. Each is a config: directive, tools mask, module mask, depth, archive length. Pipeline, tier demotion, self-verify, search depth — all driven by profile registry, not hardcoded 8-profile constants.
@@ -62,10 +60,9 @@ CORE PRINCIPLE — minimal immutable core, everything else is on-demand modules.
 3. FIX ARCHITECTURE, NOT SYMPTOMS — If a bug requires a patch, always check if the architecture allows the same bug elsewhere. Fix the root path, not one branch.
 4. EVERY COMPONENT REPORTS — Each subsystem (classifier, router, tools, memory) MUST expose metrics: latency, hit rate, error count. Add monitoring before adding logic.
 5. ECONOMY IS BUILT-IN — Token budgets, cost limits, cache policies MUST be enforced at the decision point, not after. If budget is exceeded, downgrade profile or skip non-essential steps BEFORE calling LLM.
-6. USER CORRECTION OVERRIDES ALL — If user says “no”, “wrong”, “too verbose”, “more details” — that is the #1 priority signal. Log it, learn from it, adjust behavior immediately for the next response.
+6. USER CORRECTION OVERRIDES ALL — If user says "no", "wrong", "too verbose", "more details" — that is the #1 priority signal. Log it, learn from it, adjust behavior immediately for the next response.
 7. NO MAGIC NUMBERS IN CODE — Thresholds, limits, timeouts, model names MUST come from .env or config files. Never hardcode values that an operator might need to tune.
 8. ONE SOURCE OF TRUTH — Every decision (profile, tools, memory) must flow through a single entry point. No parallel logic that can disagree.
-
 # CURRENT STATE (see docs/DOC_SNAPSHOT_RU.md for counts)
 - profile_registry, prompt_modules, compose_system_prompt, tools_for_profile → done.
 - Router LLM → profile_registry (29 profiles as of 2026-05-26).
@@ -78,9 +75,8 @@ CORE PRINCIPLE — minimal immutable core, everything else is on-demand modules.
 - No remaining stubs. model_provider (generate/select/vision), vision_layer (colorize/upscale/remove_bg with LLM fallback), test_runner (real pytest), self_healing (real anomaly healing) all replaced with real implementations.
 
 # WHEN COMPLETING A TASK
-Do NOT declare “done” until the change is verified against all architectural requirements. If a component still uses outdated assumptions (hardcoded lists, old profiles, missing fallbacks, stub implementations), the task is not done.
+Do NOT declare "done" until the change is verified against all architectural requirements. If a component still uses outdated assumptions (hardcoded lists, old profiles, missing fallbacks, stub implementations), the task is not done.
 
-
+Перед запуском тестов проверь, существует ли файл. Адаптируй команды под PowerShell (используй ; вместо &&)
 мы работаем при ssh через панель @scripts/gemma_panel.sh 
-или api
-При багфиксе gemma_bot первым делом прочитай docs/DEV_DIARY_RU.md
+При багфиксе gemma_agent первым делом прочитай docs/DEV_DIARY_RU.md

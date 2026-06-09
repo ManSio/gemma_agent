@@ -12,6 +12,7 @@ import re
 import threading
 import time
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
 from core.intent_heuristics import merge_routing_prefs_from_turn
@@ -26,6 +27,14 @@ from core.context_compression import (
 logger = logging.getLogger(__name__)
 
 DEFAULT_BASE = os.path.join(os.getcwd(), "data")
+
+
+def _get_recent_messages_limit() -> int:
+    """Get the limit for recent messages from environment or default."""
+    try:
+        return max(4, min(50, int(os.getenv("BRAIN_CONTEXT_LOAD_RECENT_LIMIT", "10"))))
+    except (TypeError, ValueError):
+        return 10
 
 
 class DialogueCompactPending(TypedDict):
@@ -108,7 +117,7 @@ def _is_short_topic_followup(text: str) -> bool:
 
 
 def _is_anaphora(text: str) -> bool:
-    """Проверить, является ли текст анафорой (продолжением темы, а не новой)."""
+    """Проверить, является ли текст анафорой (продолжением темы, не новой)."""
     if not text:
         return False
     if _is_short_topic_followup(text):
@@ -175,6 +184,49 @@ def _topic_from_text(user_text: str, current_topic: Optional[str] = None) -> Dic
         return {}
     line = t.split("\n")[0].strip()[:160]
     return {"current": line, "snippet": t[:100]}
+
+
+# Global BehaviorStore instance for LRU cache
+_behavior_store_instance: Optional['BehaviorStore'] = None
+_behavior_store_lock = threading.Lock()
+
+
+def _get_behavior_store() -> 'BehaviorStore':
+    """Get or create a global BehaviorStore instance."""
+    global _behavior_store_instance
+    if _behavior_store_instance is None:
+        with _behavior_store_lock:
+            if _behavior_store_instance is None:
+                _behavior_store_instance = BehaviorStore()
+    return _behavior_store_instance
+
+
+@lru_cache(maxsize=100)
+def _load_recent_messages_cached(user_id: str, group_id: str, limit: int) -> Tuple[Dict[str, Any], ...]:
+    """
+    Cached load of recent messages only (limited to `limit` messages).
+    Returns tuple of message dicts for hashability.
+    """
+    store = _get_behavior_store()
+    path = store._path(user_id, group_id)
+    if not os.path.isfile(path):
+        return tuple()
+    try:
+        with store._lock:
+            with open(path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            if not isinstance(raw, dict):
+                return tuple()
+            msgs = raw.get("recent_messages")
+            if not isinstance(msgs, list):
+                return tuple()
+            # Normalize and trim to limit
+            normalized = normalize_dialogue_message_rows(msgs)
+            trimmed = trim_dialogue_messages_paired(normalized, limit)
+            return tuple(trimmed)
+    except Exception as e:
+        logger.debug("cached behavior load failed: %s", e)
+        return tuple()
 
 
 class BehaviorStore:
@@ -273,6 +325,17 @@ class BehaviorStore:
             except Exception as e:
                 logger.debug("behavior load failed: %s", e)
         return self._defaults()
+
+    def load_recent_messages(self, user_id: str, group_id: Optional[str], limit: Optional[int] = None) -> List[Dict[str, Any]]:
+        """
+        Load only the last `limit` messages from behavior store.
+        Uses LRU cache to avoid repeated disk reads.
+        """
+        if not user_id:
+            return []
+        lim = limit or _get_recent_messages_limit()
+        cached = _load_recent_messages_cached(user_id, group_id or "dm", lim)
+        return list(cached)
 
     def iter_session_group_ids(self, user_id: str) -> List[Optional[str]]:
         """Существующие сессии пользователя: None = личка (файл …__dm.json), иначе id чата группы."""
