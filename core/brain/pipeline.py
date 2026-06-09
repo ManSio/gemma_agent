@@ -34,7 +34,7 @@ from core.brain.pipeline_postprocess import (
 from core.brain.self_verify_pass import (
     looks_like_garbage_json as _looks_like_garbage_json,
     retry_with_fix_hint as _retry_with_fix_hint,
-    run_self_verify as _self_verify,
+    run_self_verify_with_limit as _self_verify,
     self_verify_fix_quality as _self_verify_fix_quality,
     self_verify_model_id as _self_verify_model_id,
     should_self_verify as _should_self_verify,
@@ -187,22 +187,18 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
     context.pop("operational_diag_short_circuit", None)
     user_text = _safe_text(user_text)
     # Свежий recent_dialogue с диска (контекст из plan мог устареть; архив в промпте — отдельно).
+    # Используется lazy loading с LRU cache — только recent_messages без полной загрузки JSON.
     try:
         from core.behavior_store import BehaviorStore
-        from core.context_compression import compress_recent_dialogue, normalize_dialogue_message_rows
+        from core.brain.profile_registry import context_load_recent_limit as _ctx_recent_lim
 
         _uid_fresh = str(context.get("user_id") or "").strip()
         if _uid_fresh:
-            _rec_f = BehaviorStore().load(_uid_fresh, context.get("group_id"))
-            _rm_f = compress_recent_dialogue(
-                normalize_dialogue_message_rows(_rec_f.get("recent_messages") or [])
-            )
+            _lim = _ctx_recent_lim()
+            _rm_f = BehaviorStore().load_recent_messages(_uid_fresh, context.get("group_id"), limit=_lim)
             if _rm_f:
-                from core.brain.profile_registry import context_load_recent_limit as _ctx_recent_lim
-
-                _lim = _ctx_recent_lim()
-                context["recent_dialogue"] = _rm_f[-_lim:]
-                context["recent_messages"] = _rm_f[-_lim:]
+                context["recent_dialogue"] = _rm_f
+                context["recent_messages"] = _rm_f
             from core.behavior_store import topic_tracking_for_turn
 
             context["topic_tracking"] = topic_tracking_for_turn(

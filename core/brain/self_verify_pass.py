@@ -64,6 +64,61 @@ def self_verify_timeout() -> float:
         return 15.0
 
 
+async def estimate_confidence(reply: str) -> float:
+    """
+    Эвристическая оценка уверенности в ответе: 0.0–1.0.
+    Высокое значение = пропускаем проверку LLM.
+    """
+    txt = (reply or "").strip()
+    if not txt:
+        return 0.0
+    words = txt.split()
+    if len(words) < 5:
+        return 0.0
+    total_chars = len(txt)
+    n_sentences = max(1, txt.count(".") + txt.count("!") + txt.count("?"))
+    avg_sentence_len = total_chars / n_sentences
+
+    # Признаки неуверенности
+    hedge_words = {"возможно", "кажется", "наверное", "может быть", "вероятно",
+                   "похоже", "я думаю", "я полагаю", "не уверен", "не знаю",
+                   "perhaps", "maybe", "i think", "i guess", "probably",
+                   "seems", "appears", "might be", "could be"}
+    hedge_count = 0
+    low = txt.lower()
+    for hw in hedge_words:
+        if hw in low:
+            hedge_count += 1
+
+    # Признаки высокой уверенности
+    reference_words = {"согласно", "по данным", "источник", "цитата",
+                       "according", "source", "cited", "reference"}
+    ref_count = 0
+    for rw in reference_words:
+        if rw in low:
+            ref_count += 1
+
+    # Если средняя длина предложения слишком мала — фрагментарный ответ
+    if avg_sentence_len < 20:
+        return 0.3
+    if avg_sentence_len > 500:
+        return 0.5
+
+    confidence = 0.5
+    # Штраф за hedge words
+    confidence -= hedge_count * 0.08
+    # Бонус за ссылки
+    confidence += ref_count * 0.05
+    # Бонус за развёрнутость (нормальный размер)
+    if 50 < total_chars < 3000:
+        confidence += 0.1
+    # Штраф за слишком короткий ответ
+    if len(words) < 15:
+        confidence -= 0.15
+
+    return max(0.0, min(1.0, confidence))
+
+
 async def run_self_verify(
     reply: str,
     user_text: str,
@@ -152,6 +207,68 @@ async def run_self_verify(
             return f"fix: {fix_text}"
         logger.warning("[self_verify] empty fix, ignoring")
         return "ok"
+
+    return "ok"
+
+
+async def run_self_verify_with_limit(
+    reply: str,
+    user_text: str,
+    llm: Any,
+    *,
+    clock_info: str = "",
+    user_name: str = "",
+    source_context: str = "",
+    max_iters: int = 2,
+) -> str:
+    """
+    Self-verify с защитой от бесконечного цикла:
+      - Если confidence > 85% → пропускаем проверку (экономия).
+      - max_iters — макс. число итераций (по умолч. 2).
+      - Между retry — exponential backoff: 2^iter секунд.
+    """
+    # 1. Эвристический пропуск при высокой уверенности
+    try:
+        confidence = await estimate_confidence(reply)
+        if confidence > 0.85:
+            logger.info("[self_verify] high_confidence_skip_verify: %.2f%%", confidence * 100)
+            return "ok"
+    except Exception as e:
+        logger.debug("[self_verify] estimate_confidence error: %s", e)
+
+    # 2. Цикл с лимитом
+    current_reply = reply
+    for iteration in range(max_iters):
+        result = await run_self_verify(
+            current_reply,
+            user_text,
+            llm,
+            clock_info=clock_info,
+            user_name=user_name,
+            source_context=source_context,
+        )
+        if result.startswith("ok"):
+            return "ok"
+
+        if not result.startswith("fix:"):
+            return "ok"
+
+        # Есть фикс — применяем
+        fix_text = result[4:].strip()
+        if not fix_text:
+            return "ok"
+
+        if iteration < max_iters - 1:
+            logger.info(
+                "[self_verify] iter=%d/%d fix found, backoff before retry",
+                iteration + 1,
+                max_iters,
+            )
+            current_reply = fix_text
+            await asyncio.sleep(2 ** iteration)
+        else:
+            # Последняя итерация — возвращаем фикс как есть
+            return f"fix: {fix_text}"
 
     return "ok"
 
