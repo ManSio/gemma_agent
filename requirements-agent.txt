@@ -1,3 +1,4 @@
 # Опционально: agent_telegram_client.py (userbot через ваш аккаунт Telegram)
 # Dependabot не сканирует этот файл — см. docs/UPSTREAM_STACK_RU.md
 telethon>=1.43.2
+pyasn1>=0.6.3 # not directly required, pinned by Snyk to avoid a vulnerability
