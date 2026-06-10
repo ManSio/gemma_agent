@@ -1,6 +1,7 @@
 """Журнал блокировок gate для последующего review (C1)."""
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -25,6 +26,13 @@ def _log_path() -> Path:
     return Path(root) / "data" / "runtime" / "heuristic_misses.jsonl"
 
 
+def _hash_user_id(user_id: str) -> Optional[str]:
+    value = str(user_id or "").strip()
+    if not value:
+        return None
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def record_heuristic_miss(
     *,
     rule_id: str,
@@ -47,9 +55,9 @@ def record_heuristic_miss(
             "verdict": verdict,
             "reason": str(reason or ""),
             "text_len": len((user_text or "").strip()),
-            "text_excerpt": (user_text or "").strip()[:240],
+            "text_excerpt_redacted": True,
             "topic_current": (topic_current or "").strip() or None,
-            "user_id": str(user_id or "").strip() or None,
+            "user_id_hash": _hash_user_id(user_id),
         }
         with path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
