@@ -435,12 +435,29 @@ class Mem0MemoryModule:
                     if resp.status == 401:
                         k = _normalize_mem0_api_key(api_key or self._api_key)
                         role = self._key_label(api_key, base)
+                        p_low = str(path or "").lower()
+                        path_kind = (
+                            "memories_add"
+                            if "/memories/add" in p_low
+                            else "memories_search"
+                            if "/memories/search" in p_low
+                            else "memories_delete"
+                            if "/memories/delete" in p_low
+                            else "other"
+                        )
+                        path_len = len(str(path or ""))
                         logger.warning(
-                            "Mem0 HTTP 401 path=%s key_role=%s body_len=%s",
-                            path,
+                            "Mem0 HTTP 401 path_kind=%s path_len=%s key_role=%s body_len=%s",
+                            path_kind,
+                            path_len,
                             role,
                             len(text or ""),
-                            extra={"gemma_event": "mem0_http_401", "key_role": role, "path": path},
+                            extra={
+                                "gemma_event": "mem0_http_401",
+                                "key_role": role,
+                                "path_kind": path_kind,
+                                "path_len": path_len,
+                            },
                         )
                         if "/memories/add/" in path and role == "mirror":
                             self.disable_mirror_write_runtime("HTTP 401 на memories/add (mirror)")
@@ -449,12 +466,29 @@ class Mem0MemoryModule:
                                 "mem0",
                                 "Mem0 HTTP 401 на запись (primary): проверьте MEM0_API_KEY и MEM0_AUTH_SCHEME",
                                 extra={
-                                    "path": path,
+                                    "path_kind": path_kind,
+                                    "path_len": path_len,
                                     "body_len": len(text or ""),
                                 },
                             )
                     else:
-                        logger.warning("Mem0 HTTP %s %s body_len=%s", resp.status, path, len(text or ""))
+                        p_low = str(path or "").lower()
+                        path_kind = (
+                            "memories_add"
+                            if "/memories/add" in p_low
+                            else "memories_search"
+                            if "/memories/search" in p_low
+                            else "memories_delete"
+                            if "/memories/delete" in p_low
+                            else "other"
+                        )
+                        logger.warning(
+                            "Mem0 HTTP %s path_kind=%s path_len=%s body_len=%s",
+                            resp.status,
+                            path_kind,
+                            len(str(path or "")),
+                            len(text or ""),
+                        )
                     return None
                 if not text:
                     return {}
