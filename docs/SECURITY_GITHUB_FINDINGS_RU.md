@@ -12,7 +12,26 @@
 
 **Stale alerts:** after merge, GitHub may need one CodeQL run to close fixed alerts (Security → Code scanning).
 
-**Open autofix PRs #22, #22** — superseded by `master`; close manually.
+**Open autofix PRs #22, #23** — закрыты (superseded by `master`).
+
+## aiohttp CVE (игнор до bump aiogram)
+
+| CVE | Суть | Риск для gemma_agent |
+|-----|------|----------------------|
+| CVE-2026-34993 | `CookieJar.load()` + pickle | **Нет** — `CookieJar` в репо не используется |
+| CVE-2026-47265 | cookies при cross-origin redirect | **Низкий** — `cookies=` в aiohttp-запросах нет |
+
+**Почему не апгрейдим сейчас:** `aiogram 3.28.2` требует `aiohttp<3.14`; патчи только в `3.14+`. Последний aiogram на PyPI (2026-06-13) — всё ещё `<3.14`.
+
+### Watchlist (проверять ~раз в месяц)
+
+1. PyPI aiogram — появился ли релиз с `aiohttp>=3.14` в Requires-Dist:  
+   `python -m pip index versions aiogram` + metadata / [pypi.org/project/aiogram](https://pypi.org/project/aiogram/)
+2. Если да — один PR:
+   - `requirements.txt` → `aiohttp>=3.14.0,<3.15`
+   - убрать `--ignore-vuln CVE-2026-*` из `scripts/pip_audit.sh`
+   - полный `pytest` + CI + smoke TG
+3. Запись в `DEV_DIARY_RU.md` + обновить эту секцию.
 
 ## Dependency audit (pip-audit)
 
