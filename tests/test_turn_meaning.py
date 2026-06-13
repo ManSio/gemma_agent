@@ -7,12 +7,14 @@ from unittest.mock import AsyncMock, patch
 from core.brain.discourse_resolver import ACTION_BRANCH, ACTION_CORRECT, ACTION_STAY, resolve_discourse
 from core.turn_meaning import (
     ACTION_CORRECT as MEANING_CORRECT,
+    ACTION_STAY,
     REFERENT_AGENT,
     REFERENT_THREAD,
     REFERENT_USER,
     SPEECH_CORRECTION,
     apply_turn_meaning_to_context,
     resolve_turn_meaning_structural,
+    profile_override_from_meaning,
     routing_hint_for_meaning,
     turn_meaning_llm_needed,
 )
@@ -66,12 +68,43 @@ class TurnMeaningStructuralTests(unittest.TestCase):
         meaning = resolve_turn_meaning_structural("какие проблемы у тебя сейчас есть?", {})
         self.assertEqual(meaning.referent, REFERENT_AGENT)
 
+    def test_earth_followup_meaning_stays_on_thread(self) -> None:
+        ctx = {
+            "recent_dialogue": [
+                {"role": "user", "text": "почему земля такая овальная"},
+                {
+                    "role": "assistant",
+                    "text": "Земля овальная из-за вращения планеты и центробежной силы на экваторе.",
+                },
+            ],
+            "dialogue_state": {
+                "last_intent": "explain",
+                "last_assistant_excerpt": "Земля овальная из-за вращения",
+            },
+            "session_task": {"last_outcome": "ok"},
+        }
+        meaning = resolve_turn_meaning_structural("почему так произошло?", ctx)
+        self.assertEqual(meaning.thread_action, ACTION_STAY)
+        self.assertEqual(meaning.referent, REFERENT_THREAD)
+
     def test_agent_referent_hint(self) -> None:
         hint = routing_hint_for_meaning(
             {"referent": REFERENT_AGENT, "thread_action": ACTION_BRANCH}
         )
         self.assertIn("ассистент", hint.lower())
         self.assertIn("не уходи", hint.lower())
+
+    def test_profile_override_agent_referent(self) -> None:
+        ctx = apply_turn_meaning_to_context(
+            {},
+            resolve_turn_meaning_structural("какие проблемы у тебя сейчас есть?", {}),
+        )
+        prof = profile_override_from_meaning(ctx)
+        self.assertEqual(prof, "standard")
+
+    def test_profile_override_skipped_on_correction(self) -> None:
+        ctx = {"turn_meaning": {"referent": REFERENT_AGENT, "thread_action": MEANING_CORRECT}}
+        self.assertEqual(profile_override_from_meaning(ctx), "")
 
     def test_llm_needed_on_structural_stay(self) -> None:
         from core.turn_meaning import TurnMeaning

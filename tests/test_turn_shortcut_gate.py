@@ -18,6 +18,7 @@ from core.turn_shortcut_gate import (
     prepare_plan_turn_gate,
     weather_turn_binds_slot,
 )
+from tests.fixtures.telegram_test_ids import TEST_USER_UID
 
 
 class TurnShortcutGateTests(unittest.TestCase):
@@ -74,7 +75,7 @@ class TurnShortcutGateTests(unittest.TestCase):
         }
         meaning, ctx = prepare_plan_turn_gate(
             "я про другое",
-            "591226766",
+            TEST_USER_UID,
             None,
             persisted,
         )

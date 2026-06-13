@@ -1157,7 +1157,7 @@ class Orchestrator:
             tl0 = _meta_in.get("telegram_location")
             if isinstance(tl0, dict) and tl0.get("latitude") is not None and tl0.get("longitude") is not None:
                 ctx["telegram_location"] = dict(tl0)
-        ep = brain_addon_for_text(text)
+        ep = brain_addon_for_text(text, ctx)
         if ep:
             ctx["ephemeral_lessons_brain_addon"] = ep
         ctx["situation"] = self._build_situation_for_context(

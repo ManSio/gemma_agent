@@ -66,6 +66,54 @@ class DiscourseResolverTests(unittest.TestCase):
         self.assertFalse(inherit)
         self.assertEqual(reason, "substantive_question")
 
+    def test_immediate_followup_after_explain_stays_on_thread(self) -> None:
+        """Короткий followup после ответа про Землю — stay, не meta про агента."""
+        last_a = (
+            "Земля не идеальный шар, а геоид — форма, которая получается из-за вращения планеты. "
+            "Вращение создаёт центробежную силу на экваторе."
+        )
+        prev_u = "почему земля такая овальная"
+        user = "почему так произошло?"
+        rd = [
+            {"role": "user", "text": prev_u},
+            {"role": "assistant", "text": last_a},
+            {"role": "user", "text": user},
+        ]
+        ctx = {
+            "user_text": user,
+            "recent_dialogue": rd,
+            "dialogue_state": {
+                "last_intent": "explain",
+                "last_brain_profile": "quick_explain",
+                "last_assistant_excerpt": last_a,
+            },
+            "session_task": {"last_outcome": "ok"},
+        }
+        inherit, reason = structural_thread_continuation(user, ctx)
+        self.assertTrue(inherit, reason)
+        self.assertIn("immediate_thread_followup", reason)
+        res = resolve_discourse(user, ctx)
+        self.assertEqual(res.action, ACTION_STAY)
+        self.assertIn("почему земля", res.effective_user_text.lower())
+
+    def test_new_topic_after_news_not_immediate_followup(self) -> None:
+        user = "почему земля такая овальная"
+        last_a = "Главные мировые новости на сегодня: ситуация вокруг Би-би-си и Роскомнадзор."
+        rd = [
+            {"role": "user", "text": "какие новости в мире?"},
+            {"role": "assistant", "text": last_a},
+            {"role": "user", "text": user},
+        ]
+        ctx = {
+            "user_text": user,
+            "recent_dialogue": rd,
+            "dialogue_state": {"last_intent": "explain", "last_assistant_excerpt": last_a},
+            "session_task": {"last_outcome": "ok"},
+        }
+        inherit, reason = structural_thread_continuation(user, ctx)
+        self.assertFalse(inherit)
+        self.assertEqual(reason, "substantive_question")
+
     def test_correction_tone_not_inherit(self) -> None:
         user = "не то мы про ии говорили"
         ctx = _ai_ctx(user)

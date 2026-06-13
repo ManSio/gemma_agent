@@ -208,17 +208,31 @@ def apply_user_rating(
 
     if negative:
         try:
+            from core.feedback_contract import (
+                rating_failure_class,
+                rating_lesson_instruction,
+                resolve_anchor_user_q,
+            )
             from core.user_correction_bus import (
                 apply_negative_rating_lesson,
-                negative_rating_lesson_instruction,
                 set_pending_user_correction,
             )
 
-            inst = negative_rating_lesson_instruction(
-                user_text=user_text,
+            behavior_rec = None
+            if behavior_store:
+                try:
+                    behavior_rec = behavior_store.load(uid, group_id)
+                except Exception:
+                    behavior_rec = None
+            anchor = resolve_anchor_user_q(behavior_rec, user_text)
+            failure = rating_failure_class(user_text, anchor, intent=intent)
+            inst = rating_lesson_instruction(
+                rated_user_text=user_text,
+                anchor_user_q=anchor,
                 intent=intent,
                 module=module,
                 correction_text=correction_text,
+                failure_class=failure,
             )
             if apply_negative_rating_lesson(
                 user_id=uid,
@@ -227,6 +241,8 @@ def apply_user_rating(
                 module=module,
                 correction_text=correction_text,
                 source=source,
+                behavior_rec=behavior_rec if isinstance(behavior_rec, dict) else None,
+                trace_id=trace_id,
             ):
                 result["applied"].append("ephemeral_lesson")
             if behavior_store:

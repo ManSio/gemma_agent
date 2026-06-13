@@ -224,7 +224,15 @@ def force_general_when_math_probe(text: str) -> bool:
     return any(bool(x.get("force_general_when_math_probe")) for x in match_lessons(text))
 
 
-def brain_addon_for_text(text: str) -> str:
+def brain_addon_for_text(text: str, context: Optional[Dict[str, Any]] = None) -> str:
+    """Ephemeral lessons для brain; с context — фильтр по feedback_contract."""
+    if context is not None:
+        try:
+            from core.feedback_contract import brain_addon_for_context
+
+            return brain_addon_for_context(text, context)
+        except Exception as e:
+            logger.debug("brain_addon_for_text contract: %s", e)
     ms = match_lessons(text)
     if not ms:
         return ""

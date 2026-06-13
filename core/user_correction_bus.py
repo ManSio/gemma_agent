@@ -240,30 +240,51 @@ def apply_negative_rating_lesson(
     module: str,
     correction_text: str = "",
     source: str = "rating",
+    behavior_rec: Optional[Dict[str, Any]] = None,
+    trace_id: str = "",
 ) -> bool:
-    """Создать ephemeral lesson с триггером по тексту запроса. Возвращает True если добавлено."""
+    """Создать ephemeral lesson с триггером по anchor нити. Возвращает True если добавлено."""
     try:
         from core.ephemeral_lessons import add_lesson
+        from core.feedback_contract import (
+            build_rating_lesson_meta,
+            rating_failure_class,
+            rating_lesson_instruction,
+            rating_lesson_trigger,
+            resolve_anchor_user_q,
+        )
     except Exception:
         return False
     ut = (user_text or "").strip()
     if len(ut) < 4:
         return False
-    trig, use_regex = lesson_trigger_from_user_text(ut)
+    anchor = resolve_anchor_user_q(behavior_rec, ut)
+    trig, use_regex = rating_lesson_trigger(rated_user_text=ut, anchor_user_q=anchor)
     if not trig:
         return False
-    inst = _negative_rating_lesson_instruction(
-        user_text=ut,
+    failure = rating_failure_class(ut, anchor, intent=intent or "")
+    inst = rating_lesson_instruction(
+        rated_user_text=ut,
+        anchor_user_q=anchor,
         intent=intent or "",
         module=module or "",
         correction_text=correction_text or "",
+        failure_class=failure,
+    )
+    meta = build_rating_lesson_meta(
+        user_id=user_id,
+        trace_id=trace_id,
+        anchor_user_q=anchor,
+        failure_class=failure,
+        source=source,
+        behavior_rec=behavior_rec,
     )
     try:
         add_lesson(
             trig,
             inst,
             match_regex=use_regex,
-            meta={"source": source, "user_id": str(user_id or "")},
+            meta=meta,
         )
         return True
     except Exception:
@@ -300,12 +321,40 @@ def record_user_correction_turn(
     intent = str(ctx.get("last_intent") or "")
     module = str(ctx.get("last_module") or "")
     corr = (correction_text or user_text or "").strip()
-    inst = _negative_rating_lesson_instruction(
-        user_text=target_user,
-        intent=intent,
-        module=module,
-        correction_text=corr,
-    )
+    behavior_rec = None
+    trace_id = str(ctx.get("last_trace_id") or "")
+    if behavior_store:
+        try:
+            behavior_rec = behavior_store.load(uid, group_id)
+        except Exception:
+            behavior_rec = None
+    try:
+        from core.feedback_contract import (
+            rating_failure_class,
+            rating_lesson_instruction,
+            resolve_anchor_user_q,
+        )
+
+        anchor = resolve_anchor_user_q(
+            behavior_rec if isinstance(behavior_rec, dict) else None,
+            target_user,
+        )
+        failure = rating_failure_class(target_user, anchor, intent=intent)
+        inst = rating_lesson_instruction(
+            rated_user_text=target_user,
+            anchor_user_q=anchor,
+            intent=intent,
+            module=module,
+            correction_text=corr,
+            failure_class=failure,
+        )
+    except Exception:
+        inst = _negative_rating_lesson_instruction(
+            user_text=target_user,
+            intent=intent,
+            module=module,
+            correction_text=corr,
+        )
     if apply_negative_rating_lesson(
         user_id=uid,
         user_text=target_user,
@@ -313,6 +362,8 @@ def record_user_correction_turn(
         module=module,
         correction_text=corr,
         source=source,
+        behavior_rec=behavior_rec if isinstance(behavior_rec, dict) else None,
+        trace_id=trace_id,
     ):
         out["applied"].append("ephemeral_lesson")
     if behavior_store:
@@ -408,7 +459,7 @@ def build_operator_corrections_hint(
         try:
             from core.ephemeral_lessons import brain_addon_for_text
 
-            ep = brain_addon_for_text(user_text).strip()
+            ep = brain_addon_for_text(user_text, context).strip()
         except Exception as e:
             logger.debug('%s optional failed: %s', 'user_correction_bus', e, exc_info=True)
     if ep:

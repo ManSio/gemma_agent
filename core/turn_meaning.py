@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
 
@@ -179,19 +180,6 @@ def resolve_turn_meaning_structural(
                 reason=ref_reason,
             )
 
-        if _is_substantive_new_question(raw):
-            MONITOR.inc("turn_meaning_structural_total")
-            MONITOR.inc("turn_meaning_branch_total")
-            return TurnMeaning(
-                speech_act=SPEECH_QUESTION,
-                referent=REFERENT_WORLD,
-                thread_action=ACTION_BRANCH,
-                inherit_thread=False,
-                source="structural",
-                confidence=0.8,
-                reason="substantive_question",
-            )
-
         inherit, reason = structural_thread_continuation(raw, ctx)
         if inherit:
             MONITOR.inc("turn_meaning_structural_total")
@@ -204,6 +192,19 @@ def resolve_turn_meaning_structural(
                 source="structural",
                 confidence=0.7,
                 reason=reason or "structural",
+            )
+
+        if _is_substantive_new_question(raw):
+            MONITOR.inc("turn_meaning_structural_total")
+            MONITOR.inc("turn_meaning_branch_total")
+            return TurnMeaning(
+                speech_act=SPEECH_QUESTION,
+                referent=REFERENT_WORLD,
+                thread_action=ACTION_BRANCH,
+                inherit_thread=False,
+                source="structural",
+                confidence=0.8,
+                reason="substantive_question",
             )
 
         speech = SPEECH_QUESTION if "?" in raw else SPEECH_STATEMENT
@@ -324,6 +325,28 @@ def apply_turn_meaning_to_context(
     ctx["turn_meaning"] = meaning.to_dict()
     ctx["turn_meaning_audit"] = meaning.to_audit()
     return ctx
+
+
+def profile_override_from_meaning(context: Optional[Dict[str, Any]]) -> str:
+    """Профиль brain из TurnMeaning.referent (не substring heuristics)."""
+    ctx = context if isinstance(context, dict) else {}
+    tm = ctx.get("turn_meaning")
+    if not isinstance(tm, dict):
+        return ""
+    referent = str(tm.get("referent") or "").strip().lower()
+    action = str(tm.get("thread_action") or "").strip().lower()
+    if action == ACTION_CORRECT:
+        return ""
+    raw = (os.getenv("TURN_MEANING_AGENT_PROFILE") or "standard").strip()
+    if referent == REFERENT_AGENT and raw:
+        try:
+            from core.brain.profile_registry import is_valid_profile
+
+            if is_valid_profile(raw):
+                return raw
+        except Exception as e:
+            logger.debug("profile_override_from_meaning: %s", e)
+    return ""
 
 
 def routing_hint_for_meaning(meaning: TurnMeaning | Dict[str, Any]) -> str:

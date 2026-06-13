@@ -11,7 +11,7 @@ import logging
 import os
 import re
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Set, Tuple
 
 from core.brain.env import env_flag
 from core.monitoring import MONITOR
@@ -63,6 +63,72 @@ def _min_last_assistant_chars() -> int:
         return max(20, int((os.getenv("DISCOURSE_MIN_LAST_ASSISTANT_CHARS") or "60").strip()))
     except ValueError:
         return 60
+
+
+def _novel_topic_token_threshold() -> int:
+    """Сколько новых content-токенов рвут immediate followup (новая тема)."""
+    try:
+        return max(1, int((os.getenv("DISCOURSE_NOVEL_TOPIC_TOKENS") or "2").strip()))
+    except ValueError:
+        return 2
+
+
+def _thread_content_tokens(text: str, *, min_len: int = 3) -> Set[str]:
+    """Content-токены реплики без стоп-слов (для сравнения нити, не keyword-списки тем)."""
+    try:
+        from core.brain.context_anchors import _SKIP_WORDS
+    except Exception:
+        _SKIP_WORDS = frozenset()  # type: ignore[misc,assignment]
+    out: Set[str] = set()
+    for raw in (text or "").lower().split():
+        clean = raw.strip("«»\"'(),.!?:;—–-…”“„")
+        if len(clean) < min_len or clean in _SKIP_WORDS:
+            continue
+        out.add(clean)
+    return out
+
+
+def _immediate_thread_followup(user_text: str, context: Optional[Dict[str, Any]]) -> bool:
+    """Короткий ход сразу после ответа — stay, если нет >=N новых content-токенов вне нити."""
+    if not _discourse_enabled():
+        return False
+    ut = (user_text or "").strip()
+    if not ut:
+        return False
+    if len(ut) > _struct_max_chars() or len(ut.split()) > _struct_max_words():
+        return False
+    corr, _ = _correction_signal(context, ut)
+    if corr or _prior_assistant_turn_unsatisfactory(context):
+        return False
+    if _looks_mode_switch(ut):
+        return False
+    last_q, last_a = _last_qa_from_context(context)
+    if len(last_a) < _min_last_assistant_chars():
+        return False
+    thread_vocab = _thread_content_tokens(last_q) | _thread_content_tokens(last_a)
+    novel = _thread_content_tokens(ut, min_len=4) - thread_vocab
+    if len(novel) >= _novel_topic_token_threshold():
+        return False
+    try:
+        from core.brain.dialogue_context import build_dsv
+
+        ctx = dict(context) if isinstance(context, dict) else {}
+        ctx.setdefault("user_text", ut)
+        if build_dsv(ctx).topic_change:
+            return False
+    except Exception as e:
+        logger.debug("immediate_thread_followup dsv: %s", e)
+        return False
+    return True
+
+
+def _substantive_blocks_continuation(user_text: str, context: Optional[Dict[str, Any]]) -> bool:
+    """Substantive-маркер не рвёт immediate followup по контракту нити."""
+    if not _is_substantive_new_question(user_text):
+        return False
+    if _immediate_thread_followup(user_text, context):
+        return False
+    return True
 
 
 def _rewrite_enabled() -> bool:
@@ -294,7 +360,10 @@ def structural_thread_continuation(
     if _looks_mode_switch(ut):
         return False, "mode_switch"
 
-    if _is_substantive_new_question(ut):
+    if _immediate_thread_followup(ut, context):
+        return True, "immediate_thread_followup"
+
+    if _substantive_blocks_continuation(ut, context):
         return False, "substantive_question"
 
     strong = _strong_profile_shift(ut, context)

@@ -20,6 +20,21 @@
 
 ---
 
+## 2026-06-13 — immediate thread followup v3.5.14 (thread followup «почему так»)
+
+**Контекст:** prod — после ответа про Землю «почему так произошло?» уходило в meta про агента; не keyword-fix, а порядок решений + 👎 loop.
+
+**Сделано:**
+- `immediate_thread_followup` — novel content-токены vs last Q/A, порог `DISCOURSE_NOVEL_TOPIC_TOKENS`.
+- substantive `почему` не branch, если followup по контракту; ACTIVE_THREAD + IUR rewrite.
+- `/new` сбрасывает remarks и article_thread slot.
+- `core/feedback_contract.py` — 👎 уроки по `anchor_user_q`, фильтр legacy generic на immediate followup; `brain_addon_for_text(text, ctx)`.
+- `profile_override_from_meaning` в `pipeline_routing` (`TURN_MEANING_AGENT_PROFILE=standard`).
+
+**Verify:** `pytest tests/test_discourse_resolver.py tests/test_turn_meaning.py tests/test_feedback_contract.py tests/test_prod_thread_wratmak.py -q`.
+
+---
+
 ## 2026-06-13 — Turn shortcut gate v3.5.13 (P0: meaning до weather/geo)
 
 **Контекст:** аудит — planner shortcuts (`weather_direct`, geo, pre_llm) шли до TurnMeaning; prod: погода/футер на identity-вопросах.
@@ -66,7 +81,7 @@
 
 ## 2026-06-13 — Аудит prod: залипший weather_await_city + drift → correct (без новых regex)
 
-**Контекст:** Wratmak — футер «погода» на нерелевантных темах; «я про другое» после ответа не по теме → дамп user_facts.
+**Контекст:** prod — футер «погода» на нерелевантных темах; «я про другое» после ответа не по теме → дамп user_facts.
 
 **Корень (архитектура, не keyword-списки):**
 - Слот `weather_await_city` не имел контракта «принять/отклонить реплику» — залипал в behavior store.

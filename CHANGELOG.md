@@ -1,3 +1,20 @@
+## [2026-06-13] — v3.5.14: immediate thread followup + feedback contract + agent profile
+
+- **Fix:** `discourse_resolver` — `immediate_thread_followup`: короткий ход после ответа = stay, если <N новых content-токенов вне last Q/A (не списки «так/это»).
+- **Fix:** substantive `почему` больше не рвёт нить, когда followup по контракту; `turn_meaning` — continuation до substantive.
+- **Fix:** `/new` чистит `recent_user_remarks` и `policy_slots.article_thread` (эпоха).
+- **Added:** `core/feedback_contract.py` — 👎 уроки по `anchor_user_q` нити, не по эллипсису; фильтр legacy generic на immediate followup.
+- **Wired:** `profile_override_from_meaning` → `pipeline_routing` (`TURN_MEANING_AGENT_PROFILE`, default `standard`).
+- **Env:** `DISCOURSE_NOVEL_TOPIC_TOKENS`, `TURN_MEANING_AGENT_PROFILE`.
+- **Privacy:** тесты — только фиктивные Telegram ID из `tests/fixtures/telegram_test_ids.py` (CI `check_public_privacy`).
+
+### Verify
+```bash
+python -m pytest tests/test_discourse_resolver.py tests/test_turn_meaning.py tests/test_feedback_contract.py tests/test_prod_thread_wratmak.py -q
+```
+
+---
+
 ## [2026-06-13] — v3.5.13: TurnMeaning gates planner shortcuts (weather/geo/pre_llm)
 
 - **Added:** `core/turn_shortcut_gate.py` — structural TurnMeaning до planner shortcuts; блок weather/geo при `referent=agent|user`, correction, weather-on-thread-stay без slot bind.

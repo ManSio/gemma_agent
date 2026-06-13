@@ -1,4 +1,4 @@
-"""Интеграция prod-сценария Wratmak: stale weather + prior clarify + correction."""
+"""Интеграция: stale weather + prior clarify + correction (prod-сценарий)."""
 from __future__ import annotations
 
 import unittest
@@ -10,7 +10,7 @@ from core.turn_reconcile import apply_discourse_and_collapse_sync
 from core.turn_state import collapse_turn_state
 
 
-class ProdThreadWratmakTests(unittest.TestCase):
+class ProdThreadScenarioTests(unittest.TestCase):
     def test_stale_weather_cleared_philosophy_footer_empty(self) -> None:
         rec: dict = {}
         set_slot(rec, SLOT_WEATHER_CITY, {}, turns=3)

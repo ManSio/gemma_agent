@@ -105,7 +105,16 @@ def bump_conversation_epoch(
         except Exception as e:
             logger.debug("conversation_epoch clear_slot: %s", e)
         rp = dict(rec.get("routing_prefs") or {})
+        changed = False
         if rp.pop("pending_correction", None) is not None:
+            changed = True
+        if rp.pop("recent_user_remarks", None) is not None:
+            changed = True
+        slots = rp.get("policy_slots")
+        if isinstance(slots, dict) and slots.pop("article_thread", None) is not None:
+            rp["policy_slots"] = slots
+            changed = True
+        if changed:
             rec["routing_prefs"] = rp
     try:
         from core.dialog_state import reset_dialog_state
