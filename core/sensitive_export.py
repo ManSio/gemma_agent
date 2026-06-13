@@ -337,6 +337,13 @@ def render_audit_document_md(doc: Dict[str, Any]) -> str:
     )
 
 
+def write_utf8_text_file(path: Union[str, Path], text: str) -> None:
+    """Write UTF-8 text (caller must pass operator-safe / counts-only content)."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+
+
 def write_audit_document_md(
     path: Union[str, Path],
     doc: Dict[str, Any],
@@ -352,14 +359,15 @@ def write_audit_document_md(
         stamp_day=stamp_day,
         exported_at_epoch=exported_at_epoch,
     )
+    safe_hosts = payload.get("hosts") if isinstance(payload.get("hosts"), list) else []
+    safe_labels = payload.get("host_labels") if isinstance(payload.get("host_labels"), list) else list(host_labels)
+    safe_stamp = str(payload.get("stamp_day") or stamp_day or "")[:32]
     md = render_audit_counts_md(
-        hosts=payload.get("hosts") or [],
-        host_labels=host_labels,
-        stamp_day=stamp_day,
+        hosts=safe_hosts,
+        host_labels=safe_labels,
+        stamp_day=safe_stamp,
     )
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(md, encoding="utf-8")
+    write_utf8_text_file(path, md)
 
 
 def write_daily_ops_md(
@@ -382,9 +390,7 @@ def write_daily_ops_md(
         stamp_day=stamp_day,
         backfill_note=backfill_note,
     )
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(md, encoding="utf-8")
+    write_utf8_text_file(path, md)
 
 
 def scan_finding_public(row: Dict[str, Any]) -> Dict[str, Any]:
