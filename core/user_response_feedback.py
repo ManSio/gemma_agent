@@ -225,7 +225,12 @@ def apply_user_rating(
                 except Exception:
                     behavior_rec = None
             anchor = resolve_anchor_user_q(behavior_rec, user_text)
-            failure = rating_failure_class(user_text, anchor, intent=intent)
+            failure = rating_failure_class(
+                user_text,
+                anchor,
+                intent=intent,
+                behavior_rec=behavior_rec if isinstance(behavior_rec, dict) else None,
+            )
             inst = rating_lesson_instruction(
                 rated_user_text=user_text,
                 anchor_user_q=anchor,

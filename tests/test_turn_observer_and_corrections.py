@@ -133,7 +133,10 @@ def test_build_operator_corrections_hint_ephemeral(monkeypatch):
 
     monkeypatch.setenv("BRAIN_OPERATOR_CORRECTIONS_IN_HINT", "true")
     h = build_operator_corrections_hint(
-        {"ephemeral_lessons_brain_addon": "Временные правки:\n- не калькулятор"}
+        {
+            "post_reconcile_spine_ready": True,
+            "ephemeral_lessons_brain_addon": "Временные правки:\n- не калькулятор",
+        }
     )
     assert "не калькулятор" in h
 

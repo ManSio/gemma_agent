@@ -20,6 +20,21 @@
 
 ---
 
+## 2026-06-13 — turn decision spine v3.5.15 (post-reconcile glue)
+
+**Контекст:** code review — ephemeral до discourse, profile override затирался classifier; не short-fix.
+
+**Сделано:**
+- `turn_decision_spine` — refresh после reconcile: ephemeral + `meaning_profile_lock`.
+- `discourse_thread_contract` — публичный API нити.
+- orchestrator / `build_operator_corrections_hint` — без stale ephemeral cache.
+- `apply_meaning_profile_lock` в конце `pipeline_routing`.
+- `deactivate_legacy_generic_rating_lessons` + script для prod.
+
+**Verify:** `pytest tests/test_turn_decision_spine.py …`; `release_guard --smoke`.
+
+---
+
 ## 2026-06-13 — immediate thread followup v3.5.14 (thread followup «почему так»)
 
 **Контекст:** prod — после ответа про Землю «почему так произошло?» уходило в meta про агента; не keyword-fix, а порядок решений + 👎 loop.

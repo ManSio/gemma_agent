@@ -60,3 +60,17 @@ def test_deactivate(tmp_lessons_path: Path, monkeypatch: pytest.MonkeyPatch):
     assert el.match_lessons("azzzb")
     assert el.deactivate_lesson(lid) is True
     assert not el.match_lessons("zzz")
+
+
+def test_deactivate_legacy_generic_rating_lessons(tmp_lessons_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("EPHEMERAL_LESSONS_PATH", str(tmp_lessons_path))
+    el.add_lesson("почему так произошло", "исправь подход", meta={"source": "rating"})
+    el.add_lesson(
+        "земля круглая",
+        "physics",
+        meta={"anchor_user_q": "Почему земля круглая?", "source": "rating"},
+    )
+    n = el.deactivate_legacy_generic_rating_lessons()
+    assert n == 1
+    assert not el.match_lessons("почему так произошло?")
+    assert el.match_lessons("земля круглая и как")

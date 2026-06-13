@@ -157,15 +157,6 @@ async def resolve_brain_route(
     except Exception as e:
         logger.debug("resolve_brain_route refine: %s", e)
 
-    try:
-        from core.turn_meaning import profile_override_from_meaning
-
-        _po = profile_override_from_meaning(ctx)
-        if _po:
-            brain_profile = _po
-    except Exception as e:
-        logger.debug("resolve_brain_route meaning profile: %s", e)
-
     classifier_result: Optional[Dict[str, Any]] = None
     try:
         from core.brain.classifier import classify_query
@@ -252,6 +243,13 @@ async def resolve_brain_route(
         )
     except Exception as e:
         logger.debug("resolve_brain_route final clamp: %s", e, exc_info=True)
+
+    try:
+        from core.turn_decision_spine import apply_meaning_profile_lock
+
+        brain_profile = apply_meaning_profile_lock(brain_profile, ctx)
+    except Exception as e:
+        logger.debug("resolve_brain_route meaning lock: %s", e)
 
     try:
         from core.brain.profile_registry import build_route_audit

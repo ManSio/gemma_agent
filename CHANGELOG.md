@@ -1,3 +1,19 @@
+## [2026-06-13] — v3.5.15: turn decision spine (post-reconcile glue)
+
+- **Added:** `core/turn_decision_spine.py` — после meaning/discourse/collapse: ephemeral + `meaning_profile_lock`.
+- **Added:** `core/discourse_thread_contract.py` — публичный API нити (без private imports).
+- **Fix:** orchestrator не кэширует ephemeral до reconcile; `build_operator_corrections_hint` всегда через spine/contract.
+- **Fix:** `apply_meaning_profile_lock` после classifier/continuation (agent → standard не затирается).
+- **Added:** `deactivate_legacy_generic_rating_lessons()` + `scripts/deactivate_legacy_ephemeral_lessons.py`.
+
+### Verify
+```bash
+python -m pytest tests/test_turn_decision_spine.py tests/test_feedback_contract.py tests/test_turn_meaning.py -q
+python scripts/deactivate_legacy_ephemeral_lessons.py
+```
+
+---
+
 ## [2026-06-13] — v3.5.14: immediate thread followup + feedback contract + agent profile
 
 - **Fix:** `discourse_resolver` — `immediate_thread_followup`: короткий ход после ответа = stay, если <N новых content-токенов вне last Q/A (не списки «так/это»).

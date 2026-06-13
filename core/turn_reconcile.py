@@ -155,6 +155,13 @@ async def _apply_meaning_discourse_collapse_async(
         mutated = False
     reconciled["_turn_state_collapsed"] = True
     reconciled["_turn_meaning_resolved"] = True
+    try:
+        from core.turn_decision_spine import refresh_post_reconcile_payload
+
+        uid = str(reconciled.get("user_id") or "").strip()
+        refresh_post_reconcile_payload(reconciled, user_text, user_id=uid)
+    except Exception as e:
+        logger.debug("spine async reconcile: %s", e)
     return user_text, reconciled, mutated
 
 
@@ -302,4 +309,11 @@ def apply_discourse_and_collapse_sync(
     text, ctx = apply_discourse_to_context(user_text, ctx)
     reconciled, mutated = reconcile_turn_state(text, ctx, persisted=persisted)
     reconciled["_turn_state_collapsed"] = True
+    try:
+        from core.turn_decision_spine import refresh_post_reconcile_payload
+
+        uid = str(reconciled.get("user_id") or "").strip()
+        refresh_post_reconcile_payload(reconciled, text, user_id=uid)
+    except Exception as e:
+        logger.debug("spine sync reconcile: %s", e)
     return text, reconciled, mutated

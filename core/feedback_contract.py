@@ -54,18 +54,28 @@ def rating_failure_class(
     anchor_user_q: str,
     *,
     intent: str = "",
+    behavior_rec: Optional[Dict[str, Any]] = None,
+    context: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Класс ошибки для метаданных урока (без keyword-списков тем)."""
     rated = (rated_user_text or "").strip()
     anchor = (anchor_user_q or "").strip()
+    ctx: Dict[str, Any] = dict(context) if isinstance(context, dict) else {}
+    if behavior_rec and not ctx.get("recent_dialogue") and not ctx.get("recent_messages"):
+        rd = behavior_rec.get("recent_messages") or behavior_rec.get("recent_dialogue")
+        if isinstance(rd, list):
+            ctx["recent_dialogue"] = rd
+        st = behavior_rec.get("session_task")
+        if isinstance(st, dict):
+            ctx["session_task"] = dict(st)
     if anchor and rated.lower() != anchor.lower():
         try:
-            from core.brain.discourse_resolver import _immediate_thread_followup
+            from core.discourse_thread_contract import immediate_thread_followup
 
-            if _immediate_thread_followup(rated, {"recent_dialogue": [], "session_task": {"last_outcome": "ok"}}):
-                pass
-        except Exception:
-            pass
+            if immediate_thread_followup(rated, ctx):
+                return "thread_followup_drift"
+        except Exception as e:
+            logger.debug("rating_failure_class followup: %s", e)
         if len(rated) <= 56 and len(rated.split()) <= 8:
             return "thread_followup_drift"
     if str(intent or "").strip().lower() in ("explain", "general"):
@@ -174,9 +184,9 @@ def _anchor_thread_overlap(anchor: str, active: str) -> bool:
     if al in bl or bl in al:
         return True
     try:
-        from core.brain.discourse_resolver import _thread_content_tokens
+        from core.discourse_thread_contract import immediate_thread_followup, thread_content_tokens
 
-        return bool(_thread_content_tokens(a, min_len=4) & _thread_content_tokens(b, min_len=4))
+        return bool(thread_content_tokens(a, min_len=4) & thread_content_tokens(b, min_len=4))
     except Exception:
         return False
 
@@ -236,9 +246,9 @@ def lesson_applies_in_context(
     inst = str(lesson.get("instruction") or "")
     if "исправь подход" in inst.lower() and ctx:
         try:
-            from core.brain.discourse_resolver import _immediate_thread_followup
+            from core.discourse_thread_contract import immediate_thread_followup
 
-            if _immediate_thread_followup(user_text, ctx):
+            if immediate_thread_followup(user_text, ctx):
                 return False
         except Exception as e:
             logger.debug("lesson_applies immediate: %s", e)

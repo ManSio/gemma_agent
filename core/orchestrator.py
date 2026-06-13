@@ -29,7 +29,7 @@ from core.operator_rules import (
     force_general_intent_by_operator_patterns,
     prefer_general_over_math_from_file,
 )
-from core.ephemeral_lessons import brain_addon_for_text, force_general_when_math_probe
+from core.ephemeral_lessons import force_general_when_math_probe
 from core.self_maintenance import SelfMaintenanceCycles
 from core.self_improvement_advisor import SelfImprovementAdvisor
 from core.resilience_controller import ResilienceController
@@ -1157,9 +1157,14 @@ class Orchestrator:
             tl0 = _meta_in.get("telegram_location")
             if isinstance(tl0, dict) and tl0.get("latitude") is not None and tl0.get("longitude") is not None:
                 ctx["telegram_location"] = dict(tl0)
-        ep = brain_addon_for_text(text, ctx)
-        if ep:
-            ctx["ephemeral_lessons_brain_addon"] = ep
+        try:
+            from core.turn_decision_spine import refresh_post_reconcile_payload
+
+            if ctx.get("_turn_state_collapsed") or ctx.get("discourse_resolution"):
+                refresh_post_reconcile_payload(ctx, text, user_id=str(user_id or ""))
+        except Exception as e:
+            logger.debug("spine build_step_context: %s", e)
+            ctx.setdefault("ephemeral_lessons_brain_addon", "")
         ctx["situation"] = self._build_situation_for_context(
             input_meta=normalized_input.get("meta") or {},
             maintenance_ran=maintenance_ran,

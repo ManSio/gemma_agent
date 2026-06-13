@@ -195,6 +195,35 @@ def deactivate_lesson(lesson_id: str) -> bool:
         return changed
 
 
+def deactivate_legacy_generic_rating_lessons() -> int:
+    """Отключить legacy 👎 без anchor_user_q и с эллипсис/generic триггерами."""
+    legacy_triggers = (
+        "почему так произошло",
+        "почему так",
+        "исправь подход",
+    )
+    with _lock:
+        doc = load_document()
+        n = 0
+        for le in doc.get("lessons") or []:
+            if not isinstance(le, dict) or not le.get("active", True):
+                continue
+            meta = le.get("meta") if isinstance(le.get("meta"), dict) else {}
+            if str(meta.get("anchor_user_q") or "").strip():
+                continue
+            trig = str(le.get("trigger") or "").lower()
+            inst = str(le.get("instruction") or "").lower()
+            if any(t in trig for t in legacy_triggers) or (
+                "исправь подход" in inst and meta.get("source") in ("rating", "quality_loop", None)
+            ):
+                le["active"] = False
+                le["updated_ts"] = time.time()
+                n += 1
+        if n:
+            _save_document(doc)
+        return n
+
+
 def match_lessons(text: str) -> List[Dict[str, Any]]:
     raw = text or ""
     out: List[Dict[str, Any]] = []

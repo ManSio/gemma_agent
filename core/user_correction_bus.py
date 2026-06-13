@@ -262,7 +262,9 @@ def apply_negative_rating_lesson(
     trig, use_regex = rating_lesson_trigger(rated_user_text=ut, anchor_user_q=anchor)
     if not trig:
         return False
-    failure = rating_failure_class(ut, anchor, intent=intent or "")
+    failure = rating_failure_class(
+        ut, anchor, intent=intent or "", behavior_rec=behavior_rec
+    )
     inst = rating_lesson_instruction(
         rated_user_text=ut,
         anchor_user_q=anchor,
@@ -339,7 +341,12 @@ def record_user_correction_turn(
             behavior_rec if isinstance(behavior_rec, dict) else None,
             target_user,
         )
-        failure = rating_failure_class(target_user, anchor, intent=intent)
+        failure = rating_failure_class(
+            target_user,
+            anchor,
+            intent=intent,
+            behavior_rec=behavior_rec if isinstance(behavior_rec, dict) else None,
+        )
         inst = rating_lesson_instruction(
             rated_user_text=target_user,
             anchor_user_q=anchor,
@@ -443,6 +450,11 @@ def build_operator_corrections_hint(
         return ""
     if not isinstance(context, dict):
         return ""
+    try:
+        from core.turn_decision_spine import ephemeral_lessons_hint_for_context
+    except Exception as e:
+        logger.debug('%s optional failed: %s', 'user_correction_bus', e, exc_info=True)
+        ephemeral_lessons_hint_for_context = None  # type: ignore[assignment,misc]
     parts = []
     if user_id:
         try:
@@ -454,14 +466,9 @@ def build_operator_corrections_hint(
                     parts.append(pending)
         except Exception as e:
             logger.debug('%s optional failed: %s', 'user_correction_bus', e, exc_info=True)
-    ep = str(context.get("ephemeral_lessons_brain_addon") or "").strip()
-    if not ep and (user_text or "").strip():
-        try:
-            from core.ephemeral_lessons import brain_addon_for_text
-
-            ep = brain_addon_for_text(user_text, context).strip()
-        except Exception as e:
-            logger.debug('%s optional failed: %s', 'user_correction_bus', e, exc_info=True)
+    ep = ""
+    if ephemeral_lessons_hint_for_context is not None:
+        ep = ephemeral_lessons_hint_for_context(context, user_text)
     if ep:
         parts.append(ep)
     # operator_rules_brain_addon часто длинный — в slim только если нет ephemeral
