@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-06-13 — v3.5.19: news dialogue consistency check (P3)
+
+**Сделано:** `NewsConsistencyChecker` в hot path через `_return_news_with_telemetry` — только лог (`llm_usage.jsonl`), ответ не блокируется. Поля `consistency_*` в `news_generation_log`. Flag `NEWS_CONSISTENCY_CHECK_ENABLED`.
+
+**Verify:** `pytest tests/test_news_hot_path_wiring.py tests/test_news_consistency.py`; smoke.
+
+---
+
 ## 2026-06-13 — v3.5.18: news narrative self-verify (P2)
 
 **Сделано:** `_apply_news_self_verify` после LLM narrative digest; `source_context` из `NewsSource`; `self_verify_run/result` в `llm_usage.jsonl`. Flag `NEWS_SELF_VERIFY_ENABLED`.

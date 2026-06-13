@@ -719,6 +719,104 @@ def _source_context_for_verify(sources: Optional[List[Dict[str, Any]]]) -> str:
     return "\n".join(lines)
 
 
+def _news_consistency_check_enabled() -> bool:
+    """Whether news replies run dialogue consistency check (log-only)."""
+    return _env_truthy("NEWS_CONSISTENCY_CHECK_ENABLED", default=True)
+
+
+def _dialogue_rows_for_consistency(recent_dialogue: Any) -> List[Dict[str, Any]]:
+    """Map recent_dialogue to checker rows {user, bot, index}."""
+    if not isinstance(recent_dialogue, list):
+        return []
+    out: List[Dict[str, Any]] = []
+    if recent_dialogue and isinstance(recent_dialogue[0], dict) and (
+        "bot" in recent_dialogue[0] or "user" in recent_dialogue[0]
+    ):
+        for i, row in enumerate(recent_dialogue):
+            if not isinstance(row, dict):
+                continue
+            out.append(
+                {
+                    "user": str(row.get("user") or ""),
+                    "bot": str(row.get("bot") or ""),
+                    "index": int(row.get("index") if row.get("index") is not None else i),
+                }
+            )
+        return out
+    user_buf = ""
+    idx = 0
+    for turn in recent_dialogue:
+        if not isinstance(turn, dict):
+            continue
+        role = str(turn.get("role") or "").lower()
+        text = str(turn.get("text") or turn.get("content") or "").strip()
+        if role == "user":
+            user_buf = text
+        elif role == "assistant" and text:
+            out.append({"user": user_buf, "bot": text, "index": idx})
+            idx += 1
+            user_buf = ""
+    return out
+
+
+def _consistency_log_kwargs(result: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Map consistency checker result to news_generation_log fields."""
+    if not isinstance(result, dict):
+        return {}
+    return {
+        "consistency_checked": True,
+        "consistency_ok": bool(result.get("consistent", True)),
+        "consistency_conflicts_count": len(result.get("conflicts") or []),
+        "consistency_recommendation": str(result.get("recommendation") or "safe"),
+    }
+
+
+async def _run_news_consistency_check(
+    reply: str,
+    *,
+    user_id: str,
+    query: str,
+    sources: Optional[List[Dict[str, Any]]],
+    recent_dialogue: Any,
+) -> Optional[Dict[str, Any]]:
+    """Log-only consistency check against recent dialogue turns."""
+    if not _news_consistency_check_enabled():
+        return None
+    text = (reply or "").strip()
+    if len(text) < 60:
+        return None
+    rows = _dialogue_rows_for_consistency(recent_dialogue)
+    if not rows:
+        return None
+    try:
+        from core.news_consistency_checker import NewsConsistencyChecker
+
+        result = await NewsConsistencyChecker().check_dialogue_consistency(
+            user_id=str(user_id or ""),
+            recent_dialogue=rows,
+            new_reply=text,
+            new_sources=list(sources or []),
+        )
+        if not result.get("consistent"):
+            logger.warning(
+                "news consistency conflict uid=%s rec=%s conflicts=%s query=%.80s",
+                user_id,
+                result.get("recommendation"),
+                len(result.get("conflicts") or []),
+                query,
+            )
+            try:
+                from core.monitoring import MONITOR
+
+                MONITOR.inc("news_consistency_conflict_total")
+            except Exception:
+                pass
+        return result
+    except Exception as exc:
+        logger.debug("news consistency check: %s", exc)
+        return None
+
+
 async def _apply_news_self_verify(
     reply: str,
     *,
@@ -761,6 +859,10 @@ def _emit_news_generation_log(
     llm_model: str = "",
     self_verify_run: bool = False,
     self_verify_result: str = "N/A",
+    consistency_checked: bool = False,
+    consistency_ok: bool = True,
+    consistency_conflicts_count: int = 0,
+    consistency_recommendation: str = "safe",
 ) -> None:
     """Append news_generation row to llm_usage.jsonl."""
     if not (reply or "").strip():
@@ -777,26 +879,38 @@ def _emit_news_generation_log(
                 llm_model=llm_model or _news_llm_model(),
                 self_verify_run=bool(self_verify_run),
                 self_verify_result=str(self_verify_result or "N/A")[:500],
+                consistency_checked=bool(consistency_checked),
+                consistency_ok=bool(consistency_ok),
+                consistency_conflicts_count=int(consistency_conflicts_count),
+                consistency_recommendation=str(consistency_recommendation or "safe")[:80],
             )
         )
     except Exception as exc:
         logger.debug("news_generation_log: %s", exc)
 
 
-def _return_news_with_telemetry(
+async def _return_news_with_telemetry(
     reply: Optional[str],
     *,
     user_id: str = "",
     query: str = "",
     sources: Optional[List[Dict[str, Any]]] = None,
+    recent_dialogue: Any = None,
     llm_model: str = "",
     self_verify_run: Optional[bool] = None,
     self_verify_result: str = "N/A",
 ) -> Optional[str]:
-    """Normalize news reply and persist generation telemetry."""
+    """Normalize news reply, run consistency check, persist generation telemetry."""
     if not reply or not str(reply).strip():
         return None
     text = str(reply).strip()
+    consistency = await _run_news_consistency_check(
+        text,
+        user_id=user_id,
+        query=query,
+        sources=sources,
+        recent_dialogue=recent_dialogue,
+    )
     _emit_news_generation_log(
         user_id=user_id,
         query=query,
@@ -805,6 +919,7 @@ def _return_news_with_telemetry(
         llm_model=llm_model,
         self_verify_run=bool(self_verify_run) if self_verify_run is not None else False,
         self_verify_result=self_verify_result,
+        **_consistency_log_kwargs(consistency),
     )
     return text
 
@@ -3395,11 +3510,12 @@ async def try_news_item_reply(
         }
     src = _source_from_fetched_article(article, title=str(item.get("title") or ""))
     sources = [src] if src else []
-    return _return_news_with_telemetry(
+    return await _return_news_with_telemetry(
         text,
         user_id=str(user_id or ""),
         query=user_query,
         sources=sources,
+        recent_dialogue=recent_dialogue,
         llm_model=_news_llm_model(),
     )
 
@@ -3816,6 +3932,7 @@ async def compose_news_digest_from_search(
     persisted: Optional[Dict[str, Any]] = None,
     user_id: str = "",
     expanded: bool = False,
+    recent_dialogue: Any = None,
 ) -> Optional[str]:
     """Дайджест из SearX/DDG: stash + narrative LLM (без RSS)."""
     text = (user_text or "").strip()
@@ -3957,11 +4074,12 @@ async def compose_news_digest_from_search(
         sources=sources,
         telemetry=telemetry,
     )
-    return _return_news_with_telemetry(
+    return await _return_news_with_telemetry(
         reply,
         user_id=uid,
         query=text,
         sources=sources,
+        recent_dialogue=recent_dialogue,
         llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
         **_telemetry_log_kwargs(telemetry),
     )
@@ -4198,11 +4316,12 @@ async def try_news_reply(
                 telemetry=telemetry,
             )
             if reply and str(reply).strip():
-                return _return_news_with_telemetry(
+                return await _return_news_with_telemetry(
                     reply,
                     user_id=str(user_id or ""),
                     query=text,
                     sources=sources_cached,
+                    recent_dialogue=recent_dialogue,
                     llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
                     **_telemetry_log_kwargs(telemetry),
                 )
@@ -4320,6 +4439,7 @@ async def try_news_reply(
                 persisted=persisted,
                 user_id=str(user_id or ""),
                 expanded=expanded_digest,
+                recent_dialogue=recent_dialogue,
             )
             if reply and str(reply).strip() and not _reply_looks_like_portal_digest(reply):
                 return reply.strip()
@@ -4367,11 +4487,12 @@ async def try_news_reply(
             "Попробуйте уточнить регион или повторить через минуту."
         )
 
-    return _return_news_with_telemetry(
+    return await _return_news_with_telemetry(
         reply,
         user_id=str(user_id or ""),
         query=text,
         sources=sources,
+        recent_dialogue=recent_dialogue,
         llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
         **_telemetry_log_kwargs(telemetry),
     )
@@ -4422,19 +4543,21 @@ async def try_web_news_digest_reply(
     sources = _sources_from_search_results(results)
     body = format_news_from_search(str(pack.get("summary") or ""), user_query=text, sources=sources)
     if body and str(body).strip():
-        return _return_news_with_telemetry(
+        return await _return_news_with_telemetry(
             str(body).strip()[:4500],
             user_id=str(user_id or ""),
             query=text,
             sources=sources,
+            recent_dialogue=recent_dialogue,
         )
     summary = str(pack.get("summary") or "").strip()
     if summary:
-        return _return_news_with_telemetry(
+        return await _return_news_with_telemetry(
             summary[:4500],
             user_id=str(user_id or ""),
             query=text,
             sources=sources,
+            recent_dialogue=recent_dialogue,
         )
     return None
 
@@ -4472,19 +4595,21 @@ async def try_affirmative_search_reply(
     sources = _sources_from_search_results(results)
     body = format_news_from_search(str(pack.get("summary") or ""), user_query=q, sources=sources)
     if body and str(body).strip():
-        return _return_news_with_telemetry(
+        return await _return_news_with_telemetry(
             str(body).strip()[:4500],
             user_id=str(user_id or ""),
             query=q,
             sources=sources,
+            recent_dialogue=recent_dialogue,
         )
     summary = str(pack.get("summary") or "").strip()
     if summary:
-        return _return_news_with_telemetry(
+        return await _return_news_with_telemetry(
             summary[:4500],
             user_id=str(user_id or ""),
             query=q,
             sources=sources,
+            recent_dialogue=recent_dialogue,
         )
     return (
         f"Поиск по «{q}» выполнен, но сводка пустая. "

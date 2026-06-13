@@ -1,3 +1,17 @@
+## [2026-06-13] — v3.5.19: news dialogue consistency check (P3)
+
+- **Wired:** `NewsConsistencyChecker.check_dialogue_consistency` on news returns via `_return_news_with_telemetry` (log-only, does not block reply).
+- **Log:** `consistency_checked/ok/conflicts_count/recommendation` in `news_generation_log`.
+- **Env:** `NEWS_CONSISTENCY_CHECK_ENABLED` (default true).
+
+### Verify
+```bash
+python -m pytest tests/test_news_hot_path_wiring.py tests/test_news_consistency.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.18: news narrative self-verify with source_context (P2)
 
 - **Wired:** `_llm_digest_narrative_brief` → `run_self_verify(source_context=...)`; результат в `news_generation_log`.

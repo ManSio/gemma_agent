@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, patch
 
 from core.news_reply import (
     _apply_news_self_verify,
+    _dialogue_rows_for_consistency,
     _emit_news_generation_log,
     _fetch_page_article,
     _return_news_with_telemetry,
@@ -61,7 +62,58 @@ class NewsHotPathWiringTests(unittest.TestCase):
             self.assertIn("sources", row)
 
     def test_return_news_with_telemetry_none_on_empty(self) -> None:
-        self.assertIsNone(_return_news_with_telemetry("", user_id="1", query="q"))
+        async def run() -> None:
+            self.assertIsNone(await _return_news_with_telemetry("", user_id="1", query="q"))
+
+        asyncio.run(run())
+
+    def test_dialogue_rows_for_consistency_role_format(self) -> None:
+        rows = _dialogue_rows_for_consistency(
+            [
+                {"role": "user", "text": "новости"},
+                {"role": "assistant", "text": "Earthquake in Turkey today with emergency measures."},
+            ]
+        )
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["user"], "новости")
+        self.assertIn("Earthquake", rows[0]["bot"])
+
+    def test_return_news_with_telemetry_logs_consistency_conflict(self) -> None:
+        async def run() -> None:
+            prev = (
+                "Событие 15 марта 2023 года в Москве. Было объявлено чрезвычайное положение "
+                "в центральном районе города."
+            )
+            new = (
+                "В Москве сейчас чрезвычайное положение 15 марта 2024 года. Ситуация отличается "
+                "от прошлогодней и требует внимания."
+            )
+            dialogue = [{"user": "q", "bot": prev, "index": 0}]
+            with tempfile.TemporaryDirectory() as td:
+                log_path = Path(td) / "llm_usage.jsonl"
+                with patch.dict(
+                    os.environ,
+                    {
+                        "GEMMA_LLM_USAGE_PERSIST": "true",
+                        "GEMMA_LLM_USAGE_PATH": str(log_path),
+                        "NEWS_CONSISTENCY_CHECK_ENABLED": "true",
+                    },
+                    clear=False,
+                ):
+                    out = await _return_news_with_telemetry(
+                        new,
+                        user_id="u1",
+                        query="новости",
+                        sources=[],
+                        recent_dialogue=dialogue,
+                    )
+                self.assertEqual(out, new)
+                row = json.loads(log_path.read_text(encoding="utf-8").strip())
+                self.assertTrue(row["consistency_checked"])
+                self.assertFalse(row["consistency_ok"])
+                self.assertGreaterEqual(row["consistency_conflicts_count"], 1)
+
+        asyncio.run(run())
 
     def test_fetch_page_article_rejects_cloudflare_text(self) -> None:
         async def run() -> None:

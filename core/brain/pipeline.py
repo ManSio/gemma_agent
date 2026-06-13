@@ -1734,6 +1734,7 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
                 persisted=_persisted_short,
                 user_id=str(user_id or ""),
                 expanded=False,
+                recent_dialogue=recent_dialogue,
             )
             if reply and str(reply).strip():
                 sync_news_digest_persisted(context, _persisted_short)

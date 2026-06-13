@@ -53,6 +53,10 @@ def news_generation_log(
     llm_model: str = "",
     self_verify_run: bool = False,
     self_verify_result: str = "N/A",
+    consistency_checked: bool = False,
+    consistency_ok: bool = True,
+    consistency_conflicts_count: int = 0,
+    consistency_recommendation: str = "safe",
 ) -> Dict[str, Any]:
     """Собрать строку лога новостного ответа."""
     from datetime import datetime, timezone
@@ -86,6 +90,10 @@ def news_generation_log(
         "llm_model": llm_model,
         "self_verify_run": self_verify_run,
         "self_verify_result": self_verify_result,
+        "consistency_checked": bool(consistency_checked),
+        "consistency_ok": bool(consistency_ok),
+        "consistency_conflicts_count": int(consistency_conflicts_count),
+        "consistency_recommendation": str(consistency_recommendation or "safe")[:80],
         "fetch_methods_used": sorted(methods),
         "total_sources": len(src_list),
         "avg_confidence": round(total_conf / n, 3),
