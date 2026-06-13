@@ -13,6 +13,7 @@ from typing import Any, List, Literal, Optional, Sequence
 
 from core.brain.cot_strip import strip_provider_think_tags
 from core.brain.text_helpers import safe_text
+from core.regex_safe import cap_regex_input, safe_re_match, safe_re_search
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ def classify_short_user_turn(
     *,
     last_assistant: str = "",
 ) -> ShortTurnKind:
-    ut = (user_text or "").strip()
+    ut = cap_regex_input((user_text or "").strip(), max_len=_short_turn_max_chars() + 8)
     if not ut:
         return "noise"
     try:
@@ -136,21 +137,23 @@ def classify_short_user_turn(
         return "normal"
 
     low = ut.lower()
-    if _NEGATION_START_RE.match(ut) and len(ut) > 12:
+    if safe_re_match(_NEGATION_START_RE, ut, max_len=_short_turn_max_chars() + 8) and len(ut) > 12:
         return "normal"
 
     last = last_assistant_text(recent_dialogue, last_assistant=last_assistant)
     invited = assistant_invites_continuation(last)
 
-    if _CHITCHAT_RE.match(ut):
+    if safe_re_match(_CHITCHAT_RE, ut, max_len=_short_turn_max_chars() + 8):
         return "chitchat"
-    if _CONT_EXPLICIT_RE.match(ut):
+    if safe_re_match(_CONT_EXPLICIT_RE, ut, max_len=_short_turn_max_chars() + 8):
         return "continuation"
-    if _SUBSTANTIVE_Q_RE.search(ut):
+    if safe_re_search(_SUBSTANTIVE_Q_RE, ut, max_len=_short_turn_max_chars() + 8):
         return "substantive"
 
     if "?" in ut and len(ut.split()) <= 8:
-        if _SHORT_FOLLOWUP_RE.search(low) or (last and len(last) > 40):
+        if safe_re_search(_SHORT_FOLLOWUP_RE, low, max_len=_short_turn_max_chars() + 8) or (
+            last and len(last) > 40
+        ):
             return "continuation"
 
     if invited and len(ut) <= 32:

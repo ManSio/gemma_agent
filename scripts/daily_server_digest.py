@@ -78,8 +78,8 @@ def _write_digest(
     md_out: str = "",
 ) -> None:
     from core.sensitive_export import (
-        render_daily_ops_md,
         write_audit_document_json,
+        write_daily_ops_md,
     )
 
     out_doc = {"ts": datetime.now(timezone.utc).isoformat(), "stamp": stamp, "hosts": hosts}
@@ -94,15 +94,12 @@ def _write_digest(
         stamp_day=stamp,
         exported_at_epoch=epoch,
     )
-    md_path.parent.mkdir(parents=True, exist_ok=True)
-    md_path.write_text(
-        render_daily_ops_md(
-            hosts=hosts,
-            host_labels=labels,
-            stamp_day=stamp,
-            backfill_note=backfill_note,
-        ),
-        encoding="utf-8",
+    write_daily_ops_md(
+        md_path,
+        hosts=hosts,
+        host_labels=labels,
+        stamp_day=stamp,
+        backfill_note=backfill_note,
     )
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")

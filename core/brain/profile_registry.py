@@ -16,12 +16,12 @@ from __future__ import annotations
 import logging
 
 import os
-from dataclasses import replace
-
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple
+
+from core.regex_safe import cap_regex_input, safe_re_search
 
 
 logger = logging.getLogger(__name__)
@@ -1030,8 +1030,9 @@ def profile_from_text_heuristics(
     low = txt.lower()
     if txt.startswith("/"):
         return "task_executor"
-    if re.search(r"(?i)(?:^|\n)\s*(?:переведи|translate)\b", txt) or re.search(
-        r"(?i)^перевод\s", low
+    _txt_cap = cap_regex_input(txt, max_len=4096)
+    if safe_re_search(r"(?i)(?:^|\n)\s*(?:переведи|translate)\b", _txt_cap) or safe_re_search(
+        r"(?i)^перевод\s", low, max_len=4096
     ):
         _tr = _profile_text_gate("profile_translation_prefix", "translation", txt, planner_context)
         if _tr:
@@ -1052,7 +1053,7 @@ def profile_from_text_heuristics(
         _lg = _profile_text_gate("profile_legal_substring", "legal", txt, planner_context)
         if _lg:
             return _lg
-    if re.search(r"(?i)(?:^|\n|\.)\s*(?:статья\s+\d|статьёй\s+\d|ст\.?\s*\d)", txt):
+    if safe_re_search(r"(?i)(?:^|\n|\.)\s*(?:статья\s+\d|статьёй\s+\d|ст\.?\s*\d)", _txt_cap):
         _lg2 = _profile_text_gate("profile_legal_substring", "legal", txt, planner_context)
         if _lg2:
             return _lg2

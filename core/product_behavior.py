@@ -11,6 +11,8 @@ import re
 from difflib import SequenceMatcher
 from typing import Any, Dict, List, Optional
 
+from core.regex_safe import cap_regex_input, safe_re_search
+
 logger = logging.getLogger(__name__)
 
 _CYR_PRICE_WORD = r"(?<![а-яёa-z])(?:цена|цен[аы]|стоимость)(?![а-яёa-z])"
@@ -46,7 +48,7 @@ _PRICE_SEARCH_RE = re.compile(
 )
 _PRODUCT_SEARCH_RE = re.compile(
     r"(?i)(найди|найти|поиск|всё\s+про|все\s+про|"
-    r"информаци[яю].*про|данные\s+про)",
+    r"информаци[яю][^\n]{0,80}про|данные\s+про)",
 )
 _CORRECTION_SEARCH_RE = re.compile(
     r"(?i)(мог\s+(бы\s+)?(взять|искать|найти)|"
@@ -186,18 +188,18 @@ def is_social_advice_not_commerce(user_text: str) -> bool:
 def should_force_product_search(user_text: str) -> bool:
     if not search_contract_enabled():
         return False
-    t = (user_text or "").strip()
+    t = cap_regex_input((user_text or "").strip(), max_len=2048)
     if not t:
         return False
     if is_social_advice_not_commerce(t):
         return False
-    if _CORRECTION_SEARCH_RE.search(t):
+    if safe_re_search(_CORRECTION_SEARCH_RE, t):
         return True
-    if _PRICE_SEARCH_RE.search(t):
+    if safe_re_search(_PRICE_SEARCH_RE, t):
         return True
-    if _PRODUCT_SEARCH_RE.search(t) and _COMMERCE_RE.search(t):
+    if safe_re_search(_PRODUCT_SEARCH_RE, t) and safe_re_search(_COMMERCE_RE, t):
         return True
-    if _PRODUCT_SEARCH_RE.search(t) and len(t) > 12 and _PRICE_SEARCH_RE.search(t):
+    if safe_re_search(_PRODUCT_SEARCH_RE, t) and len(t) > 12 and safe_re_search(_PRICE_SEARCH_RE, t):
         return True
     return False
 

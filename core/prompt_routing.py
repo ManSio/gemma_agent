@@ -7,6 +7,8 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
+from core.regex_safe import cap_regex_input, safe_re_match, safe_re_search, strip_trailing_sentence_punct
+
 _PURE_CHITCHAT_RE = re.compile(
     r"^[\s\d.,!?:;'\u2019-]*("
     r"привет\w*|здравств\w*|добрый\s+(день|вечер|утро|ночи)\b|"
@@ -76,7 +78,7 @@ def is_social_chitchat_turn(text: str) -> bool:
     low = raw.lower()
     if low.startswith(("спасибо", "благодар")) and len(raw) < 72:
         return True
-    return bool(_SOCIAL_CHITCHAT_TURN_RE.match(raw.strip()))
+    return bool(safe_re_match(_SOCIAL_CHITCHAT_TURN_RE, raw.strip(), max_len=96))
 
 
 def is_pure_chitchat_private(text: str) -> bool:
@@ -91,7 +93,7 @@ def is_pure_chitchat_private(text: str) -> bool:
     low = raw.lower()
     if low.startswith(("спасибо", "благодар")) and len(raw) < 72:
         return True
-    return bool(_PURE_CHITCHAT_RE.match(raw.strip()))
+    return bool(safe_re_match(_PURE_CHITCHAT_RE, raw.strip(), max_len=96))
 
 
 def brain_fast_chitchat_eligible(
@@ -475,7 +477,7 @@ def text_looks_continuation_cue(text: str) -> bool:
     raw = (text or "").strip()
     if not raw or len(raw) > 56:
         return False
-    tl = re.sub(r"[.!?…]+$", "", raw.lower()).strip()
+    tl = strip_trailing_sentence_punct(raw.lower())
     if tl in {
         "продолжай",
         "продолжи",

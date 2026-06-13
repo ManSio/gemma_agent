@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from core.brain.cot_strip import strip_leaked_cot
 from core.brain.text_helpers import safe_text
+from core.regex_safe import cap_regex_input, safe_re_match, safe_re_search
 from core.runtime_telegram_settings import effective_bool
 
 logger = logging.getLogger(__name__)
@@ -19,8 +20,8 @@ _CODE_MARKERS_RE = re.compile(
 )
 _CODE_REQUEST_RE = re.compile(
     r"(?i)(факториал|factorial|напиши\s+код|функци\w*\s+на\s+python|"
-    r"python\s+для|программ\w*\s+на\s+python|def\s+\w+.*python|код\s+на\s+python|"
-    r"калькулятор|calculator|напиши\s+.*python|программ\w*\s+на\s+питон)"
+    r"python\s+для|программ\w*\s+на\s+python|def\s+\w+[^\n]{0,80}python|код\s+на\s+python|"
+    r"калькулятор|calculator|напиши\s+[^\n]{0,120}python|программ\w*\s+на\s+питон)"
 )
 _INTERNAL_CODE_MONOLOGUE_MARKERS = (
     "режиме code_generation",
@@ -52,7 +53,7 @@ def looks_like_code_payload(text: str) -> bool:
     t = (text or "").strip()
     if not t:
         return False
-    if _CODE_MARKERS_RE.search(t):
+    if _CODE_MARKERS_RE.search(cap_regex_input(t, max_len=8192)):
         return True
     if "print(" in t or "input(" in t:
         return True
@@ -60,7 +61,7 @@ def looks_like_code_payload(text: str) -> bool:
 
 
 def user_requests_code(user_text: str) -> bool:
-    return bool(_CODE_REQUEST_RE.search(user_text or ""))
+    return bool(safe_re_search(_CODE_REQUEST_RE, user_text, max_len=2048))
 
 
 def looks_like_internal_code_monologue(text: str) -> bool:
@@ -155,8 +156,8 @@ def thread_awaits_code_body(
     context: Optional[Dict[str, Any]] = None,
 ) -> bool:
     """Короткое «да»/«продолжай» после обещания кода без блока ```."""
-    ut = (user_text or "").strip()
-    if not ut or not _CONTINUATION_AFTER_CODE_RE.match(ut):
+    ut = cap_regex_input((user_text or "").strip(), max_len=96)
+    if not ut or not safe_re_match(_CONTINUATION_AFTER_CODE_RE, ut, max_len=96):
         return False
     ctx = context if isinstance(context, dict) else {}
     last = last_assistant_from_context(ctx)

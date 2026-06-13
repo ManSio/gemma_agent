@@ -10,7 +10,8 @@ import logging
 
 import os
 import re
-from typing import Any, Dict, Optional
+
+from core.regex_safe import collapse_whitespace, safe_re_search
 
 # URL и похожие фрагменты вырезаем перед проверкой «есть цифры и +-*/=»
 _URL_LIKE = re.compile(
@@ -31,7 +32,7 @@ def _strip_tz_offsets_for_math_probe(s: str) -> str:
     if not s:
         return s
     s = _TZ_UTC_GMT_OFFSET.sub(" ", s)
-    return re.sub(r"\s+", " ", s).strip()
+    return collapse_whitespace(s)
 
 
 def _math_strict_mode_enabled() -> bool:
@@ -44,8 +45,7 @@ def _scrub_prose_joiners_for_math_probe(s: str) -> str:
     if not s:
         return s
     s = _JOIN_WORD_SLASH.sub(" ", s)
-    s = re.sub(r"\s+", " ", s).strip()
-    return s
+    return collapse_whitespace(s)
 
 
 def _scrub_hyphen_between_letters_for_math_probe(s: str) -> str:

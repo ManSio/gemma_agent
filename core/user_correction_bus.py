@@ -8,13 +8,13 @@ from __future__ import annotations
 
 import logging
 
+import json
 import os
 import re
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import json
-from pathlib import Path
-
+from core.regex_safe import cap_regex_input, collapse_whitespace, safe_re_search
 from core.runtime_telegram_settings import effective_bool
 
 
@@ -33,18 +33,18 @@ def negative_rating_lesson_instruction(
 ) -> str:
     if correction_text.strip():
         return correction_text.strip()[:500]
-    low = (user_text or "").lower()
-    if re.search(r"(?i)(перевед|translate|на англ|на нем|auf deutsch)", low):
+    low = cap_regex_input((user_text or "").lower(), max_len=2048)
+    if safe_re_search(r"(?i)(перевед|translate|на англ|на нем|auf deutsch)", low):
         return (
             "Пользователь недоволен переводом: дай только перевод целевым языком, "
             "без уточняющих вопросов и без объяснений, если фраза уже ясна."
         )
-    if re.search(r"(?i)(уравнен|2x|реши|посчитай|калькулятор)", low):
+    if safe_re_search(r"(?i)(уравнен|2x|реши|посчитай|калькулятор)", low):
         return (
             "Пользователь недоволен математикой: для уравнений — пошаговое решение и ответ; "
             "не подставляй голый результат калькулятора вместо решения."
         )
-    if re.search(
+    if safe_re_search(
         r"(?i)(кратк|без\s+рассужден|только\s+цифр|только\s+факт|не\s+развод|обрезал|обрезан)",
         low,
     ):
@@ -83,17 +83,17 @@ def lesson_trigger_from_user_text(user_text: str) -> tuple[str, bool]:
     ut = (user_text or "").strip()
     if len(ut) < 4:
         return "", False
-    low = ut.lower()
-    if re.search(r"(?i)(перевед|translate|на англ|на нем|auf deutsch)", low):
+    low = cap_regex_input(ut.lower(), max_len=2048)
+    if safe_re_search(r"(?i)(перевед|translate|на англ|на нем|auf deutsch)", low):
         return r"(?i)(перевед|translate|на англ|на нем|auf deutsch)", True
-    if re.search(r"(?i)(уравнен|реши\s|посчитай|сколько\s+будет|\d+\s*[\*×/])", low):
+    if safe_re_search(r"(?i)(уравнен|реши\s|посчитай|сколько\s+будет|\d+\s*[\*×/])", low):
         return r"(?i)(уравнен|реши\s|посчитай|сколько\s+будет)", True
-    if re.search(r"(?i)(тессеракт|пентеракт|гиперкуб|\d+-мерн)", low):
+    if safe_re_search(r"(?i)(тессеракт|пентеракт|гиперкуб|\d+-мерн)", low):
         return r"(?i)(тессеракт|пентеракт|гиперкуб|\d+-мерн)", True
-    if re.search(r"(?i)(habr\.com|стать[ьяю]\s+про|перескаж|суммариз)", low):
+    if safe_re_search(r"(?i)(habr\.com|стать[ьяю]\s+про|перескаж|суммариз)", low):
         return r"(?i)(habr\.com|перескаж|суммариз|стать)", True
     # Первые ~48 символов по границе слова — лучше, чем 120 символов целиком
-    chunk = re.sub(r"\s+", " ", ut)[:72].strip()
+    chunk = collapse_whitespace(ut)[:72].strip()
     if len(chunk) >= 12:
         return chunk[:48], False
     return ut[: max(12, len(ut))], False

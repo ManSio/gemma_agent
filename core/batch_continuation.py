@@ -19,6 +19,8 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
+from core.regex_safe import cap_regex_input, safe_re_match, safe_re_search
+
 from core.brain.router_classifier import _detect_batch
 
 logger = logging.getLogger(__name__)
@@ -69,7 +71,7 @@ def is_unified_problem(text: str) -> bool:
     numbered: List[str] = []
     other: List[str] = []
     for line in lines:
-        if _NUMBERED_LINE_RE.match(line):
+        if safe_re_match(_NUMBERED_LINE_RE, line, max_len=512):
             numbered.append(line)
         elif not line.endswith(":") and not _is_instruction_line(line):
             other.append(line)
@@ -90,7 +92,7 @@ _UNIFIED_MATH_RE = re.compile(
     r"\d+\s*[-‑]?\s*мерн|"
     r"четыр[её]хмерн|тр[её]хмерн\s+гран|"
     r"гипергран|n\s*[-‑]?\s*мерн|"
-    r"сколько\s+всего\s+.*\s+ячеек)"
+    r"сколько\s+всего\s+.{0,120}?\s+ячеек)"
 )
 
 
@@ -98,7 +100,7 @@ def looks_like_unified_math_problem(text: str) -> bool:
     """Единая геометрическая/комбинаторная задача (тессеракт, пентеракт, …)."""
     if not is_unified_problem(text):
         return False
-    return bool(_UNIFIED_MATH_RE.search(text or ""))
+    return bool(safe_re_search(_UNIFIED_MATH_RE, text, max_len=2048))
 
 
 def resolve_unified_problem_profile(text: str) -> str:

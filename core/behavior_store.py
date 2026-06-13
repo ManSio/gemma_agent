@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
+from core.regex_safe import strip_trailing_sentence_punct
+
 from core.intent_heuristics import merge_routing_prefs_from_turn
 from core.group_chat_policy import load_group_chat_policy
 from core.context_compression import (
@@ -100,7 +102,7 @@ def _is_short_topic_followup(text: str) -> bool:
         return False
     if re.match(r"^а\s+", t) and len(t.split()) <= 8:
         return True
-    tl = re.sub(r"[.!?…]+$", "", t).strip()
+    tl = strip_trailing_sentence_punct(t)
     if tl in _SHORT_TOPIC_FOLLOWUPS:
         return True
     words = [re.sub(r"[^\wё]+", "", w) for w in tl.split() if w]

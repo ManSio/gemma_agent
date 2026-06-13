@@ -9,10 +9,13 @@ def test_send_output_calls_finalize_user_reply() -> None:
     src = (_ROOT / "core" / "input_layer.py").read_text(encoding="utf-8")
     start = src.find("async def _send_output(")
     assert start >= 0
-    chunk = src[start : start + 14000]
-    fin = chunk.find("txt = finalize_user_reply")
+    end = src.find("\n    async def ", start + 1)
+    if end < 0:
+        end = len(src)
+    body = src[start:end]
+    fin = body.find("txt = finalize_user_reply")
     assert fin >= 0
-    send = chunk.find("await reply_text_chunks", fin)
+    send = body.find("await reply_text_chunks", fin)
     assert send >= 0, "main text path must send after finalize"
 
 

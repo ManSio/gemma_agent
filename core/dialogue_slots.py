@@ -17,6 +17,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+from core.regex_safe import cap_regex_input, safe_re_search
+
 from core.runtime_telegram_settings import effective_bool
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ SLOT_SPATIAL_PROJECT = "spatial_project"
 
 _ASSISTANT_ASK_CITY_RE = re.compile(
     r"(?i)(какой\s+именно\s+город|город\s+вас\s+интерес|населённ\w+\s+пункт|"
-    r"назов\w+\s+населённ|покаж\w+\s+погод|уточн\w+.*город|напишите\s+город)"
+    r"назов\w+\s+населённ|покаж\w+\s+погод|уточн\w{0,20}[\s\S]{0,160}?город|напишите\s+город)"
 )
 
 _USER_REFERS_ARTICLE_RE = re.compile(
@@ -485,7 +487,7 @@ def resolve_slot_for_turn(
             if not isinstance(row, dict):
                 continue
             if str(row.get("role") or "") == "assistant" and _ASSISTANT_ASK_CITY_RE.search(
-                str(row.get("text") or "")
+                cap_regex_input(str(row.get("text") or ""), max_len=2048)
             ):
                 from core.brain.text_helpers import weather_city_country_resolve
 

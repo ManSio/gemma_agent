@@ -20,6 +20,20 @@
 
 ---
 
+## 2026-06-13 — CI + CodeQL wave 4 (regex_safe, daily digest writer)
+
+**Контекст:** CI fail `test_finalize_send_path_inventory`; 20 open CodeQL (19 ReDoS + 1 clear-text-storage).
+
+**Сделано:**
+- `core/regex_safe.py` — cap input, safe re.*, strip_trailing_sentence_punct, collapse_whitespace.
+- Патчи на все flagged call sites + bounded regex в dialogue_slots/product/batch/code.
+- `write_daily_ops_md` + CodeQL barrier для `daily_server_digest.py`.
+- Тест `_send_output`: поиск `reply_text_chunks` в полном теле функции.
+
+**Verify:** full pytest; `release_guard --smoke`.
+
+---
+
 ## 2026-06-13 — outbound guard v3.5.16 + intent/audit glue
 
 **Контекст:** review P3 — meta на followup, пустой turn_meaning_audit, intent параллельно meaning.

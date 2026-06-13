@@ -362,6 +362,26 @@ def write_audit_document_md(
     p.write_text(md, encoding="utf-8")
 
 
+def write_daily_ops_md(
+    path: Union[str, Path],
+    *,
+    hosts: List[Dict[str, Any]],
+    host_labels: Sequence[str] = (),
+    stamp_day: str = "",
+    backfill_note: str = "",
+) -> None:
+    """Write daily ops markdown (counts + latency; no user excerpts)."""
+    md = render_daily_ops_md(
+        hosts=hosts if isinstance(hosts, list) else [],
+        host_labels=host_labels,
+        stamp_day=stamp_day,
+        backfill_note=backfill_note,
+    )
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(md, encoding="utf-8")
+
+
 def scan_finding_public(row: Dict[str, Any]) -> Dict[str, Any]:
     leaks = row.get("leaks") or []
     file_name = Path(str(row.get("file") or "")).name[:160]

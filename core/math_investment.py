@@ -4,10 +4,12 @@ from __future__ import annotations
 import re
 from typing import Optional, Tuple
 
+from core.regex_safe import cap_regex_input, safe_re_match, safe_re_search
+
 
 def text_looks_like_investment_annuity(text: str) -> bool:
     """Задача на вклад с пополнениями и годовой доходностью — не линейное уравнение."""
-    raw = (text or "").strip()
+    raw = cap_regex_input((text or "").strip(), max_len=4096)
     if len(raw) < 80:
         return False
     low = raw.lower()
@@ -23,11 +25,11 @@ def text_looks_like_investment_annuity(text: str) -> bool:
     )
     if sum(1 for k in keys if k in low) < 2:
         return False
-    if not re.search(r"\d+\s*%\s*годов|\d+\s*%\s*годовых|годов\w*\s*\d+\s*%", low):
+    if not safe_re_search(r"\d+\s*%\s*годов|\d+\s*%\s*годовых|годов\w*\s*\d+\s*%", low, max_len=4096):
         return False
-    if not re.search(r"пополнен|добавля\w+\s+ещ", low):
+    if not safe_re_search(r"пополнен|добавля\w+\s+ещ", low, max_len=4096):
         return False
-    if not re.search(r"(?:\d+\s*(?:лет|год))|(?:лет|год)\s*\d+", low):
+    if not safe_re_search(r"(?:\d+\s*(?:лет|год))|(?:лет|год)\s*\d+", low, max_len=4096):
         return False
     return True
 

@@ -7,6 +7,9 @@
 | `py/clear-text-logging-sensitive-data` | 20 | `core/sensitive_export.py`, Mem0 path facets, connectivity scalars |
 | `py/clear-text-storage-sensitive-data` | 6 | typed writers, `render_audit_document_md`, `barrierModel` extensions |
 | `py/incomplete-url-substring-sanitization` | 1 | `urlparse` in tests |
+| `py/polynomial-redos` | 19 | `core/regex_safe.py` cap + pattern fixes (2026-06-13 wave 4) |
+
+**Wave 4 (2026-06-13):** CI `test_finalize_send_path_inventory` — полное тело `_send_output`; CodeQL ReDoS — `regex_safe`, `write_daily_ops_md`, bounded patterns.
 
 **Wave 3 (2026-06-13):** alerts #41, #49, #105, #117–#120 — typed writers, count-only stdout, `write_audit_document_md`. CodeQL config без unpublished pack (локальный extension pack остаётся для VS Code).
 

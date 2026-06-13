@@ -1,3 +1,19 @@
+## [2026-06-13] — CI + CodeQL wave 4 (regex_safe, daily digest)
+
+- **Fix:** CI `test_finalize_send_path_inventory` — проверка полного тела `_send_output`.
+- **Added:** `core/regex_safe.py` — cap user input before regex (ReDoS guard).
+- **Fix:** CodeQL `py/polynomial-redos` — bounded patterns + `safe_re_*` на flagged sites.
+- **Fix:** CodeQL `py/clear-text-storage` — `write_daily_ops_md` в `daily_server_digest.py`.
+- **Env:** `REGEX_INPUT_MAX_LEN`.
+
+### Verify
+```bash
+python -m pytest tests/test_finalize_send_path_inventory.py tests/test_regex_safe.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.16: outbound thread guard + intent from TurnMeaning + audit emit
 
 - **Added:** `core/outbound_thread_guard.py` — pre_send: блок agent-meta на immediate followup активной нити.
