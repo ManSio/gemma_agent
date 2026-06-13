@@ -857,30 +857,30 @@ class OpenRouterProvider:
                     if response.status != 200:
                         breaker.record_failure()
                         error_text = await response.text()
-                    elapsed_ms = (time.perf_counter() - t0) * 1000.0
-                    try:
-                        from core.admin_ops_notify import maybe_notify_openrouter_quota
+                        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+                        try:
+                            from core.admin_ops_notify import maybe_notify_openrouter_quota
 
-                        maybe_notify_openrouter_quota(
-                            http_status=int(response.status),
-                            error_text=error_text,
-                            model=model_name,
-                            fallback_model=None,
+                            maybe_notify_openrouter_quota(
+                                http_status=int(response.status),
+                                error_text=error_text,
+                                model=model_name,
+                                fallback_model=None,
+                            )
+                        except Exception as e:
+                            logger.debug("admin_ops_notify stream quota hook: %s", e)
+                        record_openrouter_completion(
+                            ok=False,
+                            requested_model=model_name,
+                            upstream_model=None,
+                            latency_ms=elapsed_ms,
+                            usage=None,
+                            http_status=response.status,
+                            error=error_text[:500],
+                            content_chars=0,
+                            telemetry=_telemetry,
                         )
-                    except Exception as e:
-                        logger.debug("admin_ops_notify stream quota hook: %s", e)
-                    record_openrouter_completion(
-                        ok=False,
-                        requested_model=model_name,
-                        upstream_model=None,
-                        latency_ms=elapsed_ms,
-                        usage=None,
-                        http_status=response.status,
-                        error=error_text[:500],
-                        content_chars=0,
-                        telemetry=_telemetry,
-                    )
-                    return {"error": error_text, "content": ""}
+                        return {"error": error_text, "content": ""}
 
                     while True:
                         if cancel_event is not None and cancel_event.is_set():
