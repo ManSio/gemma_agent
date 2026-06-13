@@ -20,6 +20,16 @@
 
 ---
 
+## 2026-06-13 — Backfill DAILY_OPS 05–13 июня (VPS_PROD)
+
+**Контекст:** суточные `docs/archive/DAILY_OPS_*` не генерировались с 05.06; данные в turns/llm_usage на VPS были.
+
+**Сделано:** `--date` в `server_full_audit.py`; `--backfill-from/to` в `daily_server_digest.py`; backfill 9 дней на VPS.
+
+**Verify:** `docs/archive/DAILY_OPS_2026-06-05_RU.md` … `2026-06-13`; 10–12 июня — 0 turns.
+
+---
+
 ## 2026-06-13 — Discourse resolver: единая нить диалога до routing (IUR + thread judge)
 
 **Контекст:** prod — эллипсис «как бы ты сейчас назвал правильно» после разговора про ИИ → `intent=general`, ответ про траву/Иран (context drift). Повторяющийся класс багов из gemma_bot_v2 (article_thread, user_facing_contract patches).

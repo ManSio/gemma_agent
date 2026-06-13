@@ -19,10 +19,37 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 
-def _load_jsonl(path: Path, *, days: int = 14) -> List[Dict[str, Any]]:
+def _parse_row_ts(raw: Any) -> Optional[datetime]:
+    """Parse ts/timestamp from JSONL row to UTC datetime."""
+    if raw is None:
+        return None
+    try:
+        if isinstance(raw, (int, float)):
+            return datetime.fromtimestamp(float(raw), tz=timezone.utc)
+        s = str(raw).strip()
+        if not s:
+            return None
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+def _load_jsonl(
+    path: Path,
+    *,
+    days: int = 14,
+    day: str = "",
+) -> List[Dict[str, Any]]:
+    """Load JSONL rows filtered by rolling window or single UTC calendar day."""
     if not path.is_file():
         return []
     cut = datetime.now(timezone.utc) - timedelta(days=days)
+    day_key = str(day or "").strip()[:10]
     rows: List[Dict[str, Any]] = []
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = line.strip()
@@ -32,14 +59,12 @@ def _load_jsonl(path: Path, *, days: int = 14) -> List[Dict[str, Any]]:
             row = json.loads(line)
         except json.JSONDecodeError:
             continue
-        ts = row.get("ts") or row.get("timestamp") or ""
-        if ts:
-            try:
-                dt = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-                if dt < cut:
-                    continue
-            except ValueError:
-                pass
+        dt = _parse_row_ts(row.get("ts") or row.get("timestamp"))
+        if day_key:
+            if dt is None or dt.strftime("%Y-%m-%d") != day_key:
+                continue
+        elif dt is not None and dt < cut:
+            continue
         rows.append(row)
     return rows
 
@@ -68,14 +93,25 @@ def _suspect_incomplete(text: str) -> bool:
     return last.isalnum()
 
 
-def audit_host(root: Path, *, host_label: str, days: int) -> Dict[str, Any]:
+def audit_host(
+    root: Path,
+    *,
+    host_label: str,
+    days: int = 14,
+    day: str = "",
+) -> Dict[str, Any]:
     from scripts.scan_archive_leaks import scan_archives
 
     turns_path = root / "data/runtime/turns.jsonl"
     llm_path = Path(os.getenv("GEMMA_LLM_USAGE_PATH") or root / "data/llm_usage.jsonl")
     err_path = root / "data/runtime_errors.jsonl"
+    day_key = str(day or "").strip()[:10]
 
-    turns = [t for t in _load_jsonl(turns_path, days=days) if t.get("type") != "scenario"]
+    turns = [
+        t
+        for t in _load_jsonl(turns_path, days=days, day=day_key)
+        if t.get("type") != "scenario"
+    ]
     latencies = [
         float(t["latency_ms"])
         for t in turns
@@ -98,7 +134,7 @@ def audit_host(root: Path, *, host_label: str, days: int) -> Dict[str, Any]:
         and len(str(t.get("assistant_excerpt") or "")) < 150
     ]
 
-    llm_rows = _load_jsonl(llm_path, days=days)
+    llm_rows = _load_jsonl(llm_path, days=days, day=day_key)
     brain_lat = [
         float(r["latency_ms"])
         for r in llm_rows
@@ -112,7 +148,7 @@ def audit_host(root: Path, *, host_label: str, days: int) -> Dict[str, Any]:
         if "brain" in str(r.get("telemetry_tag") or r.get("tag") or "")
     )
 
-    errs = _load_jsonl(err_path, days=days)
+    errs = _load_jsonl(err_path, days=days, day=day_key)
     err_top = Counter(
         f"{e.get('component','')}:{e.get('kind') or 'error'}"
         for e in errs
@@ -141,7 +177,8 @@ def audit_host(root: Path, *, host_label: str, days: int) -> Dict[str, Any]:
         "host": host_label,
         "root": str(root),
         "git_head": git_head,
-        "window_days": days,
+        "window_days": 1 if day_key else days,
+        "window_day": day_key or None,
         "turns": {
             "count": len(turns),
             "outcomes": dict(outcomes),
@@ -288,12 +325,22 @@ def main() -> int:
     ap.add_argument("--root", default=str(_ROOT))
     ap.add_argument("--host-label", default="local")
     ap.add_argument("--days", type=int, default=14)
+    ap.add_argument(
+        "--date",
+        default="",
+        help="UTC calendar day YYYY-MM-DD (overrides rolling --days window)",
+    )
     ap.add_argument("--json-out", default="")
     ap.add_argument("--md-out", default="")
     args = ap.parse_args()
     root = Path(args.root).resolve()
     _load_project_env(root)
-    rep = audit_host(root, host_label=args.host_label, days=args.days)
+    rep = audit_host(
+        root,
+        host_label=args.host_label,
+        days=args.days,
+        day=str(args.date or "").strip(),
+    )
     rep["ts"] = datetime.now(timezone.utc).isoformat()
     out_doc = {"ts": rep["ts"], "hosts": [rep]}
     from core.sensitive_export import (

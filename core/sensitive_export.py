@@ -272,6 +272,61 @@ def render_audit_counts_md(
     return "\n".join(lines)
 
 
+def render_daily_ops_md(
+    *,
+    hosts: List[Dict[str, Any]],
+    host_labels: Sequence[str] = (),
+    stamp_day: str = "",
+    backfill_note: str = "",
+) -> str:
+    """Daily ops markdown: counts + latency/outcomes (no user excerpts)."""
+    title = f"# Ops digest ({stamp_day})" if stamp_day else "# Ops digest"
+    lines = [title, ""]
+    if backfill_note:
+        lines += [f"> {backfill_note}", ""]
+    for idx, host in enumerate(hosts):
+        if not isinstance(host, dict):
+            continue
+        label = host_labels[idx] if idx < len(host_labels) else str(host.get("host") or f"host_{idx + 1}")
+        row = audit_host_counts_row(host)
+        turns = host.get("turns") if isinstance(host.get("turns"), dict) else {}
+        llm = host.get("llm_usage") if isinstance(host.get("llm_usage"), dict) else {}
+        errors = host.get("errors") if isinstance(host.get("errors"), dict) else {}
+        lines += [f"## {label}", ""]
+        gh = str(host.get("git_head") or "").strip()
+        if gh:
+            lines.append(f"- git (snapshot): `{gh[:96]}`")
+        lines.append(f"- turns: **{row.get('turns_count', 0)}**")
+        p50 = turns.get("latency_ms_p50")
+        p90 = turns.get("latency_ms_p90")
+        if p50 is not None or p90 is not None:
+            lines.append(f"- latency p50: **{p50 if p50 is not None else '—'}** ms · p90: **{p90 if p90 is not None else '—'}** ms")
+        if llm.get("rows") is not None:
+            lines.append(f"- llm_usage rows: **{int(llm.get('rows') or 0)}**")
+        lines += [
+            f"- incomplete (excerpt heuristic): **{row.get('incomplete_count', 0)}**",
+            f"- long Q / short A: **{row.get('long_q_short_a', 0)}**",
+            f"- turns with brain_recent_limit: **{row.get('brain_recent_limit_turns', 0)}**",
+            f"- archive leaks: **{row.get('archive_leaks', 0)}** / msgs {row.get('archive_messages', 0)}",
+            f"- errors: **{row.get('errors_count', 0)}**",
+        ]
+        outcomes = turns.get("outcomes") if isinstance(turns.get("outcomes"), dict) else {}
+        if outcomes:
+            parts = [f"{k}={v}" for k, v in sorted(outcomes.items(), key=lambda x: (-int(x[1] or 0), str(x[0])))[:8]]
+            lines.append(f"- outcomes: {', '.join(parts)}")
+        err_top = errors.get("top") if isinstance(errors.get("top"), list) else []
+        if err_top:
+            et = ", ".join(f"{a}:{b}" for a, b in err_top[:5] if a)
+            lines.append(f"- errors top: {et}")
+        note = str(host.get("note") or "").strip()
+        if note:
+            lines.append(f"- note: {note}")
+        elif int(row.get("turns_count") or 0) == 0:
+            lines.append("- note: нет пользовательских ходов на VPS за этот UTC-день")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def render_audit_document_md(doc: Dict[str, Any]) -> str:
     """Operator-safe markdown for audit/digest (counts only, no excerpts)."""
     payload = audit_document_counts_payload(doc if isinstance(doc, dict) else {})
