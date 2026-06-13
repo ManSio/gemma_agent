@@ -239,6 +239,26 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
                 row["gate_block_reason"] = str(last_hg.get("gate_block_reason"))
             if last_hg.get("topic_current"):
                 row["topic_current"] = str(last_hg.get("topic_current"))
+        disc = ra.get("discourse")
+        if isinstance(disc, dict) and disc:
+            if disc.get("action"):
+                row["discourse_action"] = str(disc.get("action"))
+            if disc.get("continuation") is not None:
+                row["discourse_continuation"] = bool(disc.get("continuation"))
+            if disc.get("reason"):
+                row["discourse_reason"] = str(disc.get("reason"))[:120]
+            if disc.get("inherit_intent"):
+                row["discourse_inherit_intent"] = str(disc.get("inherit_intent"))
+            if disc.get("inherit_profile"):
+                row["discourse_inherit_profile"] = str(disc.get("inherit_profile"))
+            if disc.get("judge_source"):
+                row["discourse_judge_source"] = str(disc.get("judge_source"))
+    _da = payload.get("discourse_audit")
+    if isinstance(_da, dict) and _da and not row.get("discourse_action"):
+        if _da.get("action"):
+            row["discourse_action"] = str(_da.get("action"))
+        if _da.get("reason"):
+            row["discourse_reason"] = str(_da.get("reason"))[:120]
     tt = payload.get("topic_tracking")
     if isinstance(tt, dict):
         cur = str(tt.get("current") or "").strip()

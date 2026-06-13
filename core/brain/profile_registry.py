@@ -799,6 +799,7 @@ def build_route_audit(
     situation_lane: str = "",
     classifier_profile: str = "",
     heuristic_gate: Optional[List[Dict[str, Any]]] = None,
+    discourse: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     out: Dict[str, Any] = {
         "final_profile": (final_profile or "standard").strip(),
@@ -812,6 +813,8 @@ def build_route_audit(
     }
     if isinstance(heuristic_gate, list) and heuristic_gate:
         out["heuristic_gate"] = heuristic_gate[-6:]
+    if isinstance(discourse, dict) and discourse:
+        out["discourse"] = discourse
     return out
 
 
@@ -936,6 +939,10 @@ def is_continuation_turn(
 ) -> bool:
     """Короткий ход продолжает нить диалога (контекст + форма, не словарь слов)."""
     try:
+        from core.brain.discourse_resolver import is_continuation_from_context
+
+        if is_continuation_from_context(user_text, context):
+            return True
         from core.brain.user_facing_contract import is_continuation_turn_from_context
 
         return is_continuation_turn_from_context(user_text, context)
@@ -957,6 +964,18 @@ def resolve_continuation_profile(
     Для «Продолжи» / «дальше» — унаследовать профиль прошлого хода, не standard+71 tools.
   """
     ctx = context if isinstance(context, dict) else {}
+    try:
+        from core.brain.discourse_resolver import inherited_profile_from_context
+
+        disc_prof = inherited_profile_from_context(ctx)
+        if disc_prof and is_valid_profile(disc_prof) and disc_prof not in (
+            "short",
+            "batch",
+            "task_executor",
+        ):
+            return disc_prof
+    except Exception:
+        pass
     if not is_continuation_turn(user_text, ctx):
         return None
     ds = ctx.get("dialogue_state")

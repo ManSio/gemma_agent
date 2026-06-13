@@ -87,6 +87,9 @@ class DialogueStateVector:
     last_bot_intent: str = ""
     """intent последней реплики бота (из dialogue_state.last_intent)."""
 
+    last_brain_profile: str = ""
+    """Профиль brain последнего хода (из dialogue_state.last_brain_profile)."""
+
     last_bot_summary: str = ""
     """Краткая суть последнего ответа бота (первые 40 токенов)."""
 
@@ -128,6 +131,12 @@ class DialogueStateVector:
             parts.append("correction_loop")
         if self.topic_change:
             parts.append("new_topic")
+        if self.last_bot_intent:
+            parts.append(f"last_intent={self.last_bot_intent}")
+        if self.last_brain_profile:
+            parts.append(f"last_profile={self.last_brain_profile}")
+        if self.previous_user_excerpt:
+            parts.append(f"prev_user: {self.previous_user_excerpt[:120]}")
         if self.last_assistant_excerpt:
             parts.append(f"last_assistant: {self.last_assistant_excerpt[:150]}")
         return " | ".join(parts)
@@ -261,6 +270,7 @@ def build_dsv(context: Optional[Dict[str, Any]]) -> DialogueStateVector:
 
     turn_count = len(rd)
     last_intent = str(ds.get("last_intent") or "")
+    last_profile = str(ds.get("last_brain_profile") or ds.get("brain_profile") or "")
 
     # -- Последняя реплика пользователя --
     user_text = str(context.get("user_text") or context.get("text") or "")
@@ -294,6 +304,7 @@ def build_dsv(context: Optional[Dict[str, Any]]) -> DialogueStateVector:
     return DialogueStateVector(
         turn_count=turn_count,
         last_bot_intent=last_intent,
+        last_brain_profile=last_profile,
         last_bot_summary=_summarize_bot_response(last_assistant),
         user_tone=user_tone,
         conflict_escalation=conflict_escalation,

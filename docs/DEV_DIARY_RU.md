@@ -20,6 +20,23 @@
 
 ---
 
+## 2026-06-13 — Discourse resolver: единая нить диалога до routing (IUR + thread judge)
+
+**Контекст:** prod — эллипсис «как бы ты сейчас назвал правильно» после разговора про ИИ → `intent=general`, ответ про траву/Иран (context drift). Повторяющийся класс багов из gemma_bot_v2 (article_thread, user_facing_contract patches).
+
+**Решение (архитектура, не keyword-списки):**
+- `core/brain/discourse_resolver.py` — единая точка **до** intent/router: structural continuation (DSV, expects_reply, registry heuristics), IUR-lite rewrite, correction/tone, batch guard.
+- `core/brain/discourse_thread_judge.py` — опциональный LLM judge (stay/branch/correct) на пограничных `structural`; upgrade в `apply_discourse_to_context_async` после sync в `orchestrator.plan()`.
+- Интеграция: `orchestrator.plan` (sync), `pipeline.call_brain` + `resolve_brain_route` (async + judge), `profile_registry` continuation inherit, `dialogue_context` DSV (`last_intent`, `last_profile`).
+- Prompt: модуль `active_thread` в `prompt_modules.py`; hygiene — `deprioritize_failed_dialogue_rows` в `context_compression` / `behavior_store`.
+- Audit: `discourse` в `build_route_audit` → `turn_observer` (`discourse_action`, `discourse_reason`, …).
+
+**Verify:** `pytest tests/test_discourse_resolver.py tests/test_route_audit_and_context.py tests/test_profile_continuation.py` (targeted); полный CI локально не гоняли.
+
+**Deploy:** только `bash scripts/gemma_panel.sh update` на VPS после merge.
+
+---
+
 ## 2026-06-13 — Audit fixes: Qdrant fail-fast, polling webhook, healers, Docker
 
 **Контекст:** независимый code-review (Qdrant fail-open, polling 409, heal allowlist, Dockerfile).

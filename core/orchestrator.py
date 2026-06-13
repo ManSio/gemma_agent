@@ -2153,6 +2153,12 @@ class Orchestrator:
                 pre_ctx["brain_force_batch_profile"] = True
         except Exception as e:
             logger.debug("batch_continuation hint: %s", e)
+        try:
+            from core.brain.discourse_resolver import apply_discourse_to_context
+
+            text, pre_ctx = apply_discourse_to_context(text, pre_ctx)
+        except Exception as e:
+            logger.debug("discourse_resolver plan: %s", e)
         _obs_mark(input_meta, "plan_context")
         maintenance = self._maintenance.maybe_run(interval_sec=self._maintenance_interval_sec)
         if maintenance.get("ran"):
@@ -2180,7 +2186,11 @@ class Orchestrator:
         _obs_mark(input_meta, "plan_maintenance")
         ingested_rows = self._knowledge_engine.ingest_context_sources(context=pre_ctx)
         MONITOR.inc("knowledge_rows_ingested_total", max(0, int(ingested_rows)))
-        intent_probe = self._detect_intent(text, persisted, file_context=file_context) if text else "empty"
+        intent_probe = (
+            self._detect_intent(text, persisted, file_context=file_context, planner_context=pre_ctx)
+            if text
+            else "empty"
+        )
         planner_knowledge_hint = self._knowledge_engine.select_for_intent(intent_probe)
         predictive_hint = self._predictive.predict(
             text=text,
@@ -2201,8 +2211,8 @@ class Orchestrator:
             text=text,
             allowed_modules=allowed,
             route_command=self._route_command,
-            detect_intent=lambda raw, p=persisted, fc=file_context: self._detect_intent(
-                raw, p, file_context=fc
+            detect_intent=lambda raw, p=persisted, fc=file_context, pc=pre_ctx: self._detect_intent(
+                raw, p, file_context=fc, planner_context=pc
             ),
             select_module=self._select_module,
             input_meta=input_meta if isinstance(input_meta, dict) else {},
@@ -2588,6 +2598,7 @@ class Orchestrator:
         persisted: Optional[Dict[str, Any]] = None,
         *,
         file_context: Optional[Dict[str, Any]] = None,
+        planner_context: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         «math» только если после удаления URL/инвайтов всё ещё похоже на выражение.
@@ -2652,6 +2663,28 @@ class Orchestrator:
         if locked_intent:
             logger.info("[PLAN] intent lock -> %s (anti-drift continuation)", locked_intent)
             return locked_intent
+        try:
+            from core.brain.discourse_resolver import (
+                inherited_intent_from_context,
+                structural_thread_continuation,
+            )
+
+            pctx: Dict[str, Any] = {}
+            if isinstance(planner_context, dict):
+                pctx.update(planner_context)
+            if isinstance(persisted, dict):
+                pctx.setdefault("dialogue_state", persisted.get("dialogue_state"))
+                pctx.setdefault("recent_dialogue", persisted.get("recent_messages"))
+            inherited = inherited_intent_from_context(pctx)
+            if not inherited:
+                inherit, _ = structural_thread_continuation(raw, pctx)
+                if inherit and isinstance(pctx.get("dialogue_state"), dict):
+                    inherited = str(pctx["dialogue_state"].get("last_intent") or "").strip().lower()
+            if inherited and inherited not in {"", "empty", "unknown"}:
+                logger.info("[PLAN] intent -> %s (discourse inherit)", inherited)
+                return inherited
+        except Exception as e:
+            logger.debug("discourse intent inherit: %s", e)
         try:
             from core.math_investment import text_looks_like_investment_annuity
             from core.math_linear import text_looks_like_equation_solve
@@ -3715,8 +3748,14 @@ class Orchestrator:
                 logger.debug("patch_session_task route: %s", e)
             dialogue_patch = {}
             if pre_ctx.get("dialogue_state"):
-                dialogue_patch["last_intent"] = (pre_ctx["dialogue_state"] or {}).get("last_intent")
-                dialogue_patch["planned_module"] = (pre_ctx["dialogue_state"] or {}).get("planned_module")
+                try:
+                    from core.brain.discourse_resolver import strip_ephemeral_discourse_state
+
+                    _ds_patch = strip_ephemeral_discourse_state(pre_ctx.get("dialogue_state"))
+                except Exception:
+                    _ds_patch = pre_ctx.get("dialogue_state") or {}
+                dialogue_patch["last_intent"] = (_ds_patch or {}).get("last_intent")
+                dialogue_patch["planned_module"] = (_ds_patch or {}).get("planned_module")
                 if not group_id:
                     dialogue_patch["assistant_expects_reply"] = infer_assistant_expects_reply(
                         combined,

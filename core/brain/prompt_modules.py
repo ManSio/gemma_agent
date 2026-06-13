@@ -764,6 +764,25 @@ def _anchors_content(parts, cfg: ProfileConfig) -> str:
 
 register_module("context_anchors", _anchors_pred, _anchors_content)
 
+
+# =====================================================================
+# Модуль: active_thread (discourse resolver)
+# =====================================================================
+
+def _active_thread_pred(parts, cfg: ProfileConfig, intent, ctx) -> bool:
+    block = str((parts.get("active_thread_block") or (ctx or {}).get("active_thread_block") or "")).strip()
+    return bool(block)
+
+
+def _active_thread_content(parts, cfg: ProfileConfig) -> str:
+    block = str(parts.get("active_thread_block") or "").strip()
+    if not block:
+        return ""
+    return _fmt_block("Active thread", block)
+
+
+register_module("active_thread", _active_thread_pred, _active_thread_content)
+
 __all__ = [
     "build_dynamic_tail",
     "register_module",

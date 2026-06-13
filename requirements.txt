@@ -17,6 +17,8 @@ psutil>=7.2.2
 # API (api.py, docker profile api)
 fastapi>=0.115.0
 uvicorn[standard]>=0.30.0
+# starlette.testclient (tests/test_api_*.py); Starlette 1.2+ предпочитает httpx2
+httpx2>=2.0.0
 
 # DB / ORM (core/database.py)
 sqlalchemy>=2.0.50

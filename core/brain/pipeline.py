@@ -228,6 +228,13 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
     except Exception as e:
         logger.debug("brain fresh recent_dialogue: %s", e)
     try:
+        from core.brain.discourse_resolver import apply_discourse_to_context_async
+        from core.brain.runtime import _llm
+
+        user_text, context = await apply_discourse_to_context_async(user_text, context, llm=_llm)
+    except Exception as e:
+        logger.debug("discourse_resolver brain: %s", e)
+    try:
         from core.telegram_output_guard import _overlap_with_user_query
 
         _ds = context.get("dialogue_state")

@@ -33,6 +33,41 @@ def _protect_last_n() -> int:
     return _i("CONTEXT_PROTECT_LAST_N", 2, minimum=0)
 
 
+def _is_low_value_assistant_text(text: str) -> bool:
+    """Ответ ассистента-fallback (llm_error/empty), не несёт смысла для нити."""
+    t = re.sub(r"\s+", " ", (text or "").strip())
+    if not t:
+        return False
+    markers = (
+        "Сейчас ответ не сложился",
+        "Не успел собрать ответ",
+        "Повтори запрос",
+        "Ответ получился пустым",
+        "Нечего показать после обработки",
+        "Пустой ответ",
+    )
+    return any(m in t for m in markers)
+
+
+def deprioritize_failed_dialogue_rows(rows: Any, *, keep_tail: int = 4) -> List[Dict[str, Any]]:
+    """Убрать старые fallback-ответы ассистента из recent (hygiene контекста)."""
+    if not _truthy("CONTEXT_DEPRIORITIZE_FAILED_TURNS", True):
+        return normalize_dialogue_message_rows(rows)
+    msgs = normalize_dialogue_message_rows(rows)
+    if len(msgs) <= keep_tail:
+        return msgs
+    head = msgs[:-keep_tail]
+    tail = msgs[-keep_tail:]
+    filtered: List[Dict[str, Any]] = []
+    for row in head:
+        role = str(row.get("role") or "").lower()
+        txt = str(row.get("text") or "")
+        if role in ("assistant", "bot", "model") and _is_low_value_assistant_text(txt):
+            continue
+        filtered.append(row)
+    return normalize_dialogue_message_rows(filtered + tail)
+
+
 def normalize_dialogue_message_rows(rows: Any) -> List[Dict[str, Any]]:
     """Drop empty rows; remove orphan assistant at head and orphan user at tail."""
     if not isinstance(rows, list):

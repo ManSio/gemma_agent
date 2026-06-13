@@ -1,3 +1,11 @@
+## [2026-06-13] — v3.5.8: discourse resolver (thread continuity before routing)
+
+- **Added:** `core/brain/discourse_resolver.py` — structural continuation, IUR-lite rewrite, correction signals, batch guard; `discourse_thread_judge.py` for ambiguous stays.
+- **Integrated:** orchestrator `plan()`, `pipeline.call_brain`, `resolve_brain_route`, `profile_registry` continuation, `prompt_modules.active_thread`.
+- **Hygiene:** `deprioritize_failed_dialogue_rows` strips old LLM-error turns from recent context.
+- **Observability:** `discourse` block in `router_route_audit` / `turns.jsonl`.
+- **Tests:** `tests/test_discourse_resolver.py`.
+
 ## [2026-06-13] — v3.5.7: audit fixes (Qdrant startup, polling, healers, Docker)
 
 ### Исправлено

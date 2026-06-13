@@ -37,6 +37,21 @@ async def resolve_brain_route(
     llm = llm if llm is not None else _llm
     ctx = context if isinstance(context, dict) else {}
 
+    try:
+        from core.brain.discourse_resolver import (
+            apply_discourse_to_context_async,
+            inherited_profile_from_context,
+        )
+
+        user_text, ctx = await apply_discourse_to_context_async(user_text, ctx, llm=llm)
+        if isinstance(context, dict):
+            context.update(ctx)
+            ctx = context
+        _disc_profile = inherited_profile_from_context(ctx)
+    except Exception as e:
+        logger.debug("discourse_resolver route: %s", e)
+        _disc_profile = ""
+
     brain_profile = ""
     heuristic_profile = ""
     need_memory = False
@@ -192,6 +207,16 @@ async def resolve_brain_route(
     except Exception as e:
         logger.debug("resolve_brain_route continuation: %s", e, exc_info=True)
 
+    if _disc_profile and not route_preflight and not ctx.get("brain_force_batch_profile"):
+        try:
+            from core.brain.profile_registry import is_valid_profile
+
+            if is_valid_profile(_disc_profile):
+                brain_profile = _disc_profile
+                route_continuation = _disc_profile
+        except Exception as e:
+            logger.debug("discourse profile inherit: %s", e)
+
     situation_lane = str(ctx.get("situation_lane") or "").strip()
     if situation_lane:
         try:
@@ -231,6 +256,7 @@ async def resolve_brain_route(
             situation_lane=situation_lane,
             classifier_profile=str((classifier_result or {}).get("profile") or ""),
             heuristic_gate=_hg_audit if isinstance(_hg_audit, list) else None,
+            discourse=ctx.get("discourse_audit") if isinstance(ctx.get("discourse_audit"), dict) else None,
         )
         try:
             from core.route_semantic_audit import build_semantic_audit_note

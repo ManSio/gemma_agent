@@ -558,6 +558,12 @@ class BehaviorStore:
                 }
         msgs = trimmed
         rec["recent_messages"] = msgs
+        try:
+            from core.context_compression import deprioritize_failed_dialogue_rows
+
+            rec["recent_messages"] = deprioritize_failed_dialogue_rows(rec.get("recent_messages"))
+        except Exception as e:
+            logger.debug("deprioritize_failed_dialogue: %s", e)
         rec["recent_messages"] = compress_recent_dialogue(rec.get("recent_messages"))
         try:
             from core.context_tool_trim import trim_tool_outputs_in_dialogue
