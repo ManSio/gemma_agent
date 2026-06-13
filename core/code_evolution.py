@@ -18,7 +18,8 @@ import json
 import logging
 import os
 import re
-import subprocess  # noqa: S404 — только для тестов/деплоя
+import shutil
+import subprocess  # noqa: S404 — patch/git apply для code evolution
 import sys
 import textwrap
 import time
@@ -296,13 +297,19 @@ class PatchRunner:
 
         try:
             if patch.diff_text.startswith("---"):
-                new_code = self._apply_unified_diff(backup, patch.diff_text)
+                new_code = PatchRunner._apply_unified_diff(
+                    backup, patch.diff_text, filepath=filepath, runner=self
+                )
+                if new_code is None:
+                    self._fail_patch(patch, "diff apply failed")
+                    return False
             else:
                 new_code = patch.diff_text
 
             try:
                 ast.parse(new_code)
             except SyntaxError as e:
+                filepath.write_text(backup, encoding="utf-8")
                 self._fail_patch(patch, f"syntax error: {e}")
                 return False
 
@@ -324,9 +331,62 @@ class PatchRunner:
             return False
 
     @staticmethod
-    def _apply_unified_diff(original: str, diff_text: str) -> str:
+    def _apply_unified_diff_pure(original: str, diff_text: str) -> Optional[str]:
+        """Применить unified diff без внешних утилит (простые hunks)."""
+        file_lines = original.splitlines(keepends=True)
+        if original and not file_lines:
+            file_lines = [original]
+        hunk_re = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+        i = 0
+        diff_rows = diff_text.splitlines(keepends=True)
+        while i < len(diff_rows):
+            m = hunk_re.match(diff_rows[i].rstrip("\r\n"))
+            if not m:
+                i += 1
+                continue
+            old_start = int(m.group(1))
+            i += 1
+            new_chunk: List[str] = []
+            src_idx = old_start - 1
+            while i < len(diff_rows):
+                row = diff_rows[i]
+                if row.startswith("@@"):
+                    break
+                if row.startswith("---") or row.startswith("+++"):
+                    i += 1
+                    continue
+                if not row:
+                    i += 1
+                    continue
+                tag = row[0]
+                body = row[1:]
+                if body and not body.endswith("\n"):
+                    body = f"{body}\n"
+                if tag == " ":
+                    if src_idx >= len(file_lines) or file_lines[src_idx] != body:
+                        return None
+                    new_chunk.append(body)
+                    src_idx += 1
+                elif tag == "-":
+                    if src_idx >= len(file_lines) or file_lines[src_idx] != body:
+                        return None
+                    src_idx += 1
+                elif tag == "+":
+                    new_chunk.append(body)
+                else:
+                    return None
+                i += 1
+            file_lines[old_start - 1 : src_idx] = new_chunk
+        return "".join(file_lines)
+
+    @staticmethod
+    def _apply_via_patch_cmd(original: str, diff_text: str) -> Optional[str]:
+        """Применить diff через GNU patch, если установлен."""
+        if not shutil.which("patch"):
+            return None
         try:
             import tempfile
+
             with tempfile.NamedTemporaryFile(
                 mode="w", suffix=".py", delete=False, encoding="utf-8"
             ) as orig_f:
@@ -342,14 +402,14 @@ class PatchRunner:
             try:
                 result = subprocess.run(
                     ["patch", "--force", "--no-backup-if-mismatch", orig_path, diff_path],
-                    capture_output=True, text=True, timeout=15,
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
                 )
                 if result.returncode == 0:
-                    patched = Path(orig_path).read_text(encoding="utf-8")
-                    return patched
-                else:
-                    logger.warning("[code_evol] patch apply failed: %s", result.stderr[:200])
-                    return original
+                    return Path(orig_path).read_text(encoding="utf-8")
+                logger.warning("[code_evol] patch apply failed: %s", (result.stderr or "")[:200])
+                return None
             finally:
                 try:
                     Path(orig_path).unlink(missing_ok=True)
@@ -360,8 +420,70 @@ class PatchRunner:
                 except Exception as e:
                     logger.debug('%s optional failed: %s', 'code_evolution', e, exc_info=True)
         except Exception as e:
-            logger.warning("[code_evol] _apply_unified_diff error: %s", e)
-            return original
+            logger.warning("[code_evol] _apply_via_patch_cmd error: %s", e)
+            return None
+
+    def _apply_via_git(self, filepath: Path, diff_text: str, original: str) -> Optional[str]:
+        """Применить diff через git apply в корне репозитория."""
+        if not shutil.which("git"):
+            return None
+        root = Path(self._project_root())
+        try:
+            filepath.relative_to(root)
+        except ValueError:
+            return None
+        backup = original
+        filepath.write_text(backup, encoding="utf-8")
+        result = None
+        try:
+            import tempfile
+
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".diff", delete=False, encoding="utf-8"
+            ) as diff_f:
+                diff_f.write(diff_text)
+                diff_path = diff_f.name
+            try:
+                result = subprocess.run(
+                    ["git", "apply", "--unsafe-paths", "-p1", diff_path],
+                    cwd=str(root),
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
+                )
+                if result.returncode == 0:
+                    return filepath.read_text(encoding="utf-8")
+                logger.warning("[code_evol] git apply failed: %s", (result.stderr or "")[:200])
+                return None
+            finally:
+                Path(diff_path).unlink(missing_ok=True)
+        except Exception as e:
+            logger.warning("[code_evol] _apply_via_git error: %s", e)
+            return None
+        finally:
+            if result is None or result.returncode != 0:
+                try:
+                    filepath.write_text(backup, encoding="utf-8")
+                except OSError as e:
+                    logger.debug('%s optional failed: %s', 'code_evolution', e, exc_info=True)
+
+    @staticmethod
+    def _apply_unified_diff(
+        original: str,
+        diff_text: str,
+        *,
+        filepath: Optional[Path] = None,
+        runner: Optional["PatchRunner"] = None,
+    ) -> Optional[str]:
+        """Применить unified diff: patch → git apply → pure Python."""
+        applied = PatchRunner._apply_via_patch_cmd(original, diff_text)
+        if applied is not None:
+            return applied
+        if filepath is not None and runner is not None:
+            applied = runner._apply_via_git(filepath, diff_text, original)
+            if applied is not None:
+                return applied
+        return PatchRunner._apply_unified_diff_pure(original, diff_text)
 
     # ─── Тестирование ───────────────────────────────────────────────────
 

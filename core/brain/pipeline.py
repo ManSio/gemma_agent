@@ -186,6 +186,18 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
     context = context if isinstance(context, dict) else {}
     context.pop("operational_diag_short_circuit", None)
     user_text = _safe_text(user_text)
+    if _is_bot_operational_diag_question(user_text):
+        MONITOR.inc("brain_operational_diag_short_circuit_total")
+        context["operational_diag_short_circuit"] = True
+        reply = _operational_diag_reply()
+        _uid_od = str(context.get("user_id") or "unknown")
+        try:
+            reply = _persona_apply_polished(_uid_od, reply)
+            if not context.get("brain_skip_memory_fetch"):
+                await get_memory().on_after_response(_uid_od, reply)
+        except Exception as e:
+            logger.debug('%s optional failed: %s', 'pipeline', e, exc_info=True)
+        return reply if _safe_text(reply) else _operational_diag_reply()
     try:
         from core.request_context import ensure_request_id, get_request_id
 
@@ -583,17 +595,6 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
             return reply if _safe_text(reply) else admin_or_user_summary_short_reply(is_admin=_is_adm)
     except Exception as e:
         logger.debug('%s optional failed: %s', 'pipeline', e, exc_info=True)
-    if _is_bot_operational_diag_question(user_text):
-        MONITOR.inc("brain_operational_diag_short_circuit_total")
-        context["operational_diag_short_circuit"] = True
-        reply = _operational_diag_reply()
-        try:
-            reply = _persona_apply_polished(user_id, reply)
-            if not skip_memory_writes:
-                await get_memory().on_after_response(user_id, reply)
-        except Exception as e:
-            logger.debug('%s optional failed: %s', 'pipeline', e, exc_info=True)
-        return reply if _safe_text(reply) else _operational_diag_reply()
 
     try:
         from core.dialogue_recheck_reply import try_recheck_deterministic_reply
