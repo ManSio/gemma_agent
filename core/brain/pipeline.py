@@ -2787,6 +2787,9 @@ URL: {fetch_url}
             "static_format": _prompt_parts.get("static_format", ""),
             "static_tools": _prompt_parts.get("static_tools", ""),
         }
+        _uf_prewarm = _prompt_parts.get("user_facts")
+        if isinstance(_uf_prewarm, dict) and _uf_prewarm:
+            _prompt_parts_prewarm["user_facts"] = _uf_prewarm
         prompt, _, _pack_meta = assemble_split_with_budget(
             _assembly_tier, _prompt_parts_prewarm,
             profile=_brain_profile, intent=_prompt_intent,
