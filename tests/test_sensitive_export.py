@@ -14,6 +14,7 @@ from core.sensitive_export import (
     security_audit_public_json_text,
     security_audit_public_report,
     write_audit_document_json,
+    write_audit_document_md,
 )
 
 
@@ -153,6 +154,18 @@ def test_security_audit_public_json_text_no_root():
     )
     assert "/opt/gemma_agent" not in text
     assert "secrets_configured" in text
+
+
+def test_write_audit_document_md(tmp_path):
+    doc = {
+        "stamp": "2026-06-13",
+        "hosts": [{"host": "local", "turns": {"count": 1}, "archives": {}, "errors": {"count": 0}}],
+    }
+    out = tmp_path / "digest.md"
+    write_audit_document_md(out, doc)
+    text = out.read_text(encoding="utf-8")
+    assert "Ops digest" in text
+    assert "samples" not in text
 
 
 def test_security_audit_public_report_no_root_path():

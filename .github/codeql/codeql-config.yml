@@ -1,3 +1,0 @@
-name: gemma-agent-codeql
-packs:
-  - gemma-agent/python-extensions

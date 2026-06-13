@@ -21,6 +21,15 @@ from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 
+_AUDIT_CHECK_KEYS = (
+    "env_not_tracked",
+    "dotenv_permissions",
+    "privacy_scan",
+    "secrets_configured",
+    "security_layer_tests",
+    "release_guard_smoke",
+)
+
 for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         try:
@@ -197,7 +206,8 @@ def main() -> int:
     else:
         print("=== Gemma Agent security audit (honest) ===")
         print("Root: gemma_agent (public build)")
-        for name, data in pub["checks"].items():
+        for name in _AUDIT_CHECK_KEYS:
+            data = (pub.get("checks") or {}).get(name) or {}
             mark = "OK" if data.get("ok") or data.get("skipped") else "FAIL"
             print(f"\n[{mark}] {name}")
             note_n = len(data.get("notes") or [])

@@ -71,15 +71,15 @@ def main() -> int:
         hosts.append(_audit_local(root, "local", args.days))
 
     from core.sensitive_export import (
-        render_audit_document_md,
         write_audit_document_json,
+        write_audit_document_md,
     )
 
     out_doc = {"ts": datetime.now(timezone.utc).isoformat(), "stamp": stamp, "hosts": hosts}
     json_path = Path(args.json_out or root / "data/benchmarks" / f"daily_digest_{stamp.replace('-', '')}.json")
     md_path = Path(args.md_out or root / "docs" / "archive" / f"DAILY_OPS_{stamp}_RU.md")
     write_audit_document_json(json_path, out_doc)
-    md_path.write_text(render_audit_document_md(out_doc), encoding="utf-8")
+    write_audit_document_md(md_path, out_doc)
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")
     return 0

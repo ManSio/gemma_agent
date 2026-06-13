@@ -298,8 +298,8 @@ def main() -> int:
     from core.sensitive_export import (
         audit_document_public,
         audit_summary_log_line,
-        render_audit_document_md,
         write_audit_document_json,
+        write_audit_document_md,
     )
 
     safe_doc = audit_document_public(out_doc)
@@ -312,12 +312,10 @@ def main() -> int:
     else:
         print(audit_summary_log_line(len(safe_doc.get("hosts") or [])))
     if args.md_out:
-        md = render_audit_document_md(out_doc)
         mp = Path(args.md_out)
         if not mp.is_absolute():
             mp = root / mp
-        mp.parent.mkdir(parents=True, exist_ok=True)
-        mp.write_text(md, encoding="utf-8")
+        write_audit_document_md(mp, out_doc)
         print(f"Wrote {mp}")
     return 0
 

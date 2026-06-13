@@ -186,6 +186,14 @@ def render_audit_document_md(doc: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def write_audit_document_md(path: Union[str, Path], doc: Dict[str, Any]) -> None:
+    """Write sanitized audit/digest markdown (counts only, no excerpts)."""
+    md = render_audit_document_md(doc if isinstance(doc, dict) else {})
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(md, encoding="utf-8")
+
+
 def scan_finding_public(row: Dict[str, Any]) -> Dict[str, Any]:
     leaks = row.get("leaks") or []
     file_name = Path(str(row.get("file") or "")).name[:160]

@@ -8,7 +8,7 @@
 | `py/clear-text-storage-sensitive-data` | 6 | typed writers, `render_audit_document_md`, `barrierModel` extensions |
 | `py/incomplete-url-substring-sanitization` | 1 | `urlparse` in tests |
 
-**Wave 3 (2026-06-13):** alerts #41, #49, #105, #117–#120 — typed writers, count-only stdout, `.github/codeql/extensions/gemma-agent-python/sensitive_export.model.yml`.
+**Wave 3 (2026-06-13):** alerts #41, #49, #105, #117–#120 — typed writers, count-only stdout, `write_audit_document_md`. CodeQL config без unpublished pack (локальный extension pack остаётся для VS Code).
 
 **Workflow:** `.github/workflows/codeql.yml` — re-scan on push + weekly.
 
