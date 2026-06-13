@@ -20,6 +20,21 @@
 
 ---
 
+## 2026-06-13 — v3.5.17: news hot path wiring (P0+P1)
+
+**Контекст:** модули News Reliability были в репо, но не в hot path (audit gaps 1–3, 6).
+
+**Сделано:**
+- `news_generation_log` + `sources` в `try_news_reply`, `compose_news_digest_from_search`, item/web/affirmative paths.
+- `NewsValidator` в `_fetch_page_article`; disclaimer через `format_news_from_* (sources=...)`.
+- Тесты: `tests/test_news_hot_path_wiring.py`.
+
+**Verify:** `pytest tests/test_news_*` 117 passed; `release_guard --smoke`.
+
+**Не в scope:** self-verify `source_context` в news_reply (P2), ConsistencyChecker (P3).
+
+---
+
 ## 2026-06-13 — CI + CodeQL wave 4 (regex_safe, daily digest writer)
 
 **Контекст:** CI fail `test_finalize_send_path_inventory`; 20 open CodeQL (19 ReDoS + 1 clear-text-storage).

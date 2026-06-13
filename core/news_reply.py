@@ -578,6 +578,174 @@ def _news_llm_model() -> str:
     return main or router
 
 
+def _news_sources_max() -> int:
+    """Max source rows attached to a news reply log."""
+    try:
+        return max(1, min(16, int((os.getenv("NEWS_SOURCES_LOG_MAX") or "8").strip())))
+    except ValueError:
+        return 8
+
+
+def _sources_from_search_results(
+    results: Optional[List[Dict[str, Any]]],
+    *,
+    max_items: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    """Build NewsSource dicts from UniversalSearch rows."""
+    from core.news_article_model import build_news_source
+
+    cap = max_items if max_items is not None else _news_sources_max()
+    out: List[Dict[str, Any]] = []
+    for row in results or []:
+        if not isinstance(row, dict):
+            continue
+        url = str(row.get("url") or row.get("link") or "").strip()
+        if not url.startswith("http"):
+            continue
+        title = str(row.get("title") or "")
+        snippet = str(row.get("snippet") or row.get("content") or row.get("body") or "")
+        conf = 0.55 if len(snippet) > 80 else 0.35
+        out.append(
+            build_news_source(
+                url,
+                fetch_method="web_search",
+                title_used=title,
+                fetch_success=True,
+                text_length=len(snippet),
+                parsing_confidence=conf,
+            )
+        )
+        if len(out) >= cap:
+            break
+    return out
+
+
+def _sources_from_displayed(
+    displayed: Optional[List[Dict[str, Any]]],
+    *,
+    max_items: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    """Build NewsSource dicts from digest display rows."""
+    from core.news_article_model import build_news_source
+
+    cap = max_items if max_items is not None else _news_sources_max()
+    out: List[Dict[str, Any]] = []
+    for row in displayed or []:
+        if not isinstance(row, dict):
+            continue
+        url = str(row.get("url") or row.get("link") or "").strip()
+        title = str(row.get("title") or "")
+        snippet = str(row.get("snippet") or "")
+        pub = str(row.get("publisher") or "")
+        conf = float(row.get("parsing_confidence") or 0.0)
+        if url.startswith("http"):
+            if conf <= 0:
+                conf = 0.65 if len(snippet) > 60 else 0.4
+            method = "urlfetch" if row.get("page_enriched") or row.get("enriched") else "web_search"
+            out.append(
+                build_news_source(
+                    url,
+                    fetch_method=method,
+                    title_used=title,
+                    fetch_success=True,
+                    text_length=len(snippet),
+                    parsing_confidence=conf,
+                )
+            )
+        elif title and pub:
+            out.append(
+                build_news_source(
+                    url or f"rss://{pub}",
+                    fetch_method="rss",
+                    title_used=title,
+                    fetch_success=True,
+                    text_length=len(snippet),
+                    parsing_confidence=0.5,
+                )
+            )
+        if len(out) >= cap:
+            break
+    return out
+
+
+def _source_from_fetched_article(
+    article: Dict[str, Any],
+    *,
+    title: str = "",
+) -> Optional[Dict[str, Any]]:
+    """Build one NewsSource from _fetch_page_article result."""
+    from core.news_article_model import build_news_source
+
+    if not isinstance(article, dict):
+        return None
+    url = str(article.get("url") or "").strip()
+    text = str(article.get("text") or "")
+    if not url.startswith("http"):
+        return None
+    conf = float(article.get("parsing_confidence") or 0.0)
+    if conf <= 0:
+        conf = 0.7 if len(text) > 200 else 0.3
+    return build_news_source(
+        url,
+        fetch_method="urlfetch",
+        title_used=title or url,
+        fetch_success=bool(text.strip()),
+        text_length=len(text),
+        parsing_confidence=conf,
+    )
+
+
+def _emit_news_generation_log(
+    *,
+    user_id: str,
+    query: str,
+    sources: Optional[List[Dict[str, Any]]],
+    reply: str,
+    llm_model: str = "",
+) -> None:
+    """Append news_generation row to llm_usage.jsonl."""
+    if not (reply or "").strip():
+        return
+    try:
+        from core.llm_usage_store import append_record, news_generation_log
+
+        append_record(
+            news_generation_log(
+                user_id=str(user_id or ""),
+                query=(query or "")[:500],
+                sources=list(sources or []),
+                reply=str(reply).strip(),
+                llm_model=llm_model or _news_llm_model(),
+                self_verify_run=False,
+                self_verify_result="N/A",
+            )
+        )
+    except Exception as exc:
+        logger.debug("news_generation_log: %s", exc)
+
+
+def _return_news_with_telemetry(
+    reply: Optional[str],
+    *,
+    user_id: str = "",
+    query: str = "",
+    sources: Optional[List[Dict[str, Any]]] = None,
+    llm_model: str = "",
+) -> Optional[str]:
+    """Normalize news reply and persist generation telemetry."""
+    if not reply or not str(reply).strip():
+        return None
+    text = str(reply).strip()
+    _emit_news_generation_log(
+        user_id=user_id,
+        query=query,
+        sources=sources,
+        reply=text,
+        llm_model=llm_model,
+    )
+    return text
+
+
 def _set_last_news_picked_index(persisted: Optional[Dict[str, Any]], pick: int) -> None:
     if not isinstance(persisted, dict) or pick < 1:
         return
@@ -2288,12 +2456,39 @@ async def _fetch_page_article(
         if isinstance(pack, dict) and pack.get("ok"):
             body = str(pack.get("text") or pack.get("content") or "").strip()
             page_url = str(pack.get("url") or url).strip()
+            try:
+                http_status = int(pack.get("http_status") or 200)
+            except (TypeError, ValueError):
+                http_status = 200
+            content_type = str(pack.get("content_type") or "")
+            try:
+                from core.news_validator import NewsValidator
+
+                val = NewsValidator().validate_fetch(
+                    page_url,
+                    html="",
+                    text=body,
+                    http_status=http_status,
+                    content_type=content_type,
+                )
+                if not val.valid:
+                    logger.warning(
+                        "news_item fetch invalid %s: %s",
+                        page_url[:80],
+                        val.reason,
+                    )
+                    return empty
+                parsing_confidence = val.confidence
+            except Exception as exc:
+                logger.debug("news_item fetch validate: %s", exc)
+                parsing_confidence = 0.0
             if _page_text_usable(body, title, url=page_url):
                 imgs = [u for u in (pack.get("images") or []) if isinstance(u, str) and u.startswith("http")]
                 return {
                     "text": body,
                     "images": imgs[: _news_item_max_images()],
-                    "url": str(pack.get("url") or url).strip(),
+                    "url": page_url,
+                    "parsing_confidence": parsing_confidence,
                 }
     except Exception as e:
         logger.debug("news_item url_fetch %s: %s", url[:60], e)
@@ -3050,23 +3245,23 @@ async def try_news_item_reply(
     """Развёрнутый пункт дайджеста по номеру («2») или «подробнее» — без полного brain."""
     if not news_item_pick_enabled():
         return None
-    text = (user_text or "").strip()
-    if not text:
+    user_query = (user_text or "").strip()
+    if not user_query:
         return None
-    pick = resolve_news_item_pick_index(text, recent_dialogue, persisted)
+    pick = resolve_news_item_pick_index(user_query, recent_dialogue, persisted)
     if pick is None:
-        if wants_expanded_news_digest(text, recent_dialogue):
+        if wants_expanded_news_digest(user_query, recent_dialogue):
             return None
         return None
-    expand_same = parse_news_item_pick_index(text, recent_dialogue, persisted) is None and bool(
-        wants_expanded_news_digest(text, recent_dialogue)
+    expand_same = parse_news_item_pick_index(user_query, recent_dialogue, persisted) is None and bool(
+        wants_expanded_news_digest(user_query, recent_dialogue)
     )
     try:
         from core.heuristic_context_gate import should_run_shortcut_async
 
         _gr = await should_run_shortcut_async(
             "news_item_pick",
-            text,
+            user_query,
             persisted=persisted,
             planner_context={"recent_dialogue": recent_dialogue}
             if recent_dialogue
@@ -3116,7 +3311,15 @@ async def try_news_item_reply(
             "image_urls": list(article.get("images") or []),
             "source_url": str(article.get("url") or ""),
         }
-    return text
+    src = _source_from_fetched_article(article, title=str(item.get("title") or ""))
+    sources = [src] if src else []
+    return _return_news_with_telemetry(
+        text,
+        user_id=str(user_id or ""),
+        query=user_query,
+        sources=sources,
+        llm_model=_news_llm_model(),
+    )
 
 
 async def try_news_item_reply_pack(
@@ -3660,6 +3863,7 @@ async def compose_news_digest_from_search(
             country=filter_co,
             world_feed=world_feed,
         )
+    sources = _sources_from_displayed(shown) or _sources_from_search_results(all_raw)
     reply = await _compose_digest_reply(
         shown,
         user_query=text,
@@ -3667,8 +3871,15 @@ async def compose_news_digest_from_search(
         user_id=uid,
         country=filter_co,
         world_feed=world_feed,
+        sources=sources,
     )
-    return reply.strip() if reply and str(reply).strip() else None
+    return _return_news_with_telemetry(
+        reply,
+        user_id=uid,
+        query=text,
+        sources=sources,
+        llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
+    )
 
 
 def _reply_looks_like_portal_digest(reply: str) -> bool:
@@ -3696,12 +3907,14 @@ async def _compose_digest_reply(
     user_id: str = "",
     country: str = "",
     world_feed: bool = False,
+    sources: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     from core.telegram_output_guard import format_news_from_displayed
 
     if not displayed:
         return ""
     shown = list(displayed)
+    src = sources if sources is not None else _sources_from_displayed(shown)
     digest_fmt = _news_digest_format()
     narr_style = _resolve_narrative_style(user_query=user_query, world_feed=world_feed)
     fp = ""
@@ -3774,7 +3987,7 @@ async def _compose_digest_reply(
         _search_only = True
     # SEARCH_ONLY + narrative: не отдавать сырой SearX-список порталов (см. DEV_DIARY 2026-05-30).
     if digest_fmt == "narrative" and _search_only:
-        list_out = format_news_from_displayed(shown, user_query=user_query) if shown else ""
+        list_out = format_news_from_displayed(shown, user_query=user_query, sources=src) if shown else ""
         if list_out and str(list_out).strip() and not _reply_looks_like_portal_digest(list_out):
             try:
                 from core.monitoring import MONITOR
@@ -3791,7 +4004,7 @@ async def _compose_digest_reply(
         shown = await _llm_digest_summaries(
             shown, expanded=expanded, user_id=str(user_id or "")
         )
-    out = format_news_from_displayed(shown, user_query=user_query) if shown else ""
+    out = format_news_from_displayed(shown, user_query=user_query, sources=src) if shown else ""
     if out and fp and cache_key and _news_digest_llm_enabled():
         try:
             from core.news_digest_cache import put_cached_compose
@@ -3891,9 +4104,16 @@ async def try_news_reply(
                 user_id=str(user_id or ""),
                 country=news_co,
                 world_feed=_wc_exp,
+                sources=_sources_from_displayed(cached),
             )
             if reply and str(reply).strip():
-                return reply.strip()
+                return _return_news_with_telemetry(
+                    reply,
+                    user_id=str(user_id or ""),
+                    query=text,
+                    sources=_sources_from_displayed(cached),
+                    llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
+                )
 
     enrich = (os.getenv("NEWS_ENRICH_SEARCH_SNIPPETS") or "true").strip().lower() in {
         "1",
@@ -4018,6 +4238,7 @@ async def try_news_reply(
             "Попробуйте «новости в мире» или повторите через минуту."
         )
 
+    sources: List[Dict[str, Any]] = []
     if rss_items:
         shown = await stash_news_digest_context_async(
             persisted,
@@ -4027,6 +4248,7 @@ async def try_news_reply(
             world_feed=bool(world_feed),
             user_id=str(user_id or ""),
         )
+        sources = _sources_from_displayed(shown)
         reply = await _compose_digest_reply(
             shown,
             user_query=text,
@@ -4034,10 +4256,16 @@ async def try_news_reply(
             user_id=str(user_id or ""),
             country=news_co,
             world_feed=bool(world_feed),
+            sources=sources,
         )
     elif search_body:
+        sources = _sources_from_search_results(search_prefetch_results)
         reply = format_news_from_search(
-            search_body, user_query=text, country=news_co, world_feed=bool(world_feed)
+            search_body,
+            user_query=text,
+            country=news_co,
+            world_feed=bool(world_feed),
+            sources=sources,
         )
     else:
         reply = (
@@ -4045,7 +4273,13 @@ async def try_news_reply(
             "Попробуйте уточнить регион или повторить через минуту."
         )
 
-    return reply.strip() if reply and str(reply).strip() else None
+    return _return_news_with_telemetry(
+        reply,
+        user_id=str(user_id or ""),
+        query=text,
+        sources=sources,
+        llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
+    )
 
 
 async def try_web_news_digest_reply(
@@ -4089,12 +4323,24 @@ async def try_web_news_digest_reply(
         )
     from core.telegram_output_guard import format_news_from_search
 
-    body = format_news_from_search(str(pack.get("summary") or ""), user_query=text)
+    results = [r for r in (pack.get("results") or []) if isinstance(r, dict)]
+    sources = _sources_from_search_results(results)
+    body = format_news_from_search(str(pack.get("summary") or ""), user_query=text, sources=sources)
     if body and str(body).strip():
-        return str(body).strip()[:4500]
+        return _return_news_with_telemetry(
+            str(body).strip()[:4500],
+            user_id=str(user_id or ""),
+            query=text,
+            sources=sources,
+        )
     summary = str(pack.get("summary") or "").strip()
     if summary:
-        return summary[:4500]
+        return _return_news_with_telemetry(
+            summary[:4500],
+            user_id=str(user_id or ""),
+            query=text,
+            sources=sources,
+        )
     return None
 
 
@@ -4127,12 +4373,24 @@ async def try_affirmative_search_reply(
         )
     from core.telegram_output_guard import format_news_from_search
 
-    body = format_news_from_search(str(pack.get("summary") or ""), user_query=q)
+    results = [r for r in (pack.get("results") or []) if isinstance(r, dict)]
+    sources = _sources_from_search_results(results)
+    body = format_news_from_search(str(pack.get("summary") or ""), user_query=q, sources=sources)
     if body and str(body).strip():
-        return str(body).strip()[:4500]
+        return _return_news_with_telemetry(
+            str(body).strip()[:4500],
+            user_id=str(user_id or ""),
+            query=q,
+            sources=sources,
+        )
     summary = str(pack.get("summary") or "").strip()
     if summary:
-        return summary[:4500]
+        return _return_news_with_telemetry(
+            summary[:4500],
+            user_id=str(user_id or ""),
+            query=q,
+            sources=sources,
+        )
     return (
         f"Поиск по «{q}» выполнен, но сводка пустая. "
         "Уточните, что именно нужно найти."

@@ -1,3 +1,17 @@
+## [2026-06-13] — v3.5.17: news hot path wiring (sources, validator, llm_usage log)
+
+- **Wired:** `try_news_reply` / `compose_news_digest_from_search` / item & web digest — `NewsSource` + disclaimer + `news_generation_log` → `llm_usage.jsonl`.
+- **Wired:** `_fetch_page_article` — `NewsValidator.validate_fetch()` (HTTP, captcha/cloudflare, confidence).
+- **Added:** `tests/test_news_hot_path_wiring.py`.
+
+### Verify
+```bash
+python -m pytest tests/test_news_hot_path_wiring.py tests/test_news_reply.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — CI + CodeQL wave 4 (regex_safe, daily digest)
 
 - **Fix:** CI `test_finalize_send_path_inventory` — проверка полного тела `_send_output`.

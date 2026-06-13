@@ -980,7 +980,12 @@ def collect_news_display_items(
     return out
 
 
-def format_news_from_displayed(displayed: List[Dict[str, Any]], *, user_query: str = "") -> str:
+def format_news_from_displayed(
+    displayed: List[Dict[str, Any]],
+    *,
+    user_query: str = "",
+    sources: Optional[List[Dict[str, Any]]] = None,
+) -> str:
     """Дайджест из уже собранных пунктов (после enrich в stash)."""
     blocks: List[str] = []
     for row in displayed:
@@ -997,7 +1002,15 @@ def format_news_from_displayed(displayed: List[Dict[str, Any]], *, user_query: s
     if not blocks:
         return ""
     head = _news_digest_header(user_query)
-    return _finish_news_digest(head + "\n\n".join(blocks))
+    result = _finish_news_digest(head + "\n\n".join(blocks))
+    if result and sources:
+        try:
+            from core.news_disclaimer import format_news_with_disclaimer
+
+            result = format_news_with_disclaimer(result, sources)
+        except Exception:
+            pass
+    return result
 
 
 def format_news_from_items(items: List[Dict[str, Any]], *, user_query: str = "") -> str:
