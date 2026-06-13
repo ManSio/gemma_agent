@@ -2599,6 +2599,31 @@ class InputLayer:
                         output.meta["scenario_pre_send"] = [
                             {"id": h.id, "action": h.action} for h in _pre_hits
                         ]
+                    _tid_ps = str(output.meta.get("trace_id") or "").strip()
+                    _otg_ps = output.meta.get("outbound_thread_guard_issues")
+                    if _tid_ps and (
+                        (isinstance(_otg_ps, list) and _otg_ps) or _pre_hits
+                    ):
+                        try:
+                            from core.event_bus import bus
+
+                            bus.emit_ff(
+                                "turn.pre_send",
+                                {
+                                    "trace_id": _tid_ps,
+                                    "user_id": (
+                                        str(message.from_user.id)
+                                        if message.from_user
+                                        else ""
+                                    ),
+                                    "outbound_thread_guard_issues": (
+                                        list(_otg_ps) if isinstance(_otg_ps, list) else None
+                                    ),
+                                    "scenario_pre_send": output.meta.get("scenario_pre_send"),
+                                },
+                            )
+                        except Exception as _tps_e:
+                            logger.debug("turn.pre_send emit: %s", _tps_e)
             except Exception as _ps_e:
                 logger.debug("scenario pre_send: %s", _ps_e)
             try:

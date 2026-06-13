@@ -79,6 +79,7 @@ def detect_issues(
     detail: str,
     delivery_normalize_status: str = "",
     short_turn_kind: str = "",
+    outbound_thread_guard_issues: Optional[List[str]] = None,
 ) -> List[str]:
     issues: List[str] = []
     o = (outcome or "").strip().lower()
@@ -119,6 +120,11 @@ def detect_issues(
         tag = f"delivery_normalize_{delivery_normalize_status}"
         if tag not in issues:
             issues.append(tag)
+    if isinstance(outbound_thread_guard_issues, list):
+        for tag in outbound_thread_guard_issues:
+            key = str(tag or "").strip()[:48]
+            if key and key not in issues:
+                issues.append(key)
     return issues
 
 
@@ -151,6 +157,8 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
     detail = str(payload.get("detail") or "")[:200]
     neg = bool(payload.get("user_feedback_negative"))
     pos = bool(payload.get("user_feedback_positive"))
+    _otg_in = payload.get("outbound_thread_guard_issues")
+    _otg_list = [str(x)[:48] for x in _otg_in[:8]] if isinstance(_otg_in, list) else None
     issues = detect_issues(
         outcome=outcome,
         user_feedback_negative=neg,
@@ -159,6 +167,7 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
         detail=detail,
         delivery_normalize_status=str(payload.get("delivery_normalize_status") or ""),
         short_turn_kind=str(payload.get("short_turn_kind") or ""),
+        outbound_thread_guard_issues=_otg_list,
     )
     fp = str(payload.get("fp") or "")
     if not fp and user_excerpt:
@@ -329,6 +338,8 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
     _lfa = payload.get("last_feedback_applied")
     if isinstance(_lfa, list) and _lfa:
         row["last_feedback_applied"] = [str(x)[:40] for x in _lfa[:8]]
+    if _otg_list:
+        row["outbound_thread_guard_issues"] = _otg_list
     append_turn_record(row)
 
 
@@ -337,6 +348,90 @@ def _on_turn_outcome(payload: Dict[str, Any]) -> None:
         record_from_turn_outcome(payload)
     except Exception as e:
         logger.debug("turn_observer: %s", e)
+
+
+def enrich_turn_record_by_trace_id(trace_id: str, patch: Dict[str, Any]) -> bool:
+    """Patch the latest turn row matching trace_id (e.g. after pre_send guard)."""
+    tid = (trace_id or "").strip()
+    if not tid or not isinstance(patch, dict) or not patch:
+        return False
+    path = log_path()
+    if not path.is_file():
+        return False
+    try:
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return False
+    for i in range(len(lines) - 1, -1, -1):
+        line = lines[i].strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict):
+            continue
+        if row.get("type") in ("scenario", "pre_send"):
+            continue
+        if str(row.get("trace_id") or "") != tid:
+            continue
+        for key, val in patch.items():
+            if val is None:
+                continue
+            row[key] = val
+        otg = patch.get("outbound_thread_guard_issues")
+        if isinstance(otg, list) and otg:
+            iss = row.get("issues") if isinstance(row.get("issues"), list) else []
+            for tag in otg:
+                key = str(tag or "").strip()[:48]
+                if key and key not in iss:
+                    iss.append(key)
+            row["issues"] = iss
+        lines[i] = json.dumps(row, ensure_ascii=False, default=str)
+        try:
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        except OSError as e:
+            logger.debug("turn_observer enrich: %s", e)
+            return False
+        return True
+    return False
+
+
+def record_from_turn_pre_send(payload: Dict[str, Any]) -> None:
+    """Merge pre_send guard telemetry into the matching turn row."""
+    if not isinstance(payload, dict):
+        return
+    tid = str(payload.get("trace_id") or "").strip()
+    if not tid:
+        return
+    patch: Dict[str, Any] = {}
+    otg = payload.get("outbound_thread_guard_issues")
+    if isinstance(otg, list) and otg:
+        patch["outbound_thread_guard_issues"] = [str(x)[:48] for x in otg[:8]]
+    sps = payload.get("scenario_pre_send")
+    if isinstance(sps, list) and sps:
+        patch["scenario_pre_send"] = sps[:12]
+    if not patch:
+        return
+    if enrich_turn_record_by_trace_id(tid, patch):
+        return
+    append_turn_record(
+        {
+            "ts": _now_iso(),
+            "type": "pre_send",
+            "trace_id": tid[:64],
+            "user_id": str(payload.get("user_id") or ""),
+            **patch,
+        }
+    )
+
+
+def _on_turn_pre_send(payload: Dict[str, Any]) -> None:
+    try:
+        record_from_turn_pre_send(payload)
+    except Exception as e:
+        logger.debug("turn_observer pre_send: %s", e)
 
 
 def _on_turn_scenario(payload: Dict[str, Any]) -> None:
@@ -380,7 +475,7 @@ def read_recent_turns(
             continue
         if not isinstance(row, dict):
             continue
-        if row.get("type") == "scenario":
+        if row.get("type") in ("scenario", "pre_send"):
             continue
         if user_id and str(row.get("user_id") or "") != str(user_id):
             continue
@@ -451,5 +546,6 @@ def install_turn_observer() -> None:
 
     bus.subscribe("turn.outcome", _on_turn_outcome)
     bus.subscribe("turn.scenario", _on_turn_scenario)
+    bus.subscribe("turn.pre_send", _on_turn_pre_send)
     _INSTALLED = True
     logger.info("[turn_observer] installed → %s", log_path())

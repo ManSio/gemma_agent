@@ -29,8 +29,9 @@
 - `intent_hint_from_turn_meaning` в `_detect_intent`.
 - `turn_meaning_audit_for_emit` — multi-source fallback.
 - discourse/turn_meaning в output.meta для pre_send.
+- `turn.pre_send` → `turn_observer`: `outbound_thread_guard_issues` enrich по `trace_id` в turns.jsonl.
 
-**Verify:** `pytest tests/test_outbound_thread_guard.py …`; `release_guard --smoke`.
+**Verify:** `pytest tests/test_outbound_thread_guard.py tests/test_turn_observer_pre_send.py …`; `release_guard --smoke`.
 
 ---
 
