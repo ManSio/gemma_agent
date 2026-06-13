@@ -102,17 +102,88 @@ def build_heuristic_miss_row(
     }
 
 
-def write_public_json_file(
-    path: Union[str, Path],
-    payload: Dict[str, Any],
-    *,
-    sanitizer,
-) -> None:
-    """Write JSON via an explicit sanitizer (breaks CodeQL taint to disk)."""
-    safe = sanitizer(payload if isinstance(payload, dict) else {})
+def _safe_label_pairs(raw: Any, *, limit: int = 15) -> List[List[Union[str, int]]]:
+    """Truncate (label, count) pairs for public audit export."""
+    out: List[List[Union[str, int]]] = []
+    for item in (raw or [])[:limit]:
+        if isinstance(item, (list, tuple)) and len(item) >= 2:
+            out.append([str(item[0])[:64], int(item[1])])
+        elif isinstance(item, str):
+            out.append([str(item)[:64], 1])
+    return out
+
+
+def write_audit_document_json(path: Union[str, Path], doc: Dict[str, Any]) -> None:
+    """Write sanitized server audit/digest JSON."""
+    safe = audit_document_public(doc if isinstance(doc, dict) else {})
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(safe, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def write_scan_report_json(path: Union[str, Path], raw: Dict[str, Any]) -> None:
+    """Write sanitized archive leak scan JSON."""
+    safe = scan_report_public(raw if isinstance(raw, dict) else {})
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(safe, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def security_audit_public_json_text(report: Dict[str, Any]) -> str:
+    """JSON text for security audit CLI (--json) without raw paths."""
+    pub = security_audit_public_report(report if isinstance(report, dict) else {})
+    return json.dumps(pub, ensure_ascii=False, indent=2)
+
+
+def audit_summary_log_line(host_count: int) -> str:
+    """One-line audit summary safe for stdout (counts only)."""
+    n = max(0, int(host_count))
+    return f"AUDIT hosts={n}"
+
+
+def scan_summary_log_line(*, files: int, messages: int, leaks: int) -> str:
+    """One-line archive scan summary safe for stdout (counts only)."""
+    return (
+        f"SUMMARY files={max(0, int(files))} msgs={max(0, int(messages))} "
+        f"leaks={max(0, int(leaks))}"
+    )
+
+
+def render_audit_document_md(doc: Dict[str, Any]) -> str:
+    """Operator-safe markdown for audit/digest (counts only, no excerpts)."""
+    pub = audit_document_public(doc if isinstance(doc, dict) else {})
+    stamp = pub.get("stamp")
+    title = f"# Ops digest ({stamp})" if stamp else f"# Server audit {pub.get('ts', '')}"
+    lines = [title, ""]
+    for host in pub.get("hosts") or []:
+        if not isinstance(host, dict):
+            continue
+        if host.get("error_type"):
+            lines += [
+                f"## {host.get('host', '?')}",
+                "",
+                f"- error_type: **{host.get('error_type')}**",
+                "",
+            ]
+            continue
+        turns = host.get("turns") if isinstance(host.get("turns"), dict) else {}
+        archives = host.get("archives") if isinstance(host.get("archives"), dict) else {}
+        errors = host.get("errors") if isinstance(host.get("errors"), dict) else {}
+        lines += [
+            f"## {host.get('host', '?')} (`{host.get('git_head', '')}`)",
+            "",
+            f"- turns: **{int(turns.get('count') or 0)}**",
+            f"- latency p50: **{turns.get('latency_ms_p50')}** ms, p90: **{turns.get('latency_ms_p90')}** ms",
+            f"- outcomes_count: **{len(turns.get('outcomes') or {})}**",
+            f"- issues_count: **{int(turns.get('issues_count') or 0)}**",
+            f"- incomplete (excerpt heuristic): **{int(turns.get('suspect_incomplete_excerpt') or 0)}**",
+            f"- long Q / short A: **{int(turns.get('long_q_short_a') or 0)}**",
+            f"- turns with brain_recent_limit: **{int(turns.get('with_brain_recent_limit') or 0)}**",
+            f"- archive leaks: **{int(archives.get('findings_count') or 0)}** / msgs {int(archives.get('messages_scanned') or 0)}",
+            f"- errors: **{int(errors.get('count') or 0)}** kinds **{int(errors.get('kinds_count') or 0)}**",
+            "",
+        ]
+    return "\n".join(lines)
 
 
 def scan_finding_public(row: Dict[str, Any]) -> Dict[str, Any]:
@@ -164,6 +235,8 @@ def audit_host_public(host: Dict[str, Any]) -> Dict[str, Any]:
         }
 
     err_top = errors.get("top") if isinstance(errors.get("top"), list) else []
+    issues_top = turns.get("issues_top") if isinstance(turns.get("issues_top"), list) else []
+    profiles_top = turns.get("profiles_top") if isinstance(turns.get("profiles_top"), list) else []
     return {
         "host": str(host.get("host") or "local")[:64],
         "git_head": str(host.get("git_head") or "")[:120],
@@ -171,9 +244,14 @@ def audit_host_public(host: Dict[str, Any]) -> Dict[str, Any]:
         "error_type": str(host.get("error_type") or "")[:64] if host.get("error_type") else None,
         "turns": {
             "count": int(turns.get("count") or 0),
-            "outcomes": dict(turns.get("outcomes") or {}),
-            "issues_top": list(turns.get("issues_top") or [])[:15],
-            "profiles_top": list(turns.get("profiles_top") or [])[:10],
+            "outcomes": {
+                str(k)[:64]: int(v)
+                for k, v in (turns.get("outcomes") or {}).items()
+                if k is not None
+            },
+            "issues_count": len(issues_top),
+            "issues_top": _safe_label_pairs(issues_top, limit=15),
+            "profiles_top": _safe_label_pairs(profiles_top, limit=10),
             "latency_ms_p50": turns.get("latency_ms_p50"),
             "latency_ms_p90": turns.get("latency_ms_p90"),
             "latency_samples": int(turns.get("latency_samples") or 0),
@@ -181,17 +259,15 @@ def audit_host_public(host: Dict[str, Any]) -> Dict[str, Any]:
             "long_q_short_a": int(turns.get("long_q_short_a") or 0),
             "with_brain_recent_limit": int(turns.get("with_brain_recent_limit") or 0),
             "with_prompt_tokens_est": int(turns.get("with_prompt_tokens_est") or 0),
-            "samples_incomplete": list(turns.get("samples_incomplete") or [])[:8],
-            "samples_long_short": list(turns.get("samples_long_short") or [])[:5],
         },
         "llm_usage": {
             "rows": int(llm.get("rows") or 0),
             "brain_latency_p50_ms": llm.get("brain_latency_p50_ms"),
-            "brain_recent_limit_top": list(llm.get("brain_recent_limit_top") or [])[:8],
+            "brain_recent_limit_top": _safe_label_pairs(llm.get("brain_recent_limit_top"), limit=8),
         },
         "errors": {
             "count": int(errors.get("count") or 0),
-            "top": [(str(k)[:120], int(v)) for k, v in err_top[:12]],
+            "kinds_count": len(err_top),
         },
         "archives": arch_pub,
     }

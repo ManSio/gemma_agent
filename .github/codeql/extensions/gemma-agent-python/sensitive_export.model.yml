@@ -1,0 +1,27 @@
+extensions:
+  - addsTo:
+      pack: codeql/python-all
+      extensible: barrierModel
+    data:
+      - ["core.sensitive_export", "Member[audit_document_public].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[audit_document_public].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[audit_host_public].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[audit_host_public].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[scan_report_public].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[scan_report_public].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[scan_finding_public].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[scan_finding_public].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[security_audit_public_report].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[security_audit_public_report].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[security_audit_public_json_text].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[security_audit_public_json_text].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[build_heuristic_miss_row].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[build_heuristic_miss_row].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[mem0_check_public_view].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[mem0_check_public_view].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[hash_sensitive_text].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[hash_sensitive_text].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[render_audit_document_md].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[render_audit_document_md].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[audit_summary_log_line].ReturnValue", "clear-text-logging"]
+      - ["core.sensitive_export", "Member[scan_summary_log_line].ReturnValue", "clear-text-logging"]

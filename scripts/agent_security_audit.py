@@ -12,7 +12,6 @@ Does NOT claim "military-grade" — reports what is checked and what is not.
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import re
 import subprocess
@@ -190,11 +189,11 @@ def main() -> int:
 
     report = build_report(quick=args.quick, ci=args.ci)
 
-    from core.sensitive_export import security_audit_public_report
+    from core.sensitive_export import security_audit_public_json_text, security_audit_public_report
 
     pub = security_audit_public_report(report)
     if args.json:
-        print(json.dumps(pub, ensure_ascii=False, indent=2))
+        print(security_audit_public_json_text(report))
     else:
         print("=== Gemma Agent security audit (honest) ===")
         print("Root: gemma_agent (public build)")

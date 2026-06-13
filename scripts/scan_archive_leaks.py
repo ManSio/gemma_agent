@@ -114,7 +114,11 @@ def main() -> int:
     ap.add_argument("--json-out", default="")
     args = ap.parse_args()
     root = Path(args.root).resolve()
-    from core.sensitive_export import scan_report_public, write_public_json_file
+    from core.sensitive_export import (
+        scan_report_public,
+        scan_summary_log_line,
+        write_scan_report_json,
+    )
 
     raw = scan_archives(root)
     rep = scan_report_public(raw)
@@ -122,11 +126,14 @@ def main() -> int:
         out = Path(args.json_out)
         if not out.is_absolute():
             out = root / out
-        write_public_json_file(out, raw, sanitizer=scan_report_public)
+        write_scan_report_json(out, raw)
         print(f"Wrote {out}")
     print(
-        f"SUMMARY files={rep['files_scanned']} msgs={rep['messages_scanned']} "
-        f"leaks={rep['findings_count']} codes={rep['by_code']}"
+        scan_summary_log_line(
+            files=rep["files_scanned"],
+            messages=rep["messages_scanned"],
+            leaks=rep["findings_count"],
+        )
     )
     return 1 if rep["findings_count"] else 0
 

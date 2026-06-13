@@ -1,3 +1,18 @@
+## [2026-06-13] — v3.5.3: CodeQL wave 3 — 7 remaining alerts
+
+### Исправлено
+- CodeQL #41, #49, #105, #117–#120: typed writers (`write_audit_document_json`, `write_scan_report_json`), stdout только counts (`audit_summary_log_line`, `scan_summary_log_line`), MD через `render_audit_document_md`
+- `audit_host_public`: без excerpts/samples; errors — только `kinds_count`
+- CodeQL model pack: `.github/codeql/extensions/gemma-agent-python/` — `barrierModel` для sanitizers (`clear-text-logging` / `clear-text-storage`)
+
+### Verify
+```bash
+python -m pytest tests/test_sensitive_export.py -q
+python -m py_compile core/sensitive_export.py scripts/server_full_audit.py
+```
+
+---
+
 ## [2026-06-13] — v3.5.2: CodeQL sanitization wave + security workflow
 
 ### Исправлено

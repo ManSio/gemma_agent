@@ -50,67 +50,6 @@ def _audit_local(root: Path, host_label: str, days: int) -> dict:
     return audit_host(root, host_label=host_label, days=days)
 
 
-def _render_md(hosts: list, *, stamp: str) -> str:
-    lines = [f"# Суточный ops-дайджест ({stamp})", ""]
-    for host in hosts:
-        if not isinstance(host, dict):
-            continue
-        turns = host.get("turns") if isinstance(host.get("turns"), dict) else {}
-        archives = host.get("archives") if isinstance(host.get("archives"), dict) else {}
-        errors = host.get("errors") if isinstance(host.get("errors"), dict) else {}
-        lines += [
-            f"## {str(host.get('host') or '?')[:64]} (`{str(host.get('git_head') or '')[:160]}`)",
-            "",
-            f"- turns (window): **{int(turns.get('count') or 0)}**",
-            f"- latency p50: **{turns.get('latency_ms_p50')}** ms, p90: **{turns.get('latency_ms_p90')}** ms",
-            f"- outcomes: {turns.get('outcomes') if isinstance(turns.get('outcomes'), dict) else {}}",
-            f"- issues: {turns.get('issues_top') if isinstance(turns.get('issues_top'), list) else []}",
-            f"- incomplete (excerpt heuristic): **{int(turns.get('suspect_incomplete_excerpt') or 0)}**",
-            f"- long Q / short A: **{int(turns.get('long_q_short_a') or 0)}**",
-            f"- turns with brain_recent_limit: **{int(turns.get('with_brain_recent_limit') or 0)}**",
-            f"- archive leaks: **{int(archives.get('leaks') or 0)}** / msgs {int(archives.get('messages') or 0)}",
-            f"- errors (window): **{int(errors.get('count') or 0)}** top {errors.get('top') if isinstance(errors.get('top'), list) else []}",
-            "",
-        ]
-    return "\n".join(lines)
-
-
-def _hosts_for_md(hosts: list) -> list:
-    """Strict allowlist for markdown output to avoid persisting secret-like content."""
-    out: list = []
-    for h in hosts:
-        if not isinstance(h, dict):
-            continue
-        turns = h.get("turns") if isinstance(h.get("turns"), dict) else {}
-        archives = h.get("archives") if isinstance(h.get("archives"), dict) else {}
-        errors = h.get("errors") if isinstance(h.get("errors"), dict) else {}
-        host_row = {
-            "host": str(h.get("host") or "?")[:64],
-            "git_head": str(h.get("git_head") or "")[:160],
-            "turns": {
-                "count": int(turns.get("count") or 0),
-                "latency_ms_p50": turns.get("latency_ms_p50"),
-                "latency_ms_p90": turns.get("latency_ms_p90"),
-                "outcomes": turns.get("outcomes") if isinstance(turns.get("outcomes"), dict) else {},
-                "issues_top": turns.get("issues_top") if isinstance(turns.get("issues_top"), list) else [],
-                "suspect_incomplete_excerpt": int(turns.get("suspect_incomplete_excerpt") or 0),
-                "long_q_short_a": int(turns.get("long_q_short_a") or 0),
-                "with_brain_recent_limit": int(turns.get("with_brain_recent_limit") or 0),
-                "samples_incomplete": [],
-            },
-            "archives": {
-                "leaks": int(archives.get("leaks") or 0),
-                "messages": int(archives.get("messages") or 0),
-            },
-            "errors": {
-                "count": int(errors.get("count") or 0),
-                "top": errors.get("top") if isinstance(errors.get("top"), list) else [],
-            },
-        }
-        out.append(host_row)
-    return out
-
-
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=str(_ROOT))
@@ -131,15 +70,16 @@ def main() -> int:
     else:
         hosts.append(_audit_local(root, "local", args.days))
 
-    from core.sensitive_export import audit_document_public, write_public_json_file
+    from core.sensitive_export import (
+        render_audit_document_md,
+        write_audit_document_json,
+    )
 
     out_doc = {"ts": datetime.now(timezone.utc).isoformat(), "stamp": stamp, "hosts": hosts}
     json_path = Path(args.json_out or root / "data/benchmarks" / f"daily_digest_{stamp.replace('-', '')}.json")
     md_path = Path(args.md_out or root / "docs" / "archive" / f"DAILY_OPS_{stamp}_RU.md")
-    safe_doc = audit_document_public(out_doc)
-    md_hosts = _hosts_for_md(safe_doc.get("hosts") or [])
-    write_public_json_file(json_path, out_doc, sanitizer=audit_document_public)
-    md_path.write_text(_render_md(md_hosts, stamp=stamp), encoding="utf-8")
+    write_audit_document_json(json_path, out_doc)
+    md_path.write_text(render_audit_document_md(out_doc), encoding="utf-8")
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")
     return 0

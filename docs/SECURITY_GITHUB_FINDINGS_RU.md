@@ -5,8 +5,10 @@
 | Rule | Count (before fix wave) | Mitigation |
 |------|-------------------------|------------|
 | `py/clear-text-logging-sensitive-data` | 20 | `core/sensitive_export.py`, Mem0 path facets, connectivity scalars |
-| `py/clear-text-storage-sensitive-data` | 6 | `write_public_json_file`, `build_heuristic_miss_row`, audit sanitizers |
+| `py/clear-text-storage-sensitive-data` | 6 | typed writers, `render_audit_document_md`, `barrierModel` extensions |
 | `py/incomplete-url-substring-sanitization` | 1 | `urlparse` in tests |
+
+**Wave 3 (2026-06-13):** alerts #41, #49, #105, #117–#120 — typed writers, count-only stdout, `.github/codeql/extensions/gemma-agent-python/sensitive_export.model.yml`.
 
 **Workflow:** `.github/workflows/codeql.yml` — re-scan on push + weekly.
 

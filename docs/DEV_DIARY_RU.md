@@ -20,6 +20,28 @@
 
 ---
 
+## 2026-06-13 — CodeQL wave 3: 7 open alerts (#41–#120)
+
+**Контекст:** после wave 2 на GitHub остались 7 High alerts (clear-text logging/storage).
+
+### Сделано
+
+- Typed JSON writers вместо `write_public_json_file` + callback (CodeQL не доверял sanitizer arg)
+- `audit_host_public`: убраны `samples_*`, errors без raw `top` tuples
+- `render_audit_document_md`, `audit_summary_log_line`, `scan_summary_log_line`, `security_audit_public_json_text`
+- CodeQL extension pack `gemma-agent/python-extensions` + `codeql-config.yml`
+- Скрипты: `server_full_audit`, `daily_server_digest`, `scan_archive_leaks`, `agent_security_audit`
+
+### Verify
+
+```bash
+python -m pytest tests/test_sensitive_export.py -q
+```
+
+**Не гоняли:** полный pytest; CodeQL на GitHub (нужен push).
+
+---
+
 ## 2026-06-13 — Security wave 2: CodeQL sanitization + workflow
 
 **Контекст:** на GitHub 27 open CodeQL alerts; Dependabot alerts пусто; pip-audit — 2 ignored CVE в aiohttp (aiogram pin).
