@@ -303,10 +303,12 @@ async def _chat_via_orchestrator(
         "channel": channel,
         "group_id": group_id,
         "timestamp": datetime.now().isoformat(),
-        "request_id": ensure_request_id(rid),
     }
     if extra_meta:
         meta.update(extra_meta)
+    meta["request_id"] = ensure_request_id(
+        str(meta.get("request_id") or meta.get("relay_request_id") or rid or "").strip() or None
+    )
     input_data = Input(type="text", payload=message, meta=meta)
     plan = orchestrator.plan(input_data, user_id, group_id)
     outputs = await orchestrator.execute_plan(plan, user_id, group_id)
@@ -507,6 +509,8 @@ async def generate_module_endpoint(request: ModuleGenerationRequest, token: str 
 async def self_repair_endpoint(request: SelfRepairRequest, token: str = Depends(verify_api_token)):
     """Repair a failing module or library"""
     try:
+        if not getattr(orchestrator, "self_programming", None):
+            raise HTTPException(status_code=503, detail="Self-programming engine not available")
         if request.module_name:
             result = await orchestrator.self_programming.self_repair_module(request.module_name)
         elif request.library_name:

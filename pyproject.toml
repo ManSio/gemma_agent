@@ -18,3 +18,15 @@ src = ["core", "modules", "scripts", "tests", "api.py", "main.py"]
 # CI: syntax errors only (E9). Full style lint: ruff check --select E,F locally
 [tool.ruff.lint]
 select = ["E9"]
+
+# Editor (Zed / basedpyright): venv at ./venv, imports from repo root (core.*)
+[tool.basedpyright]
+include = ["core", "modules", "scripts", "tests", "api.py", "main.py"]
+exclude = ["**/venv", "**/.venv", "**/__pycache__", "**/node_modules"]
+venvPath = "."
+venv = "venv"
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+reportMissingImports = "warning"
+reportMissingTypeStubs = false
+extraPaths = ["."]
