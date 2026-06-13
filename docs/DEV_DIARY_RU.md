@@ -40,10 +40,12 @@ python -m pytest tests/test_sensitive_export.py -q
 
 **Не гоняли:** полный pytest; CodeQL на GitHub (нужен push).
 
-### Follow-up (тот же день)
+### Follow-up (тот же день, вечер)
 
 - CodeQL workflow **упал**: `gemma-agent/python-extensions not found in registry` — убран `config-file` с unpublished pack
-- `write_audit_document_md`; security audit text mode — `_AUDIT_CHECK_KEYS` (literal names)
+- После успешного CodeQL остались **4 новых** alert (#121–#124) — storage/logging на `write_*` и `security_audit_public_json_text`
+- **Fix:** counts-only JSON/MD (`audit_document_counts_payload`), `security_audit_stdout_json` (literal keys + bools), pack → `gemma_agent-python`
+- **Итог:** `60c5119` — **0 open CodeQL alerts**, CI + release-guard + CodeQL green
 
 ---
 
