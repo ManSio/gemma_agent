@@ -1,0 +1,8 @@
+reviews:
+  auto_review: true               # авторевью включено
+  auto_review_draft: false        # не ревьюить черновики (то, что вам нужно)
+  review_status: true             # показывать статус (можно false)
+
+# Или можно вовсе отключить ревью по умолчанию:
+# reviews:
+#   auto_review: false
