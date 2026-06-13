@@ -1,6 +1,9 @@
 # Generated at Docker build
 requirements-plugins.generated.txt
 
+# IDE (local only — project uses Cursor; Zed configs not tracked)
+.zed/
+
 # Python
 __pycache__/
 *.py[cod]

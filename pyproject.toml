@@ -19,7 +19,7 @@ src = ["core", "modules", "scripts", "tests", "api.py", "main.py"]
 [tool.ruff.lint]
 select = ["E9"]
 
-# Editor (Zed / basedpyright): venv at ./venv, imports from repo root (core.*)
+# Editor (basedpyright / IDE): venv at ./venv, imports from repo root (core.*)
 [tool.basedpyright]
 include = ["core", "modules", "scripts", "tests", "api.py", "main.py"]
 exclude = ["**/venv", "**/.venv", "**/__pycache__", "**/node_modules"]

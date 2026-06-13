@@ -161,7 +161,7 @@ PYTHONPATH=. venv/bin/python3 scripts/snapshot_cache_latency.py \
 
 ---
 
-## Zed / basedpyright (IDE)
+## basedpyright (IDE)
 
 ~900+ «ошибок» в Project Diagnostics — **статический type checker** (`pyproject.toml` → `[tool.basedpyright]`), не runtime и не pytest.
 

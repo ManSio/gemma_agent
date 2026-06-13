@@ -84,7 +84,7 @@ PYTHONPATH=. python scripts/agent_security_audit.py --ci
 - Live Telegram conversations (`gemma_status.py --online` — manual)
 - Your host's SearXNG / Mem0 HTTP availability
 - Prompt injection resistance (documented limitation)
-- **basedpyright / Zed Project Diagnostics** (~900+ local typing hints) — not gated; see [CACHE_LATENCY_METRICS.md](CACHE_LATENCY_METRICS.md#ide-diagnostics-zed--basedpyright)
+- **basedpyright / IDE Project Diagnostics** (~900+ local typing hints) — not gated; see [CACHE_LATENCY_METRICS.md](CACHE_LATENCY_METRICS.md#ide-diagnostics-basedpyright)
 
 See [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) and [security/security-model.md](security/security-model.md).
 

@@ -52,7 +52,7 @@ Other scripts: `metrics_period_report.py`, `daily_server_digest.py`, `turns_sear
 
 ---
 
-## IDE diagnostics (Zed / basedpyright)
+## IDE diagnostics (basedpyright)
 
 ~900+ editor “errors” are **static typing** (`pyproject.toml`), not pytest failures. CI runs ruff E9 + pytest only — [CI.md](CI.md).
 
