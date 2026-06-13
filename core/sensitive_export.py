@@ -45,6 +45,20 @@ def mem0_check_public_view(raw: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def mem0_path_log_facets(path: str) -> Tuple[str, int]:
+    """Mem0 API path as operator-safe kind + length (no raw path in logs)."""
+    p_low = str(path or "").lower()
+    if "/memories/add" in p_low:
+        kind = "memories_add"
+    elif "/memories/search" in p_low:
+        kind = "memories_search"
+    elif "/memories/delete" in p_low:
+        kind = "memories_delete"
+    else:
+        kind = "other"
+    return kind, len(str(path or ""))
+
+
 def mem0_log_facets(raw: Dict[str, Any]) -> Tuple[bool, Optional[int], Optional[str]]:
     """Scalars safe for logging — no raw API bodies or key material."""
     pub = mem0_check_public_view(raw if isinstance(raw, dict) else {})

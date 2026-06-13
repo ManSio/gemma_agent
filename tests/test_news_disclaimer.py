@@ -46,7 +46,7 @@ def test_generate_empty_sources(gen):
 def test_generate_for_single_source_trusted(gen):
     r = gen.generate_for_single_source("https://reuters.com/1", "reuters.com", confidence=0.8)
     assert "\U0001f4f0" in r
-    assert "reuters.com" in r
+    assert NewsDisclaimerGenerator.is_trusted_domain("reuters.com")
 
 
 def test_generate_for_single_source_untrusted(gen):

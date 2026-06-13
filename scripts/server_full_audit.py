@@ -307,7 +307,8 @@ def main() -> int:
         p.write_text(text, encoding="utf-8")
         print(f"Wrote {p}")
     else:
-        print(text[:12000])
+        hosts = safe_doc.get("hosts") or []
+        print(f"AUDIT hosts={len(hosts)} ts={safe_doc.get('ts')}")
     if args.md_out:
         md = render_md(safe_doc)
         mp = Path(args.md_out)

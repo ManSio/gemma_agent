@@ -108,7 +108,7 @@ def budget_enabled() -> bool:
 
 def budget_hard_limit_tokens() -> int:
     b = _cfg().get("budget")
-    return max(100, int((b or {}).get("hard_limit_tokens", 12000)))
+    return max(100, int((b or {}).get("hard_limit_tokens", 15000)))
 
 
 def compactor_enabled() -> bool:

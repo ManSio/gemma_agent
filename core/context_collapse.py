@@ -10,7 +10,10 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 from core.brain.prompt_pack import estimate_tokens_approx
+from core.monitoring import MONITOR
 from core.token_efficiency import (
+    budget_enabled,
+    budget_hard_limit_tokens,
     collapse_enabled,
     collapse_max_prompt_tokens,
     collapse_history_window,
@@ -76,15 +79,146 @@ def _estimate_context_tokens(parts: Dict[str, Any]) -> int:
     """Rough estimate of total prompt tokens from context parts."""
     total = 0
     for k, v in parts.items():
+        if k.startswith("_"):
+            continue
         if isinstance(v, str):
             total += max(1, len(v) // 4)
         elif isinstance(v, (list, tuple)):
             for item in v:
                 total += max(1, len(str(item)) // 4)
         elif isinstance(v, dict):
-            for sub_k, sub_v in v.items():
+            for sub_v in v.values():
                 total += max(1, len(str(sub_v)) // 4)
     return max(1, total)
+
+
+# Low → high priority: prune first keys first; protected keys are never touched.
+_HARD_LIMIT_PROTECTED_KEYS = frozenset({
+    "system_prompt_for_llm", "user_text", "agent_inst", "agent_inst_collapse_stub",
+})
+
+_HARD_LIMIT_PRUNE_ORDER: Tuple[str, ...] = (
+    "message_archive",
+    "memory_facts",
+    "recent_dialogue",
+    "document_intake_block",
+    "knowledge_hot",
+    "knowledge_summary",
+    "dialogue_summary",
+    "external_hint",
+    "ephemeral_lessons",
+    "goal_plan",
+    "task_facts",
+    "topic_tracking",
+    "group_context",
+    "plugin_manifest_prompts",
+    "sess_first",
+    "pteacher",
+    "group_chat_addon",
+    "ocr_text",
+    "skill_output",
+    "skill_hint",
+    "user_facts",
+)
+
+
+def _prune_part_value(value: Any) -> Tuple[Any, int]:
+    """Halve a prompt part and return (new_value, approx_tokens_saved)."""
+    if isinstance(value, str):
+        if not value:
+            return value, 0
+        new_len = max(0, len(value) // 2)
+        new_val = value[:new_len]
+        saved = max(0, (len(value) - len(new_val)) // 4)
+        return new_val, saved
+    if isinstance(value, list):
+        if not value:
+            return value, 0
+        if len(value) <= 1:
+            return [], max(1, len(str(value)) // 4)
+        keep = max(1, len(value) // 2)
+        new_val = value[-keep:]
+        saved = max(1, sum(len(str(item)) for item in value[:-keep]) // 4)
+        return new_val, saved
+    if value:
+        empty: Any = "" if isinstance(value, str) else []
+        saved = max(1, len(str(value)) // 4)
+        return empty, saved
+    return value, 0
+
+
+def enforce_context_limit(
+    prompt_parts: Dict[str, Any],
+    *,
+    max_tokens: Optional[int] = None,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Hard cap on prompt_parts: prune by priority until token estimate fits budget."""
+    meta: Dict[str, Any] = {
+        "enforced": False,
+        "pruned_keys": [],
+    }
+    if not budget_enabled():
+        meta["reason"] = "budget_disabled"
+        return prompt_parts, meta
+
+    limit = max(100, int(max_tokens if max_tokens is not None else budget_hard_limit_tokens()))
+    meta["limit"] = limit
+    total = _estimate_context_tokens(prompt_parts)
+    meta["tokens_before"] = total
+    if total <= limit:
+        meta["tokens_after"] = total
+        return prompt_parts, meta
+
+    meta["enforced"] = True
+    logger.warning(
+        "[context_limit] exceeded: est_tokens=%d > hard_limit=%d — pruning",
+        total,
+        limit,
+    )
+    MONITOR.inc("context_hard_limit_pruned_total")
+
+    max_rounds = max(5, len(_HARD_LIMIT_PRUNE_ORDER) * 2)
+    for _ in range(max_rounds):
+        total = _estimate_context_tokens(prompt_parts)
+        if total <= limit:
+            break
+        pruned_this_round = False
+        for key in _HARD_LIMIT_PRUNE_ORDER:
+            if key in _HARD_LIMIT_PROTECTED_KEYS or key not in prompt_parts:
+                continue
+            val = prompt_parts.get(key)
+            if not val:
+                continue
+            new_val, _saved = _prune_part_value(val)
+            if new_val != val:
+                prompt_parts[key] = new_val
+                meta["pruned_keys"].append(key)
+                pruned_this_round = True
+            total = _estimate_context_tokens(prompt_parts)
+            if total <= limit:
+                break
+        if pruned_this_round:
+            continue
+        for key in _HARD_LIMIT_PRUNE_ORDER:
+            if key in _HARD_LIMIT_PROTECTED_KEYS or key not in prompt_parts:
+                continue
+            if prompt_parts.get(key):
+                prompt_parts[key] = [] if isinstance(prompt_parts.get(key), list) else ""
+                meta["pruned_keys"].append(f"{key}:dropped")
+            total = _estimate_context_tokens(prompt_parts)
+            if total <= limit:
+                break
+        break
+
+    meta["tokens_after"] = _estimate_context_tokens(prompt_parts)
+    logger.info(
+        "[context_limit] tokens_before=%d tokens_after=%d limit=%d pruned=%s",
+        meta["tokens_before"],
+        meta["tokens_after"],
+        limit,
+        meta["pruned_keys"],
+    )
+    return prompt_parts, meta
 
 
 def collapse_context(

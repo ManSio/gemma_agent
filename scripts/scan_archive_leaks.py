@@ -125,8 +125,6 @@ def main() -> int:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text, encoding="utf-8")
         print(f"Wrote {out}")
-    else:
-        print(text)
     print(
         f"SUMMARY files={rep['files_scanned']} msgs={rep['messages_scanned']} "
         f"leaks={rep['findings_count']} codes={rep['by_code']}"

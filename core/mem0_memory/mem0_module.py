@@ -17,6 +17,7 @@ from urllib.parse import urljoin
 import aiohttp
 
 from core.error_analysis import record_error_event
+from core.sensitive_export import mem0_path_log_facets
 
 logger = logging.getLogger(__name__)
 
@@ -412,6 +413,7 @@ class Mem0MemoryModule:
         root = (base or self._base).rstrip("/")
         payload = _coerce_payload_for_self_hosted(path, payload, root)
         url = urljoin(root + "/", path.lstrip("/"))
+        path_kind, path_len = mem0_path_log_facets(path)
         try:
             async with session.post(url, headers=self._headers(api_key), json=payload) as resp:
                 text = await resp.text()
@@ -420,10 +422,11 @@ class Mem0MemoryModule:
                         alt = self._local_simple_retry_target(path, payload)
                         if alt:
                             alt_path, alt_payload = alt
+                            alt_kind, _ = mem0_path_log_facets(alt_path)
                             logger.info(
-                                "Mem0 404 %s -> retry %s (local simple compat)",
-                                path,
-                                alt_path,
+                                "Mem0 404 path_kind=%s -> retry path_kind=%s (local simple compat)",
+                                path_kind,
+                                alt_kind,
                             )
                             return await self._post_json(
                                 alt_path,
@@ -436,11 +439,17 @@ class Mem0MemoryModule:
                         k = _normalize_mem0_api_key(api_key or self._api_key)
                         role = self._key_label(api_key, base)
                         logger.warning(
-                            "Mem0 HTTP 401 path=%s key_role=%s body_len=%s",
-                            path,
+                            "Mem0 HTTP 401 path_kind=%s path_len=%s key_role=%s body_len=%s",
+                            path_kind,
+                            path_len,
                             role,
                             len(text or ""),
-                            extra={"gemma_event": "mem0_http_401", "key_role": role, "path": path},
+                            extra={
+                                "gemma_event": "mem0_http_401",
+                                "key_role": role,
+                                "path_kind": path_kind,
+                                "path_len": path_len,
+                            },
                         )
                         if "/memories/add/" in path and role == "mirror":
                             self.disable_mirror_write_runtime("HTTP 401 на memories/add (mirror)")
@@ -449,19 +458,26 @@ class Mem0MemoryModule:
                                 "mem0",
                                 "Mem0 HTTP 401 на запись (primary): проверьте MEM0_API_KEY и MEM0_AUTH_SCHEME",
                                 extra={
-                                    "path": path,
+                                    "path_kind": path_kind,
+                                    "path_len": path_len,
                                     "body_len": len(text or ""),
                                 },
                             )
                     else:
-                        logger.warning("Mem0 HTTP %s %s body_len=%s", resp.status, path, len(text or ""))
+                        logger.warning(
+                            "Mem0 HTTP %s path_kind=%s path_len=%s body_len=%s",
+                            resp.status,
+                            path_kind,
+                            path_len,
+                            len(text or ""),
+                        )
                     return None
                 if not text:
                     return {}
                 try:
                     data = json.loads(text)
                 except json.JSONDecodeError:
-                    logger.warning("Mem0 invalid JSON from %s", path)
+                    logger.warning("Mem0 invalid JSON path_kind=%s path_len=%s", path_kind, path_len)
                     return None
                 if (
                     _allow_local_retry
@@ -483,7 +499,11 @@ class Mem0MemoryModule:
                     )
                 return data
         except aiohttp.ClientError as e:
-            logger.warning("Mem0 request failed %s: %s", path, e)
+            logger.warning(
+                "Mem0 request failed path_kind=%s err=%s",
+                path_kind,
+                type(e).__name__,
+            )
             return None
 
     def _post_json_sync(
@@ -501,6 +521,7 @@ class Mem0MemoryModule:
         root = (base or self._base).rstrip("/")
         payload = _coerce_payload_for_self_hosted(path, payload, root)
         url = urljoin(root + "/", path.lstrip("/"))
+        path_kind, path_len = mem0_path_log_facets(path)
         try:
             r = requests.post(
                 url,
@@ -514,10 +535,11 @@ class Mem0MemoryModule:
                     alt = self._local_simple_retry_target(path, payload)
                     if alt:
                         alt_path, alt_payload = alt
+                        alt_kind, _ = mem0_path_log_facets(alt_path)
                         logger.info(
-                            "Mem0 HTTP 404 %s -> retry %s (local simple compat, sync)",
-                            path,
-                            alt_path,
+                            "Mem0 HTTP 404 path_kind=%s -> retry path_kind=%s (local simple compat, sync)",
+                            path_kind,
+                            alt_kind,
                         )
                         return self._post_json_sync(
                             alt_path,
@@ -532,11 +554,17 @@ class Mem0MemoryModule:
                     rb = (r.text or "")[:400]
                     role = self._key_label(api_key, base)
                     logger.warning(
-                        "Mem0 HTTP 401 path=%s key_role=%s body_len=%s",
-                        path,
+                        "Mem0 HTTP 401 path_kind=%s path_len=%s key_role=%s body_len=%s",
+                        path_kind,
+                        path_len,
                         role,
                         len(rb or ""),
-                        extra={"gemma_event": "mem0_http_401", "key_role": role, "path": path},
+                        extra={
+                            "gemma_event": "mem0_http_401",
+                            "key_role": role,
+                            "path_kind": path_kind,
+                            "path_len": path_len,
+                        },
                     )
                     if "/memories/add/" in path and role == "mirror":
                         self.disable_mirror_write_runtime("HTTP 401 на memories/add (mirror, sync)")
@@ -544,10 +572,20 @@ class Mem0MemoryModule:
                         record_error_event(
                             "mem0",
                             "Mem0 HTTP 401 на запись (primary, sync): проверьте MEM0_API_KEY",
-                            extra={"path": path, "body_len": len(rb or "")},
+                            extra={
+                                "path_kind": path_kind,
+                                "path_len": path_len,
+                                "body_len": len(rb or ""),
+                            },
                         )
                 else:
-                    logger.warning("Mem0 HTTP %s %s body_len=%s", r.status_code, path, len(r.text or ""))
+                    logger.warning(
+                        "Mem0 HTTP %s path_kind=%s path_len=%s body_len=%s",
+                        r.status_code,
+                        path_kind,
+                        path_len,
+                        len(r.text or ""),
+                    )
                 return None
             if not (r.text or "").strip():
                 return {}
@@ -573,7 +611,11 @@ class Mem0MemoryModule:
                 )
             return data
         except requests.RequestException as e:
-            logger.warning("Mem0 sync request failed %s: %s", path, e)
+            logger.warning(
+                "Mem0 sync request failed path_kind=%s err=%s",
+                path_kind,
+                type(e).__name__,
+            )
             return None
 
     async def on_user_message(self, user_id: str, message: str) -> List[str]:

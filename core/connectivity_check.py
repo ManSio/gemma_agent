@@ -509,7 +509,7 @@ async def check_mem0_platform(
 
 async def log_mem0_startup_status(mem0_memory: Mem0MemoryModule, log: logging.Logger) -> None:
     """Один запрос к Mem0 при старте процесса: явный INFO/WARNING в логах оператора."""
-    from core.sensitive_export import mem0_check_public_view, mem0_log_facets
+    from core.sensitive_export import mem0_check_public_view
 
     if not mem0_memory._cloud:
         return
@@ -517,18 +517,17 @@ async def log_mem0_startup_status(mem0_memory: Mem0MemoryModule, log: logging.Lo
         await check_mem0_platform(mem0_memory._api_key, api_url=mem0_memory._base, role="primary")
     )
     record_external_service_check(_mp, source="startup")
-    _ok, _status, _code = mem0_log_facets(_mp)
-    if _ok:
+    if _mp.get("ok"):
         log.info(
-            "Mem0 primary check ok status=%s",
-            _status,
+            "Mem0 primary check ok http_status=%s",
+            _mp.get("http_status"),
             extra={"gemma_event": "mem0_primary_ok"},
         )
     else:
         log.warning(
-            "Mem0 primary check failed code=%s status=%s — см. /admin_connectivity",
-            _code,
-            _status,
+            "Mem0 primary check failed code=%s http_status=%s — см. /admin_connectivity",
+            _mp.get("error_code"),
+            _mp.get("http_status"),
             extra={"gemma_event": "mem0_primary_check_failed"},
         )
     if mem0_memory._mirror_key:
@@ -540,18 +539,17 @@ async def log_mem0_startup_status(mem0_memory: Mem0MemoryModule, log: logging.Lo
             )
         )
         record_external_service_check(_mm, source="startup")
-        _ok_m, _status_m, _code_m = mem0_log_facets(_mm)
-        if _ok_m:
+        if _mm.get("ok"):
             log.info(
-                "Mem0 mirror check ok status=%s",
-                _status_m,
+                "Mem0 mirror check ok http_status=%s",
+                _mm.get("http_status"),
                 extra={"gemma_event": "mem0_mirror_ok"},
             )
         else:
             log.warning(
-                "Mem0 mirror check failed code=%s status=%s — см. /admin_connectivity",
-                _code_m,
-                _status_m,
+                "Mem0 mirror check failed code=%s http_status=%s — см. /admin_connectivity",
+                _mm.get("error_code"),
+                _mm.get("http_status"),
                 extra={"gemma_event": "mem0_mirror_check_failed"},
             )
             if getattr(mem0_memory, "_mirror_write", False):

@@ -45,7 +45,7 @@ async def main() -> int:
         for row in items[:3]:
             print(
                 f"  #{row.get('index')} snip={len(str(row.get('snippet') or ''))} "
-                f"g={str(row.get('google_link') or '')[:50]}"
+                f"has_google_link={bool(row.get('google_link'))}"
             )
 
     pick = 3 if len(items) >= 3 else 1

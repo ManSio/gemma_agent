@@ -23,9 +23,9 @@ token_efficiency:
 
   budget:
     enabled: true
-    hard_limit_tokens: 12000
+    hard_limit_tokens: 15000
 
-    compactor:
+  compactor:
     enabled: true
     threshold: 0.7
     max_summary_tokens: 200

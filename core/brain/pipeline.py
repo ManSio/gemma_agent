@@ -2948,6 +2948,34 @@ URL: {fetch_url}
                             MONITOR.inc("budget_collapse_triggered_total")
                     except Exception as e:
                         logger.debug('%s optional failed: %s', 'pipeline', e, exc_info=True)
+                    _est_tok_after = int(
+                        _prompt_breakdown.get("total_tokens_est") or max(1, len(_full_combined) // 4)
+                    )
+                    if _est_tok_after > _hard_limit:
+                        try:
+                            from core.context_collapse import enforce_context_limit
+                            _prompt_parts, _hard_limit_meta = enforce_context_limit(_prompt_parts)
+                            if _hard_limit_meta.get("enforced"):
+                                prompt, _kv_cache_tail, _hl_pack_meta = assemble_split_with_budget(
+                                    _assembly_tier, _prompt_parts,
+                                    profile=_brain_profile, intent=_prompt_intent,
+                                )
+                                _pack_meta["collapse_level"] = max(
+                                    int(_pack_meta.get("collapse_level") or 0),
+                                    int(_hl_pack_meta.get("collapse_level") or 0),
+                                )
+                                _full_combined = prompt + (_kv_cache_tail or "")
+                                _prompt_breakdown = prompt_runtime_breakdown(_full_combined)
+                                _telemetry_extra["prompt_chars"] = int(
+                                    _prompt_breakdown.get("total_chars") or len(_full_combined)
+                                )
+                                _telemetry_extra["prompt_tokens_est"] = int(
+                                    _prompt_breakdown.get("total_tokens_est") or 0
+                                )
+                                _telemetry_extra["context_hard_limit"] = _hard_limit_meta
+                                MONITOR.inc("context_hard_limit_enforced_total")
+                        except Exception as e:
+                            logger.debug('%s optional failed: %s', 'pipeline', e, exc_info=True)
                     # Reduce reasoning depth when budget exceeded
                     task_tier = _max_task_tier("shallow", task_tier)
                     _telemetry_extra["budget_reduced_reasoning_depth"] = True

@@ -3,6 +3,7 @@ from core.sensitive_export import (
     audit_host_public,
     mem0_check_public_view,
     mem0_log_facets,
+    mem0_path_log_facets,
     scan_report_public,
     security_audit_public_report,
 )
@@ -19,6 +20,14 @@ def test_mem0_check_public_view_strips_tainted_fields():
     assert "user_message" not in pub
     assert pub["error_code"] == "invalid_key"
     assert pub["http_status"] == 401
+
+
+def test_mem0_path_log_facets_kinds():
+    kind, n = mem0_path_log_facets("/v1/memories/add/")
+    assert kind == "memories_add"
+    assert n > 0
+    kind2, _ = mem0_path_log_facets("/other")
+    assert kind2 == "other"
 
 
 def test_mem0_log_facets_safe_scalars():

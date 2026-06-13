@@ -192,19 +192,17 @@ def main() -> int:
 
     from core.sensitive_export import security_audit_public_report
 
+    pub = security_audit_public_report(report)
     if args.json:
-        print(json.dumps(security_audit_public_report(report), ensure_ascii=False, indent=2))
+        print(json.dumps(pub, ensure_ascii=False, indent=2))
     else:
         print("=== Gemma Agent security audit (honest) ===")
         print("Root: gemma_agent (public build)")
-        for name, data in report["checks"].items():
+        for name, data in pub["checks"].items():
             mark = "OK" if data.get("ok") or data.get("skipped") else "FAIL"
             print(f"\n[{mark}] {name}")
             for line in data.get("notes") or []:
                 print(f"  - {str(line)[:280]}")
-            detail = data.get("detail") or []
-            if detail and not data.get("notes"):
-                print(f"  - detail_lines={len(detail)} (use --json for full output)")
             if data.get("skipped"):
                 print("  - skipped")
         print("\n--- Known limitations (not bugs) ---")
