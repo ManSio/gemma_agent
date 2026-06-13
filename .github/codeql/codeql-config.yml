@@ -1,7 +1,10 @@
 name: gemma_agent
 
+dependencies:
+  gemma_agent/python-extensions: "*"
+
 query-filters:
   - exclude:
       id: py/polynomial-redos
       paths:
-        - core/regex_safe.py
+        - "**/regex_safe.py"

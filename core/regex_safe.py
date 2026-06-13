@@ -6,6 +6,7 @@ import re
 from typing import Any, Match, Optional, Pattern, Union
 
 _Pattern = Union[str, Pattern[str]]
+_CODEQL_RE_MAX_LEN = 1000
 
 
 def regex_input_max_len() -> int:
@@ -34,6 +35,15 @@ def collapse_whitespace(text: str) -> str:
     return " ".join((text or "").split())
 
 
+def _bounded_regex_text(text: Any, *, max_len: Optional[int] = None) -> str:
+    """Cap user text before regex; hard bound for static analysis (CodeQL)."""
+    t = cap_regex_input(text, max_len=max_len)
+    hard = min(_CODEQL_RE_MAX_LEN, max_len if max_len is not None else regex_input_max_len())
+    if len(t) > hard:
+        t = t[:hard]
+    return t
+
+
 def safe_re_search(
     pattern: _Pattern,
     text: Any,
@@ -42,10 +52,7 @@ def safe_re_search(
     max_len: Optional[int] = None,
 ) -> Optional[Match[str]]:
     """re.search on capped user text."""
-    t = cap_regex_input(text, max_len=max_len)
-    cap = max_len if max_len is not None else regex_input_max_len()
-    if len(t) > cap:
-        t = t[:cap]
+    t = _bounded_regex_text(text, max_len=max_len)
     if isinstance(pattern, re.Pattern):
         return pattern.search(t)
     return re.search(pattern, t, flags)
@@ -59,10 +66,7 @@ def safe_re_match(
     max_len: Optional[int] = None,
 ) -> Optional[Match[str]]:
     """re.match on capped user text."""
-    t = cap_regex_input(text, max_len=max_len)
-    cap = max_len if max_len is not None else regex_input_max_len()
-    if len(t) > cap:
-        t = t[:cap]
+    t = _bounded_regex_text(text, max_len=max_len)
     if isinstance(pattern, re.Pattern):
         return pattern.match(t)
     return re.match(pattern, t, flags)
@@ -78,10 +82,7 @@ def safe_re_sub(
     max_len: Optional[int] = None,
 ) -> str:
     """re.sub on capped user text."""
-    t = cap_regex_input(text, max_len=max_len)
-    cap = max_len if max_len is not None else regex_input_max_len()
-    if len(t) > cap:
-        t = t[:cap]
+    t = _bounded_regex_text(text, max_len=max_len)
     if isinstance(pattern, re.Pattern):
         return pattern.sub(repl, t, count=count)
     return re.sub(pattern, repl, t, count=count, flags=flags)
