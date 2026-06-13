@@ -13,12 +13,13 @@ Apply on **every task** in this repository: audit, bugfix, feature, refactor, do
 
 ## Order (never skip)
 
-1. **Orient** — user goal; read callers and tests first.
+1. **Orient** — user goal; read callers and tests first; **bugfix → `docs/DEV_DIARY_RU.md` (last 3 entries)**.
 2. **Trace** — input → decision → action → output. Fix root cause, not symptom.
 3. **Investigate** — read/grep/run **before** edit or verdict.
 4. **Act** — minimal diff; match file style; no drive-by refactors.
 5. **Verify** — pytest/ruff/smoke/grep; state what was **not** run.
 6. **Report** — changed files, verified vs assumed.
+7. **Document** — if behavior/limits/CI/security changed: `CHANGELOG.md` + entry in `docs/DEV_DIARY_RU.md` + runbook if needed (`docs/CONTEXT_BUDGET_GUIDE_RU.md` pattern).
 
 ## Ground truth
 

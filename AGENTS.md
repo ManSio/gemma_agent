@@ -55,6 +55,8 @@ Details: [docs/HONEST_POSITIONING.md](docs/HONEST_POSITIONING.md)
 | Task | Doc |
 |------|-----|
 | Repo map | [docs/REPO_MAP.md](docs/REPO_MAP.md) |
+| **Dev diary (bugfix: read first)** | [docs/DEV_DIARY_RU.md](docs/DEV_DIARY_RU.md) |
+| Context / token limits | [docs/CONTEXT_BUDGET_GUIDE_RU.md](docs/CONTEXT_BUDGET_GUIDE_RU.md) |
 | Honest positioning | [docs/HONEST_POSITIONING.md](docs/HONEST_POSITIONING.md) |
 | CI & tests | [docs/CI.md](docs/CI.md) |
 | Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |

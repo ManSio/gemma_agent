@@ -71,10 +71,14 @@ Validate: `pytest tests/test_plugin_contract.py -q`
 | `core/behavior_store.py` | Dialogue STM with compression |
 | `core/context_compression.py` | Trim paired messages |
 | `core/dialogue_compactor.py` | LLM summary of overflow |
-| `core/brain/context_budget.py` | Warn before token overflow |
+| `core/brain/context_budget.py` | UX warn before token overflow (no auto-truncate) |
+| `core/context_collapse.py` | Optional collapse + `enforce_context_limit()` hard prune |
+| `core/compactor.py` | LLM summary when over budget threshold |
 | `core/brain/brief_context_filter.py` | Slim prompt assembly |
 
-Tests: `test_context_compression.py`, `test_compactor.py`, `test_brain_chat_context_slim.py`
+Tests: `test_context_compression.py`, `test_compactor.py`, `test_context_hard_limit.py`, `test_brain_chat_context_slim.py`
+
+Runbook: `docs/CONTEXT_BUDGET_GUIDE_RU.md`
 
 ---
 

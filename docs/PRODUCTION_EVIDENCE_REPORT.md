@@ -121,7 +121,7 @@ The author recalls seeing **~26 000 tokens on a single request** during the heav
 |-------|-------------|
 | One **LLM call** vs one **user turn** | A single Telegram message can trigger **router_classifier + brain_first + brain_second + news narrative** — summed `total_tokens` across calls can exceed 20k even when one tag’s median is ~10k. |
 | Long paste + full memory | STM/LTM + article paste before slim rollout inflated prompts; gates now block some long pastes (`prose_over_chars` in heuristic_misses). |
-| Pre-budget era | `config/token_efficiency.yml` now sets `hard_limit_tokens: 12000` with compactor at 0.7 threshold — guardrail added after the worst weeks. |
+| Pre-budget era | `config/token_efficiency.yml` sets `hard_limit_tokens: 15000` with `enforce_context_limit()` fallback when collapse is off; compactor at 0.7 threshold. |
 
 **Honest label:** ~26k = **owner peak observation** during May; **10 255** = **documented median** for `brain_first` in METRICS_PERIODS. We cite both; we do not round 10k up to 26k as “average.”
 
@@ -132,10 +132,12 @@ The author recalls seeing **~26 000 tokens on a single request** during the heav
 | Slim prompt rollout (15–19 May) | −70% median prompt on `brain_first` |
 | `BRAIN_KV_PROFILE_STICKY` + epoch bump | KV hit 0% → 75–85% |
 | Narrow brain profiles + shortcut gate | More fast_path; less fat context |
-| `context_budget.py` + compactor | Caps and summarizes before send |
-| `token_efficiency.yml` budget | `hard_limit_tokens: 12000` |
+| `context_budget.py` + compactor + `enforce_context_limit` | Warn UX, LLM compact, hard prune before send |
+| `token_efficiency.yml` budget | `hard_limit_tokens: 15000` |
 
-**Code in this repo:** `core/brain/context_budget.py`, `config/token_efficiency.yml`, `core/context_compression.py`.
+**Code in this repo:** `core/brain/context_budget.py`, `core/context_collapse.py` (`enforce_context_limit`), `config/token_efficiency.yml`, `core/context_compression.py`, `core/compactor.py`.
+
+**Runbook:** `docs/CONTEXT_BUDGET_GUIDE_RU.md` · **Dev log:** `docs/DEV_DIARY_RU.md`
 
 ---
 

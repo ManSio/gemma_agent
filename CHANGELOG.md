@@ -1,3 +1,23 @@
+## [2026-06-13] — v3.5.1: Hard context limit 15K, CI aiohttp pin, CodeQL sanitization
+
+### Исправлено
+- **CI:** `aiohttp>=3.9.0,<3.14` — совместимость с `aiogram 3.28.2` (dependabot ломал `pip install`)
+- **Hard context limit:** `enforce_context_limit()` в `core/context_collapse.py` — prune `prompt_parts` при превышении `budget_hard_limit_tokens`, даже когда `collapse.enabled=false`
+- **YAML:** `compactor` вынесен из `budget`; `hard_limit_tokens: 15000`; `compactor.enabled: true`
+- **CodeQL:** sanitization Mem0 paths (`mem0_path_log_facets`), heuristic_misses (`user_id_hash`), audit scripts — только public view
+
+### Добавлено
+- Тесты: `tests/test_context_hard_limit.py`, `tests/test_token_efficiency_config.py`
+- Метрики: `context_hard_limit_enforced_total`, `context_hard_limit_pruned_total`
+
+### Документация
+- `docs/DEV_DIARY_RU.md` — журнал разработки (читать агенту первым при багфиксе)
+- `docs/CONTEXT_BUDGET_GUIDE_RU.md` — runbook лимитов контекста
+
+**Deploy:** после pull — рестарт бота; `python -m pytest tests/test_context_hard_limit.py tests/test_token_efficiency_config.py -q`; CI `release-guard` + `CI` на push
+
+---
+
 ## [2026-06-08] — v3.5.0: News Reliability Hardening (source attribution + verification)
 
 ### Добавлено

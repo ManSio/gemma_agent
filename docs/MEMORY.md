@@ -89,8 +89,9 @@ flowchart TD
   STM --> MTM[MTM: memory_recall_facade addon]
   LTM --> MTM
   MTM --> PACK[prompt_pack: memory_facts, dialogue_summary, user_facts]
-  PACK --> BUDGET[context_budget + context_compression]
-  BUDGET --> LLM[OpenRouter call]
+  PACK --> BUDGET[context_compression + compactor + enforce_context_limit]
+  BUDGET --> UX[context_budget UX warn only]
+  UX --> LLM[OpenRouter call]
 ```
 
 | Stage | Code | What happens |
@@ -99,7 +100,7 @@ flowchart TD
 | LTM fetch | `core/brain/pipeline.py` ~376 | `memory_facts = await get_memory().on_before_response(user_id, query)` |
 | MTM addon | `core/memory_recall_facade.py` | `build_pipeline_memory_addon()` — relative time, thin-pack when dialogue sparse |
 | Prompt slots | `core/brain/prompt_pack.py` | `memory_facts`, `dialogue_summary`, `user_facts` in `_build_context_block()` |
-| Token cap | `core/brain/context_budget.py` | Prevents unbounded context |
+| Token cap | `core/context_collapse.py` + `config/token_efficiency.yml` | Hard limit 15K est. tokens; UX warn in `context_budget.py` |
 
 ### Ranking honesty
 

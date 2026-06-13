@@ -12,6 +12,7 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 | **CI & tests proof** | [CI.md](CI.md) |
 | **GitHub About text** | [GITHUB_ABOUT.md](GITHUB_ABOUT.md) |
 | **Honest positioning (hub)** | [HONEST_POSITIONING.md](HONEST_POSITIONING.md) |
+| **Dev diary (агент: читать первым)** | [DEV_DIARY_RU.md](DEV_DIARY_RU.md) |
 | **Cursor agent** | [../.cursor/README.md](../.cursor/README.md) |
 
 ---
@@ -23,6 +24,7 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Layers + Mermaid diagram |
 | [AGENT_LOOP.md](AGENT_LOOP.md) | Plan → Execute → Verify (honest defaults) |
 | [MEMORY.md](MEMORY.md) | STM / MTM / LTM tiers |
+| [CONTEXT_BUDGET_GUIDE_RU.md](CONTEXT_BUDGET_GUIDE_RU.md) | Hard limit 15K, compactor, token_efficiency runbook |
 | [SELF_HEALING.md](SELF_HEALING.md) | Healers, safe mode, rollback |
 | [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) | Test gates and evidence |
 | [SYSTEM_REQUIREMENTS.md](SYSTEM_REQUIREMENTS.md) | Proven hardware (1 GB–4 GB) |

@@ -7,7 +7,10 @@ alwaysApply: true
 
 **Full workflow:** read `.cursor/skills/gemma-agent/SKILL.md` (and `reference.md` for verify matrix).
 
-Every task: **orient → trace flow → investigate → act → verify → report**.
+Every task: **orient → trace flow → investigate → act → verify → document → report**.
+
+- Bugfix: read `docs/DEV_DIARY_RU.md` first (`.cursorrules`).
+- After behavior/limits/CI changes: `CHANGELOG.md` + diary entry + runbook if needed.
 
 - Minimal diff; read before write; user correction wins.
 - Never declare done without verify (pytest / smoke / grep).

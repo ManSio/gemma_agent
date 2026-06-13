@@ -3,7 +3,7 @@
 | Script | Purpose |
 |--------|---------|
 | `scripts/print_repo_stats.py` | Verifiable test/CI counts (410 files, 2580+ cases) |
-| `scripts/pip_audit.sh` | Dependency CVE scan (`pip-audit`, aiohttp pin documented) |
+| `scripts/pip_audit.sh` | Dependency CVE scan (`pip-audit`; `aiohttp<3.14` for aiogram — see `requirements.txt`) |
 | `scripts/generate_encryption_key.py` | Generate `ENCRYPTION_KEY` for memory at-rest encryption |
 | `scripts/agent_bootstrap.sh` | First-time install |
 | `scripts/gemma_panel.sh` | Bot + Mem0 control |

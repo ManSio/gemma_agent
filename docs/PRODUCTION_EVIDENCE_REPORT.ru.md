@@ -118,7 +118,7 @@ xychart-beta
 
 - Один **ход в Telegram** = несколько LLM-вызовов (`router` + `brain_first` + narrative…) — сумма `total_tokens` может перевалить за 20k.
 - Длинный paste + память до slim и до compactor.
-- Сейчас в `config/token_efficiency.yml`: `hard_limit_tokens: 12000`, compactor 0.7.
+- Сейчас в `config/token_efficiency.yml`: `hard_limit_tokens: 15000`, compactor 0.7, `enforce_context_limit()` при превышении (даже если `collapse.enabled=false`).
 
 **Честно:** ~26k = **пик по ощущениям/админке**; **10 255** = **задокументированный median**. Не выдаём пик за среднее.
 
