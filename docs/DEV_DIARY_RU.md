@@ -20,6 +20,37 @@
 
 ---
 
+## 2026-06-13 — Документация: кэш, задержки, синхронизация docs
+
+**Контекст:** снят prod-снимок cache/latency (VPS 24h); нужен runbook и порядок в индексах.
+
+**Сделано:**
+- `scripts/snapshot_cache_latency.py` — llm_usage + turns + metrics_timeseries + stage_ms
+- `docs/CACHE_LATENCY_METRICS_RU.md` / `.md` — runbook
+- `docs/archive/CACHE_LATENCY_SNAPSHOT_2026-06-13_RU.md` — снимок без PII
+- Обновлены: `docs/README.md`, `index.md`, `index.ru.md`, `REPO_MAP.md`, `scripts-cli.md`, `admin-ops*`, `PRODUCTION_EVIDENCE_REPORT*`, `VERSION` → 3.5.9, счётчики тестов (430 файлов / 2718+ cases)
+
+**Verify:** `python -m py_compile scripts/snapshot_cache_latency.py`; smoke на VPS.
+
+---
+
+## 2026-06-13 — user_facts identity recall + CI (discourse context)
+
+**Контекст:** prod — `/me` знает имя, brain на «как меня зовут?» отвечал «не знаю»; CI красный после identity-теста.
+
+**Сделано:**
+- `detect_pre_llm_shortcut` → `user_facts_identity`; `pre_llm_plan` direct reply
+- `brain_user_facts_from_store` в orchestrator brain context (DM aggregate)
+- `discourse_resolver._publish_discourse_context` — флаги short-circuit не теряются на shallow copy context
+- Privacy: тест без реального telegram_id
+- `pyproject.toml`: `reportUnsupportedDunderAll = false`
+
+**Verify:** `pytest tests/test_user_facts_identity_recall.py tests/test_discourse_resolver.py tests/test_brain_operational_short_circuit_meta.py -q`; `check_public_privacy --ci`; `release_guard --smoke`.
+
+**Deploy:** VPS `8de96c7` via `gemma_panel.sh update`.
+
+---
+
 ## 2026-06-13 — Backfill DAILY_OPS 05–13 июня (VPS_PROD)
 
 **Контекст:** суточные `docs/archive/DAILY_OPS_*` не генерировались с 05.06; данные в turns/llm_usage на VPS были.

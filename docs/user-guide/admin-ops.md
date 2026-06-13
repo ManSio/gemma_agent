@@ -16,7 +16,10 @@ Requires `ADMIN_USER_IDS` in `.env`.
 python scripts/gemma_status.py
 python scripts/gemma_status.py --online
 python scripts/turns_search.py "weather" --days 3
+PYTHONPATH=. python scripts/snapshot_cache_latency.py --root . --hours 24
 ```
+
+Cache/latency runbook: [CACHE_LATENCY_METRICS.md](../CACHE_LATENCY_METRICS.md)
 
 ## Logs
 

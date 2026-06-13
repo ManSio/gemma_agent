@@ -29,7 +29,7 @@ python scripts/release_guard.py --smoke
 
 | Claim | Where |
 |-------|-------|
-| Tests | `tests/` — 410 files, 2580+ cases |
+| Tests | `tests/` — 430 files, 2718+ cases |
 | CI | `.github/workflows/ci.yml` |
 | Architecture | `docs/ARCHITECTURE.md`, `docs/REPO_MAP.md` |
 | Security | `SECURITY.md`, `docs/security/security-model.md` |
@@ -55,6 +55,7 @@ Details: [docs/HONEST_POSITIONING.md](docs/HONEST_POSITIONING.md)
 | Task | Doc |
 |------|-----|
 | Repo map | [docs/REPO_MAP.md](docs/REPO_MAP.md) |
+| Cache & latency ops | [docs/CACHE_LATENCY_METRICS.md](docs/CACHE_LATENCY_METRICS.md) |
 | **Dev diary (bugfix: read first)** | [docs/DEV_DIARY_RU.md](docs/DEV_DIARY_RU.md) |
 | Context / token limits | [docs/CONTEXT_BUDGET_GUIDE_RU.md](docs/CONTEXT_BUDGET_GUIDE_RU.md) |
 | Honest positioning | [docs/HONEST_POSITIONING.md](docs/HONEST_POSITIONING.md) |

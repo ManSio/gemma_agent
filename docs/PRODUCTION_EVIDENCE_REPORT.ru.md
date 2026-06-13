@@ -211,6 +211,7 @@ python -m pytest tests/ --collect-only -q
 
 | Скрипт | Что даёт |
 |--------|----------|
+| `snapshot_cache_latency.py` | кэш + задержки за 24h (llm_usage, turns, stage_ms) — [CACHE_LATENCY_METRICS_RU.md](CACHE_LATENCY_METRICS_RU.md) |
 | `metrics_period_report.py` | agent vs LLM по дням |
 | `daily_server_digest.py` | DAILY_OPS |
 | `analyze_kv_session_metrics.py` | KV hit |

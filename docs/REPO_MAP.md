@@ -13,13 +13,14 @@ Context: [CHATGPT_PASTE.md](../CHATGPT_PASTE.md) · [HONEST_POSITIONING.md](HONE
 
 | Fact | Evidence in repo |
 |------|------------------|
-| Tests | `tests/` — **410** files, **2580+** cases — [`pytest.ini`](../pytest.ini) |
+| Tests | `tests/` — **430** files, **2718+** cases — [`pytest.ini`](../pytest.ini) |
 | Honest positioning | [HONEST_POSITIONING.md](HONEST_POSITIONING.md) |
 | Prod metrics (May–Jun) | [PRODUCTION_EVIDENCE_REPORT.md](PRODUCTION_EVIDENCE_REPORT.md) |
+| Cache & latency (ops) | [CACHE_LATENCY_METRICS.md](CACHE_LATENCY_METRICS.md) |
 | CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — runs on every PR |
 | Docker | [`Dockerfile`](../Dockerfile), [`docker-compose.yml`](../docker-compose.yml) |
 | Docs | `docs/` — architecture, memory, deploy, security |
-| Version | [`VERSION`](../VERSION) — currently 3.4.x |
+| Version | [`VERSION`](../VERSION) — currently 3.5.x |
 
 ```bash
 python scripts/print_repo_stats.py   # refresh numbers locally
@@ -38,8 +39,8 @@ gemma_agent/
 ├── core/                    # Brain, orchestrator, guards, resilience
 ├── modules/                 # 19 plugins (public build), each has module.json
 ├── config/                  # modules_catalog.json, env fragments
-├── tests/                   # 410 test_*.py files, 2580+ cases
-├── scripts/                 # bootstrap, panel, release_guard, backup
+├── tests/                   # 430 test_*.py files, 2718+ cases
+├── scripts/                 # bootstrap, panel, release_guard, snapshot_cache_latency
 ├── docs/                    # Full documentation hub
 ├── .github/workflows/       # CI (ci.yml, release-guard.yml)
 ├── Dockerfile               # Container image
@@ -60,6 +61,7 @@ gemma_agent/
 | **Run the bot** | [getting-started/quickstart.md](getting-started/quickstart.md) |
 | **See test & CI proof** | [CI.md](CI.md) · [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) |
 | **Deploy on VPS** | [DEPLOY.md](DEPLOY.md) · [SYSTEM_REQUIREMENTS.md](SYSTEM_REQUIREMENTS.md) |
+| **Cache & latency ops** | [CACHE_LATENCY_METRICS.md](CACHE_LATENCY_METRICS.md) |
 | **Security boundaries** | [security/security-model.md](security/security-model.md) |
 | **Contribute** | [CONTRIBUTING.md](../CONTRIBUTING.md) |
 | **Honest positioning** | [HONEST_POSITIONING.md](HONEST_POSITIONING.md) |
@@ -85,7 +87,7 @@ Details: [CI.md](CI.md)
 
 | People say | Reality |
 |------------|---------|
-| "No tests" | 2580+ pytest cases in `tests/` |
+| "No tests" | 2718+ pytest cases in `tests/` |
 | "No CI" | `.github/workflows/ci.yml` |
 | "Just a script bot" | 19 plugins, brain pipeline, healers |
 | "Needs local Gemma GPU" | OpenRouter API — any model you choose |

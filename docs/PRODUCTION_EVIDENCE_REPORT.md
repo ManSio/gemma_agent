@@ -276,6 +276,7 @@ These scripts exist in the codebase (run on prod with `/srv/gemma_bot` root):
 
 | Script | Input logs | Output |
 |--------|------------|--------|
+| `scripts/snapshot_cache_latency.py` | llm_usage, turns, metrics_timeseries | 24h cache + latency snapshot — [CACHE_LATENCY_METRICS.md](CACHE_LATENCY_METRICS.md) |
 | `scripts/metrics_period_report.py` | ops_trace, turns, llm_usage | daily agent vs LLM tables |
 | `scripts/daily_server_digest.py` | turns, errors, smoke | DAILY_OPS markdown |
 | `scripts/analyze_kv_session_metrics.py` | llm_usage | KV hit by session/profile |

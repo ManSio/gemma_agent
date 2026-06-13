@@ -2,7 +2,7 @@
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/print_repo_stats.py` | Verifiable test/CI counts (410 files, 2580+ cases) |
+| `scripts/print_repo_stats.py` | Verifiable test/CI counts (430 files, 2718+ cases) |
 | `scripts/pip_audit.sh` | Dependency CVE scan (`pip-audit`; `aiohttp<3.14` for aiogram — see `requirements.txt`) |
 | `scripts/generate_encryption_key.py` | Generate `ENCRYPTION_KEY` for memory at-rest encryption |
 | `scripts/agent_bootstrap.sh` | First-time install |
@@ -18,5 +18,9 @@
 | `scripts/backup.sh` | Backup `data/` and config |
 | `scripts/generate_llms_txt.py` | Regenerate docs/llms.txt |
 | `scripts/turns_search.py` | Search turns.jsonl |
+| `scripts/snapshot_cache_latency.py` | Cache + latency snapshot (llm_usage, turns, stage_ms) |
+| `scripts/metrics_period_report.py` | Daily agent vs LLM metrics + history JSONL |
+| `scripts/daily_server_digest.py` | DAILY_OPS archive digests |
+| `scripts/server_full_audit.py` | Weekly / dated server audit |
 
 Panel subcommands: [Panel](../user-guide/panel.md)

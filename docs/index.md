@@ -4,9 +4,9 @@ Telegram assistant for a **small trusted circle** — **OpenRouter**, memory, ro
 
 | | |
 |---|---|
-| Version | `3.4.0` (see [VERSION](../VERSION)) |
+| Version | see [VERSION](../VERSION) |
 | Modules (public build) | **19** active plugins |
-| Tests | **410** files · **2580+** cases — [CI.md](CI.md) |
+| Tests | **430** files · **2718+** cases — [CI.md](CI.md) |
 | Honest positioning | [HONEST_POSITIONING.md](HONEST_POSITIONING.md) — reviewer Q&A |
 | CI | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — every push/PR |
 | First visit | [REPO_MAP.md](REPO_MAP.md) · [AGENTS.md](../AGENTS.md) |
@@ -38,6 +38,7 @@ Telegram assistant for a **small trusted circle** — **OpenRouter**, memory, ro
 | [Security](security/security-model.md) | What is protected — and what is not |
 | [Honest positioning](HONEST_POSITIONING.md) | Assistant vs agent, scores, test quality, retrieval |
 | [Production evidence](PRODUCTION_EVIDENCE_REPORT.md) | May–Jun metrics: tokens −70%, costs, latency, tests |
+| [Cache & latency metrics](CACHE_LATENCY_METRICS.md) | KV cache, response delays, snapshot script |
 | [Repo map](REPO_MAP.md) | Read this first — tests, CI, layout |
 | [CI & tests](CI.md) | GitHub Actions jobs + local commands |
 | [Agent loop](AGENT_LOOP.md) | Plan → Execute → Verify (honest) |

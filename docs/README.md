@@ -25,6 +25,8 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 | [AGENT_LOOP.md](AGENT_LOOP.md) | Plan → Execute → Verify (honest defaults) |
 | [MEMORY.md](MEMORY.md) | STM / MTM / LTM tiers |
 | [CONTEXT_BUDGET_GUIDE_RU.md](CONTEXT_BUDGET_GUIDE_RU.md) | Hard limit 15K, compactor, token_efficiency runbook |
+| [CACHE_LATENCY_METRICS_RU.md](CACHE_LATENCY_METRICS_RU.md) | Кэш OpenRouter/KV, задержки ответа, snapshot script |
+| [CACHE_LATENCY_METRICS.md](CACHE_LATENCY_METRICS.md) | Cache & latency metrics (EN) |
 | [SECURITY_GITHUB_FINDINGS_RU.md](SECURITY_GITHUB_FINDINGS_RU.md) | CodeQL + pip-audit status |
 | [SELF_HEALING.md](SELF_HEALING.md) | Healers, safe mode, rollback |
 | [ACCEPTANCE_CRITERIA.md](ACCEPTANCE_CRITERIA.md) | Test gates and evidence |

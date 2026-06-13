@@ -1,3 +1,21 @@
+## [2026-06-13] — v3.5.9: cache/latency metrics docs, identity recall, discourse context CI
+
+- **Added:** `scripts/snapshot_cache_latency.py` — ops snapshot (llm_usage, turns, metrics_timeseries, stage_ms).
+- **Docs:** `docs/CACHE_LATENCY_METRICS_RU.md`, `CACHE_LATENCY_METRICS.md`, archive snapshot 2026-06-13; hub/index/REPO_MAP/scripts-cli/admin-ops synced.
+- **Fix:** `user_facts` identity recall (`как меня зовут` / `кто я`) via pre-LLM direct plan; DM brain context uses profile aggregate.
+- **Fix:** discourse resolver publishes into caller `context` dict (short-circuit flags survive).
+- **CI:** privacy test id sanitized; basedpyright lazy `__all__` warning suppressed.
+
+### Verify
+```bash
+python -m py_compile scripts/snapshot_cache_latency.py
+python -m pytest tests/test_user_facts_identity_recall.py tests/test_discourse_resolver.py tests/test_brain_operational_short_circuit_meta.py -q
+python scripts/check_public_privacy.py --ci
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.8: discourse resolver (thread continuity before routing)
 
 - **Added:** `core/brain/discourse_resolver.py` — structural continuation, IUR-lite rewrite, correction signals, batch guard; `discourse_thread_judge.py` for ambiguous stays.
