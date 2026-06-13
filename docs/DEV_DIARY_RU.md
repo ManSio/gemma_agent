@@ -127,6 +127,28 @@ pip install -r requirements.txt   # без ResolutionImpossible
 
 ---
 
+## 2026-06-13 — API message/body limits (v3.5.5)
+
+### Проблема
+- HTTP API принимал `message` без лимита (100KB+ → OOM/огромные токены).
+- Обход через `bot-relay` `meta`, `ops/probe`, отсутствие лимита HTTP body.
+
+### Решение
+- `core/api_request_limits.py` — единый источник лимитов из `.env`:
+  - `API_MESSAGE_MAX_CHARS` (default 10000)
+  - `API_RELAY_META_MAX_JSON_CHARS` (default 4096)
+  - `API_MAX_REQUEST_BODY_BYTES` (default 65536)
+- Модели: `ChatRequest`, `BotRelayRequest`, `OpsProbeRequest`.
+- Middleware 413 до парсинга handler.
+
+### Verify
+```bash
+python -m pytest tests/test_api_request_models.py tests/test_api_request_limits.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## 2026-06-13 — API_TOKEN guard + ops stdout (v3.5.4)
 
 ### Проблема

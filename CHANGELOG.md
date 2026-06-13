@@ -1,3 +1,22 @@
+## [2026-06-13] — v3.5.5: API message/body size guards
+
+### Исправлено
+- `core/api_request_limits.py`: `API_MESSAGE_MAX_CHARS`, `API_RELAY_META_MAX_JSON_CHARS`, `API_MAX_REQUEST_BODY_BYTES` из `.env`
+- `ChatRequest` / `BotRelayRequest` / `OpsProbeRequest`: `message` с `max_length` из env (дефолт 10000)
+- `BotRelayRequest.meta`: лимит сериализованного JSON
+- ASGI middleware `RequestBodySizeLimitMiddleware` — HTTP 413 на oversized body
+
+### Добавлено
+- `tests/test_api_request_models.py`, `tests/test_api_request_limits.py`
+
+### Verify
+```bash
+python -m pytest tests/test_api_request_models.py tests/test_api_request_limits.py -q
+python -m py_compile core/api_request_limits.py api.py core/api_ops.py
+```
+
+---
+
 ## [2026-06-13] — v3.5.4: API_TOKEN startup guard + ops stdout hardening
 
 ### Исправлено

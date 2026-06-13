@@ -16,6 +16,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+from core.api_request_limits import API_MESSAGE_MAX_CHARS
+
 from core.ops_trace import (
     load_user_dialogue_view,
     log_path,
@@ -34,7 +36,7 @@ from core.api_auth import verify_api_token
 
 class OpsProbeRequest(BaseModel):
     user_id: str
-    message: str
+    message: str = Field(..., max_length=API_MESSAGE_MAX_CHARS)
     group_id: Optional[str] = None
     channel: str = "ops_probe"
 

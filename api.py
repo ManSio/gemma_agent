@@ -8,13 +8,14 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, Query, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from contextlib import asynccontextmanager
 import asyncio
 import logging
 import os
+from core.api_request_limits import API_MESSAGE_MAX_CHARS, validate_relay_meta
 from core.database import SessionLocal, get_db
 from core.models import User
 from core.mem0_memory.mem0_module import Mem0MemoryModule, load_mem0_config_from_env
@@ -65,7 +66,7 @@ enforce_startup_api_token_config(API_TOKEN)
 
 class ChatRequest(BaseModel):
     user_id: str
-    message: str
+    message: str = Field(..., max_length=API_MESSAGE_MAX_CHARS)
     channel: str = "telegram"
     group_id: Optional[str] = None
 
@@ -77,12 +78,17 @@ class BotRelayRequest(BaseModel):
     """
 
     user_id: str
-    message: str
+    message: str = Field(..., max_length=API_MESSAGE_MAX_CHARS)
     channel: str = "bot_relay"
     group_id: Optional[str] = None
     request_id: Optional[str] = None
     source_bot: Optional[str] = None
     meta: Optional[Dict[str, Any]] = None
+
+    @field_validator("meta")
+    @classmethod
+    def _validate_meta_size(cls, value: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        return validate_relay_meta(value)
 
 
 class ChatResponse(BaseModel):
@@ -241,6 +247,10 @@ app = FastAPI(
     version="1.0.0",
     lifespan=_api_lifespan,
 )
+
+from core.api_request_limits import RequestBodySizeLimitMiddleware
+
+app.add_middleware(RequestBodySizeLimitMiddleware)
 
 from core.api_ops import ops_router
 
