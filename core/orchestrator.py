@@ -1282,6 +1282,14 @@ class Orchestrator:
         normalized_input = self._normalize_input_data(input_data.model_dump())
         text = normalized_input.get("payload", "")
         input_meta = normalized_input.get("meta") or {}
+        try:
+            from core.request_context import ensure_request_id
+
+            if isinstance(input_meta, dict):
+                rid = str(input_meta.get("request_id") or input_meta.get("relay_request_id") or "").strip()
+                ensure_request_id(rid or None)
+        except Exception:
+            pass
         file_context = input_meta.get("file_context") if isinstance(input_meta, dict) else None
         doc_context = input_meta.get("document_intake") if isinstance(input_meta, dict) else None
         code_context = input_meta.get("code_intake") if isinstance(input_meta, dict) else None

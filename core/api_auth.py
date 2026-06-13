@@ -1,6 +1,7 @@
 """Общая авторизация HTTP API (api.py, core/api_ops.py)."""
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 from typing import Optional, Set
@@ -72,6 +73,19 @@ def allowed_api_tokens() -> Set[str]:
     return out
 
 
+def token_matches_allowed(candidate: str, allowed: Optional[Set[str]] = None) -> bool:
+    """Timing-safe compare of API token against configured secrets."""
+    cand = normalize_api_token(candidate)
+    if not cand:
+        return False
+    tokens = allowed if allowed is not None else allowed_api_tokens()
+    for expected in tokens:
+        exp = normalize_api_token(expected)
+        if exp and hmac.compare_digest(cand, exp):
+            return True
+    return False
+
+
 def verify_api_token(
     token: Optional[str] = Query(None, description="API token (query)"),
     x_api_token: Optional[str] = Header(None, alias="X-API-Token"),
@@ -86,6 +100,6 @@ def verify_api_token(
             raw = normalize_api_token(a[7:])
     if not raw and token:
         raw = normalize_api_token(token)
-    if not raw or raw not in allowed_api_tokens():
+    if not raw or not token_matches_allowed(raw):
         raise HTTPException(status_code=401, detail="Invalid or missing API token")
     return raw

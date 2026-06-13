@@ -5,6 +5,7 @@ import os
 import json
 import logging
 import sys
+import threading
 from typing import Any, Callable, Dict, List, Optional, Union
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Локальный кэш импортированных классов: module_name -> class
 _lazy_import_cache: Dict[str, Any] = {}
+_hot_install_lock = threading.Lock()
 
 
 class ModuleManifest(BaseModel):
@@ -263,6 +265,11 @@ class PluginRegistry:
         Загрузить/перезагрузить один плагин с диска (после SelfProgramming.generate_module или правок файлов).
         Сбрасывает кэш importlib для пакета modules.<dir> и включает модуль в loaded_modules.
         """
+        with _hot_install_lock:
+            return self._hot_install_module_locked(module_dir_name)
+
+    def _hot_install_module_locked(self, module_dir_name: str) -> Dict[str, Any]:
+        """hot_install_module body — must run under _hot_install_lock."""
         path = self.modules_path / module_dir_name
         if not path.is_dir():
             return {"success": False, "error": f"not a directory: {path}"}

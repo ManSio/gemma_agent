@@ -127,6 +127,28 @@ pip install -r requirements.txt   # без ResolutionImpossible
 
 ---
 
+## 2026-06-13 — P1/P2 hardening batch (v3.5.6)
+
+Задачи 3–6, 7–12 из security backlog:
+- PolicyEngine memory leak, API 501 stubs, timing-safe tokens, plugin hot_install lock
+- USD daily budget, LLM concurrency cap, circuit breaker, request_id tracing
+- DB health 503, docker api healthcheck
+
+Не в scope этой сессии: dormant modules refactor (#13), symlink paths (#14), timezone models (#15), TypedDict sweep (#16), ADR (#17) — pip-audit уже в CI (#18).
+
+### Verify
+```bash
+python -m pytest tests/test_api_http_guards.py tests/test_openrouter_circuit_integration.py tests/test_resilience_cost_guards.py -q
+```
+
+### Deploy (API)
+```bash
+git pull && ./scripts/gemma_api.sh restart
+curl -sS http://127.0.0.1:8000/api/v1/health
+```
+
+---
+
 ## 2026-06-13 — API message/body limits (v3.5.5)
 
 ### Проблема

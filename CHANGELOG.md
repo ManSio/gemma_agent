@@ -1,3 +1,32 @@
+## [2026-06-13] — v3.5.6: P1/P2 hardening (policy, API, LLM guards)
+
+### Исправлено
+- **P1** `PolicyEngine`: удаление пустых ключей `call_history` (`POLICY_CALL_HISTORY_RETENTION_MIN`)
+- **P1** mock API `/parents/.../children`, `/schedule/...` → HTTP **501**
+- **P1** `api_auth`: `hmac.compare_digest` для токенов
+- **P1** `PluginRegistry.hot_install_module`: `threading.Lock` на `sys.modules`
+- **P2** `COST_DAILY_USD_BUDGET` + hard stop в OpenRouter preflight
+- **P2** `OPENROUTER_MAX_CONCURRENT_CALLS` semaphore
+- **P2** `CircuitBreaker` для OpenRouter (`core/resilience.py`)
+- **P2** correlation id: `core/request_context.py`, API middleware, orchestrator/brain
+- **P2** `/api/v1/health`: проверка БД → **503** при недоступности
+- **P2** docker-compose `api` service: healthcheck на `/api/v1/health`
+
+### Добавлено
+- `tests/test_api_http_guards.py`, `tests/test_openrouter_circuit_integration.py`
+
+### Исправлено (финал)
+- `openrouter_provider.generate()`: success/error ветки под `status==200`; `record_failure` на HTTP/exception
+- `/health` (legacy): проверка БД → 503
+
+### Verify
+```bash
+python -m pytest tests/test_api_http_guards.py tests/test_openrouter_circuit_integration.py tests/test_resilience_cost_guards.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.5: API message/body size guards
 
 ### Исправлено

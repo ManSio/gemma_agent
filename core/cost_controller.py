@@ -30,6 +30,14 @@ def _parse_float(name: str, default: float, minimum: float = 0.0, maximum: float
     return max(minimum, min(maximum, val))
 
 
+def _parse_budget_float(name: str, default: float, minimum: float = 0.0, maximum: float = 100000.0) -> float:
+    try:
+        val = float((os.getenv(name) or "").strip() or str(default))
+    except (TypeError, ValueError):
+        val = default
+    return max(minimum, min(maximum, val))
+
+
 def cost_autopilot_enabled() -> bool:
     return _truthy("COST_AUTOPILOT_ENABLED", False)
 
@@ -70,6 +78,40 @@ def _today_tokens_spent(max_rows: int = 20000) -> int:
             continue
         total += tt if tt > 0 else max(0, pt + ct)
     return max(0, total)
+
+
+def _today_cost_spent_usd(max_rows: int = 20000) -> float:
+    rows = load_records(max_lines=max_rows)
+    if not rows:
+        return 0.0
+    today_local = datetime.now(timezone.utc).astimezone(get_report_tz()).date().isoformat()
+    total = 0.0
+    for row in rows:
+        if not isinstance(row, dict) or not row.get("ok"):
+            continue
+        if _parse_ts_local_day(row.get("ts")) != today_local:
+            continue
+        try:
+            total += float(row.get("cost") or 0.0)
+        except (TypeError, ValueError):
+            continue
+    return max(0.0, total)
+
+
+def daily_cost_budget_usd() -> float:
+    """Hard daily LLM spend cap in USD from .env."""
+    return _parse_budget_float("COST_DAILY_USD_BUDGET", 10.0, minimum=0.01, maximum=10000.0)
+
+
+def llm_daily_cost_blocked_reason() -> Optional[str]:
+    """Return block reason when today's LLM spend reached COST_DAILY_USD_BUDGET."""
+    if not _truthy("COST_DAILY_USD_HARD_STOP", True):
+        return None
+    budget = daily_cost_budget_usd()
+    spent = _today_cost_spent_usd(max_rows=_parse_int("COST_LLM_USAGE_MAX_ROWS", 20000, minimum=200))
+    if spent >= budget:
+        return f"Daily LLM cost budget exceeded ({spent:.4f} >= {budget:.4f} USD)"
+    return None
 
 
 def _is_rich_request(

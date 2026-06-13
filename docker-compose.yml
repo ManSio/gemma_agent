@@ -102,6 +102,12 @@ services:
       - LATENCY_TRACE_LOG=${LATENCY_TRACE_LOG:-}
       - MODULES_PATH=${MODULES_PATH}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
     profiles: ["api"]
 
   # Portainer CE — веб-UI для Docker (логи, рестарт, стеки). Не часть кода бота.

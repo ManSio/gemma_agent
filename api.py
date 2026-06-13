@@ -15,8 +15,8 @@ from contextlib import asynccontextmanager
 import asyncio
 import logging
 import os
-from core.api_request_limits import API_MESSAGE_MAX_CHARS, validate_relay_meta
-from core.database import SessionLocal, get_db
+from core.request_context import ensure_request_id, new_request_id, reset_request_id, set_request_id
+from core.database import SessionLocal, get_db, check_database_health
 from core.models import User
 from core.mem0_memory.mem0_module import Mem0MemoryModule, load_mem0_config_from_env
 from core.brain import configure_brain_memory
@@ -63,6 +63,8 @@ from core.api_auth import (
 
 API_TOKEN = normalize_api_token(os.getenv("API_TOKEN", DEFAULT_API_TOKEN))
 enforce_startup_api_token_config(API_TOKEN)
+
+from core.api_request_limits import API_MESSAGE_MAX_CHARS, validate_relay_meta
 
 class ChatRequest(BaseModel):
     user_id: str
@@ -140,6 +142,7 @@ class HealthResponse(BaseModel):
     timestamp: str
     version: str = "1.0.0"
     environment: str = os.getenv("APP_ENV", "development")
+    database_ok: Optional[bool] = None
     external_services_ok: Optional[bool] = None
     external_services_issues: Optional[List[str]] = None
 
@@ -256,6 +259,21 @@ from core.api_ops import ops_router
 
 app.include_router(ops_router)
 
+
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    """Bind correlation id for API logs and downstream orchestrator."""
+    incoming = (request.headers.get("X-Request-Id") or "").strip()
+    rid = incoming or new_request_id()
+    token = set_request_id(rid)
+    try:
+        response = await call_next(request)
+        response.headers["X-Request-Id"] = rid
+        return response
+    finally:
+        reset_request_id(token)
+
+
 if os.getenv("API_CORS_ENABLED", "false").lower() == "true":
     app.add_middleware(
         CORSMiddleware,
@@ -277,11 +295,15 @@ async def _chat_via_orchestrator(
     """Один проход plan + execute_plan (как Telegram, но по HTTP)."""
     from core.models import Input
 
+    rid: Optional[str] = None
+    if isinstance(extra_meta, dict):
+        rid = str(extra_meta.get("request_id") or extra_meta.get("relay_request_id") or "").strip() or None
     meta: Dict[str, Any] = {
         "user_id": user_id,
         "channel": channel,
         "group_id": group_id,
         "timestamp": datetime.now().isoformat(),
+        "request_id": ensure_request_id(rid),
     }
     if extra_meta:
         meta.update(extra_meta)
@@ -317,16 +339,23 @@ async def _chat_via_orchestrator(
 @app.get("/api/v1/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint"""
+    db = check_database_health()
     hints = get_external_connectivity_hints_for_health()
     issues = [str(x) for x in (hints.get("failure_messages") or []) if x]
+    if not db.get("ok"):
+        issues.insert(0, f"database: {db.get('error') or 'unavailable'}")
     degraded = bool(issues)
     has_any = bool(hints.get("by_service"))
-    return HealthResponse(
-        status="degraded" if degraded else "healthy",
+    payload = HealthResponse(
+        status="unhealthy" if not db.get("ok") else ("degraded" if degraded else "healthy"),
         timestamp=datetime.now().isoformat(),
+        database_ok=bool(db.get("ok")),
         external_services_ok=(not degraded) if has_any else None,
         external_services_issues=issues if issues else None,
     )
+    if not db.get("ok"):
+        return JSONResponse(status_code=503, content=payload.model_dump())
+    return payload
 
 
 @app.get("/api/v1/diagnostics", response_model=DiagnosticResponse)
@@ -436,74 +465,14 @@ async def get_user(user_id: str, token: str = Depends(verify_api_token), db=Depe
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.get("/api/v1/parents/{parent_id}/children", response_model=ChildrenResponse)
-async def get_children(parent_id: str, token: str = Depends(verify_api_token), db=Depends(get_db)):
-    """Get children of a parent"""
-    try:
-        # Find parent by user_id
-        parent = db.query(User).filter(User.external_id == parent_id).first()
-        if not parent:
-            raise HTTPException(status_code=404, detail="Parent not found")
-        
-        # Here we would query parent-child relationships in real system
-        # For now, returning mock response but keeping proper structure
-        children_list = []
-        
-        # In a production system, this would query the actual DB relationships:
-        # children_list = [
-        #     {
-        #         "id": child.id,
-        #         "external_id": child.external_id,
-        #         "name": child.name,
-        #         "username": child.username,
-        #         "role": child.role,
-        #         "created_at": child.created_at.isoformat() if child.created_at else None
-        #     }
-        #     for child in db.query(User).join(ParentChildLink).filter(ParentChildLink.parent_id == parent.id).all()
-        # ]
-        
-        children_list.append({
-            "id": "child_123",
-            "external_id": "child_123",
-            "name": "Дети",
-            "username": "",
-            "role": "child",
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat()
-        })
-        
-        return ChildrenResponse(children=children_list)
-    except Exception as e:
-        logger.error(f"Get children error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+async def get_children(parent_id: str, token: str = Depends(verify_api_token)):
+    """Parent/child relationships are not implemented in the public API."""
+    raise HTTPException(status_code=501, detail="Not implemented")
 
 @app.get("/api/v1/schedule/{user_id}", response_model=ScheduleResponse)
-async def get_schedule(user_id: str, token: str = Depends(verify_api_token), db=Depends(get_db)):
-    """Get user schedule"""
-    try:
-        # Find user
-        user = db.query(User).filter(User.external_id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-        
-        # In a full implementation, we would query actual schedule data
-        # Here using mock data to maintain API contract
-        schedule_items = [
-            {
-                "id": "lesson_1",
-                "datetime_start": "2026-04-25T09:00:00",
-                "datetime_end": "2026-04-25T10:00:00",
-                "type": "lesson",
-                "description": "Математика"
-            }
-        ]
-        
-        return ScheduleResponse(
-            user_id=user_id,
-            schedule_items=schedule_items
-        )
-    except Exception as e:
-        logger.error(f"Get schedule error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+async def get_schedule(user_id: str, token: str = Depends(verify_api_token)):
+    """User schedule API is not implemented in the public build."""
+    raise HTTPException(status_code=501, detail="Not implemented")
 
 @app.post("/api/v1/generate-module", response_model=ModuleGenerationResponse)
 async def generate_module_endpoint(request: ModuleGenerationRequest, token: str = Depends(verify_api_token)):
@@ -558,12 +527,22 @@ async def self_repair_endpoint(request: SelfRepairRequest, token: str = Depends(
 # Health check endpoint (non-API)
 @app.get("/health")
 async def health():
+    db = check_database_health()
     hints = get_external_connectivity_hints_for_health()
     issues = [str(x) for x in (hints.get("failure_messages") or []) if x]
-    out: Dict[str, Any] = {"status": "healthy", "version": "1.0.0"}
+    if not db.get("ok"):
+        issues.insert(0, f"database: {db.get('error') or 'unavailable'}")
+    out: Dict[str, Any] = {
+        "status": "unhealthy" if not db.get("ok") else ("degraded" if issues else "healthy"),
+        "version": "1.0.0",
+        "database_ok": bool(db.get("ok")),
+    }
     if issues:
-        out["status"] = "degraded"
+        if db.get("ok"):
+            out["status"] = "degraded"
         out["external_services_issues"] = issues
+    if not db.get("ok"):
+        return JSONResponse(status_code=503, content=out)
     return out
 
 # Error handlers

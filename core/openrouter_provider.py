@@ -21,6 +21,38 @@ logger = logging.getLogger(__name__)
 
 _OPENROUTER_TRANSIENT_HTTP = frozenset({429, 500, 502, 503, 504})
 
+_llm_semaphore: Optional[asyncio.Semaphore] = None
+
+
+def _openrouter_max_concurrent_calls() -> int:
+    try:
+        n = int((os.getenv("OPENROUTER_MAX_CONCURRENT_CALLS") or "10").strip())
+    except ValueError:
+        n = 10
+    return max(1, min(n, 100))
+
+
+def openrouter_llm_semaphore() -> asyncio.Semaphore:
+    """Global cap on parallel OpenRouter HTTP calls."""
+    global _llm_semaphore
+    if _llm_semaphore is None:
+        _llm_semaphore = asyncio.Semaphore(_openrouter_max_concurrent_calls())
+    return _llm_semaphore
+
+
+def _openrouter_preflight_block() -> Optional[Dict[str, Any]]:
+    """Return error payload when LLM call must be blocked before HTTP."""
+    from core.cost_controller import llm_daily_cost_blocked_reason
+    from core.resilience import openrouter_circuit_breaker
+
+    cost_block = llm_daily_cost_blocked_reason()
+    if cost_block:
+        return {"error": "daily_cost_budget_exceeded", "content": "", "detail": cost_block}
+    if not openrouter_circuit_breaker().allow_request():
+        return {"error": "circuit_open", "content": "", "detail": "OpenRouter circuit breaker open"}
+    return None
+
+
 _LOCAL_TRANSIENT_ERR_RE = re.compile(
     r"(?i)event loop is closed|attached to a different loop|"
     r"connector is closed|session is closed"
@@ -325,6 +357,11 @@ class OpenRouterProvider:
             logger.error("OpenRouter API key not provided")
             return {"error": "API key not configured", "content": ""}
 
+        blocked = _openrouter_preflight_block()
+        if blocked:
+            logger.warning("OpenRouter call blocked: %s", blocked.get("error"))
+            return blocked
+
         _telem_tag = (kwargs.pop("telemetry_tag", None) or "").strip() or None
         _telem_kind_in = (kwargs.pop("telemetry_kind", None) or "").strip() or None
         _telem_extra = kwargs.pop("telemetry_extra", None)
@@ -447,6 +484,10 @@ class OpenRouterProvider:
         t0 = time.perf_counter()
         http_retries, http_gap = _openrouter_http_retry_params()
         last_http_err: Dict[str, Any] = {"error": "openrouter_http_retry_exhausted", "content": ""}
+        from core.resilience import openrouter_circuit_breaker
+
+        breaker = openrouter_circuit_breaker()
+        sem = openrouter_llm_semaphore()
 
         for http_try in range(http_retries):
             if http_try:
@@ -463,220 +504,223 @@ class OpenRouterProvider:
                 if _session_id and _session_headers_enabled():
                     headers["X-Session-Id"] = _session_id
 
-                async with session.post(
-                    self.api_url,
-                    headers=headers,
-                    json=payload,
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        elapsed_ms = (time.perf_counter() - t0) * 1000.0
-                        upstream = data.get("model") if isinstance(data, dict) else None
-                        raw_usage = data.get("usage") if isinstance(data, dict) else {}
-                        try:
-                            choices = data.get("choices") or []
-                            ch0 = choices[0] if choices else None
-                            finish = ""
-                            if isinstance(ch0, dict):
-                                finish = str(ch0.get("finish_reason") or "").strip().lower()
-                            content = user_facing_completion_text(ch0, requested_model=model_name)
-                            if finish == "length" and (content or "").strip():
-                                raw_sfx = os.getenv("OPENROUTER_LENGTH_FINISH_SUFFIX")
-                                if raw_sfx is None:
-                                    suffix = (
-                                        "[Ответ обрезан лимитом токенов модели. "
-                                        "Напишите «продолжи» или сократите запрос.]"
+                async with sem:
+                    async with session.post(
+                        self.api_url,
+                        headers=headers,
+                        json=payload,
+                    ) as response:
+                        if response.status == 200:
+                            breaker.record_success()
+                            data = await response.json()
+                            elapsed_ms = (time.perf_counter() - t0) * 1000.0
+                            upstream = data.get("model") if isinstance(data, dict) else None
+                            raw_usage = data.get("usage") if isinstance(data, dict) else {}
+                            try:
+                                choices = data.get("choices") or []
+                                ch0 = choices[0] if choices else None
+                                finish = ""
+                                if isinstance(ch0, dict):
+                                    finish = str(ch0.get("finish_reason") or "").strip().lower()
+                                content = user_facing_completion_text(ch0, requested_model=model_name)
+                                if finish == "length" and (content or "").strip():
+                                    raw_sfx = os.getenv("OPENROUTER_LENGTH_FINISH_SUFFIX")
+                                    if raw_sfx is None:
+                                        suffix = (
+                                            "[Ответ обрезан лимитом токенов модели. "
+                                            "Напишите «продолжи» или сократите запрос.]"
+                                        )
+                                    else:
+                                        suffix = raw_sfx.strip()
+                                    if suffix:
+                                        content = content.rstrip() + "\n\n" + suffix
+                            except (IndexError, TypeError, AttributeError) as e:
+                                logger.error("OpenRouter JSON parse error: %s data_keys=%s", e, list(data.keys()) if isinstance(data, dict) else type(data))
+                                record_openrouter_completion(
+                                    ok=False,
+                                    requested_model=model_name,
+                                    upstream_model=upstream,
+                                    latency_ms=elapsed_ms,
+                                    usage=None,
+                                    http_status=200,
+                                    error=f"invalid_openrouter_response: {e}",
+                                    content_chars=0,
+                                    telemetry=_telemetry,
+                                )
+                                return {"error": "invalid_openrouter_response", "content": ""}
+
+                            finish_fr = ""
+                            try:
+                                if isinstance(ch0, dict):
+                                    finish_fr = str(ch0.get("finish_reason") or "").strip().lower()
+                            except Exception:
+                                finish_fr = ""
+
+                            if not content.strip():
+                                logger.warning(
+                                    "OpenRouter returned empty content (requested_model=%s upstream_model=%s finish=%s usage=%s)",
+                                    model_name,
+                                    upstream,
+                                    finish_fr or "?",
+                                    raw_usage,
+                                )
+                                try:
+                                    from core.openrouter_silent_refusal import (
+                                        completion_looks_like_silent_refusal,
+                                        log_silent_refusal,
+                                        silent_refusal_fallback_model,
+                                        silent_refusal_retry_enabled,
                                     )
-                                else:
-                                    suffix = raw_sfx.strip()
-                                if suffix:
-                                    content = content.rstrip() + "\n\n" + suffix
-                        except (IndexError, TypeError, AttributeError) as e:
-                            logger.error("OpenRouter JSON parse error: %s data_keys=%s", e, list(data.keys()) if isinstance(data, dict) else type(data))
-                            record_openrouter_completion(
-                                ok=False,
+
+                                    if (
+                                        silent_refusal_retry_enabled()
+                                        and completion_looks_like_silent_refusal(ch0, content)
+                                        and not kwargs.get("_silent_refusal_retry_done")
+                                    ):
+                                        log_silent_refusal(
+                                            requested_model=model_name,
+                                            finish=finish_fr,
+                                            tag=_telem_tag,
+                                        )
+                                        fb = silent_refusal_fallback_model(model_name)
+                                        if fb and fb != model_name:
+                                            kw_retry = dict(kwargs)
+                                            kw_retry["_silent_refusal_retry_done"] = True
+                                            kw_retry["telemetry_tag"] = (
+                                                f"{_telem_tag}_silent_fb" if _telem_tag else "silent_fb"
+                                            )
+                                            return await self.generate(
+                                                prompt,
+                                                model=fb,
+                                                system_prompt=system_prompt,
+                                                max_tokens=max_tokens,
+                                                temperature=temperature,
+                                                api_key_override=api_key_override,
+                                                kv_cache_tail=kv_cache_tail,
+                                                **kw_retry,
+                                            )
+                                except Exception as e:
+                                    logger.debug("silent_refusal_retry: %s", e)
+
+                            usage_detail = record_openrouter_completion(
+                                ok=True,
                                 requested_model=model_name,
                                 upstream_model=upstream,
                                 latency_ms=elapsed_ms,
-                                usage=None,
+                                usage=raw_usage,
                                 http_status=200,
-                                error=f"invalid_openrouter_response: {e}",
-                                content_chars=0,
+                                content_chars=len(content),
                                 telemetry=_telemetry,
                             )
-                            return {"error": "invalid_openrouter_response", "content": ""}
 
-                        finish_fr = ""
-                        try:
-                            if isinstance(ch0, dict):
-                                finish_fr = str(ch0.get("finish_reason") or "").strip().lower()
-                        except Exception:
-                            finish_fr = ""
-
-                        if not content.strip():
-                            logger.warning(
-                                "OpenRouter returned empty content (requested_model=%s upstream_model=%s finish=%s usage=%s)",
+                            # Log detailed cache telemetry at INFO level
+                            _cached_tok = usage_detail.get("cached_prompt_tokens") if isinstance(usage_detail, dict) else None
+                            _cache_write = usage_detail.get("cache_write_tokens") if isinstance(usage_detail, dict) else None
+                            _reasoning_tok = usage_detail.get("reasoning_tokens") if isinstance(usage_detail, dict) else None
+                            logger.info(
+                                "llm_cache_telemetry session_len=%s model=%s upstream=%s prompt_tok=%s cached_tok=%s cache_write=%s reasoning=%s latency_ms=%s",
+                                len(_session_id or ""),
                                 model_name,
-                                upstream,
-                                finish_fr or "?",
-                                raw_usage,
+                                upstream or "?",
+                                usage_detail.get("prompt_tokens", "?") if isinstance(usage_detail, dict) else "?",
+                                _cached_tok if _cached_tok is not None else "?",
+                                _cache_write if _cache_write is not None else "?",
+                                _reasoning_tok if _reasoning_tok is not None else "?",
+                                int(elapsed_ms),
                             )
+
+                            # Увеличить счетчик использования
+                            self.current_usage += 1
+
+                            tt = usage_detail.get("total_tokens")
+                            if tt is None and isinstance(raw_usage, dict):
+                                tt = raw_usage.get("total_tokens", 0)
+
+                            return {
+                                "success": True,
+                                "content": content,
+                                "model": model_name,
+                                "upstream_model": upstream,
+                                "tokens_used": int(tt or 0),
+                                "usage_detail": usage_detail,
+                                "latency_ms": round(elapsed_ms, 2),
+                            }
+                        error_text = await response.text()
+                        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+                        transient = int(response.status) in _OPENROUTER_TRANSIENT_HTTP
+                        if transient and (http_try + 1) < http_retries:
+                            logger.warning(
+                                "OpenRouter HTTP %s — повтор %s/%s через %.1fs",
+                                response.status,
+                                http_try + 1,
+                                http_retries,
+                                http_gap,
+                            )
+                            last_http_err = {"error": error_text, "content": ""}
+                            continue
+                        if _looks_like_no_balance(int(response.status), error_text):
+                            fb_cand: Optional[str] = None
+                            if _no_balance_fallback_enabled() and not nb_done:
+                                fb_cand = _no_balance_fallback_model()
                             try:
-                                from core.openrouter_silent_refusal import (
-                                    completion_looks_like_silent_refusal,
-                                    log_silent_refusal,
-                                    silent_refusal_fallback_model,
-                                    silent_refusal_retry_enabled,
+                                from core.admin_ops_notify import maybe_notify_openrouter_quota
+
+                                maybe_notify_openrouter_quota(
+                                    http_status=int(response.status),
+                                    error_text=error_text,
+                                    model=requested_model_name,
+                                    fallback_model=fb_cand if fb_cand and fb_cand != model_name else None,
                                 )
-
-                                if (
-                                    silent_refusal_retry_enabled()
-                                    and completion_looks_like_silent_refusal(ch0, content)
-                                    and not kwargs.get("_silent_refusal_retry_done")
-                                ):
-                                    log_silent_refusal(
-                                        requested_model=model_name,
-                                        finish=finish_fr,
-                                        tag=_telem_tag,
-                                    )
-                                    fb = silent_refusal_fallback_model(model_name)
-                                    if fb and fb != model_name:
-                                        kw_retry = dict(kwargs)
-                                        kw_retry["_silent_refusal_retry_done"] = True
-                                        kw_retry["telemetry_tag"] = (
-                                            f"{_telem_tag}_silent_fb" if _telem_tag else "silent_fb"
-                                        )
-                                        return await self.generate(
-                                            prompt,
-                                            model=fb,
-                                            system_prompt=system_prompt,
-                                            max_tokens=max_tokens,
-                                            temperature=temperature,
-                                            api_key_override=api_key_override,
-                                            kv_cache_tail=kv_cache_tail,
-                                            **kw_retry,
-                                        )
                             except Exception as e:
-                                logger.debug("silent_refusal_retry: %s", e)
-
-                        usage_detail = record_openrouter_completion(
-                            ok=True,
+                                logger.debug("admin_ops_notify quota hook: %s", e)
+                        record_openrouter_completion(
+                            ok=False,
                             requested_model=model_name,
-                            upstream_model=upstream,
+                            upstream_model=None,
                             latency_ms=elapsed_ms,
-                            usage=raw_usage,
-                            http_status=200,
-                            content_chars=len(content),
+                            usage=None,
+                            http_status=response.status,
+                            error=error_text[:500],
+                            content_chars=0,
                             telemetry=_telemetry,
                         )
-
-                        # Log detailed cache telemetry at INFO level
-                        _cached_tok = usage_detail.get("cached_prompt_tokens") if isinstance(usage_detail, dict) else None
-                        _cache_write = usage_detail.get("cache_write_tokens") if isinstance(usage_detail, dict) else None
-                        _reasoning_tok = usage_detail.get("reasoning_tokens") if isinstance(usage_detail, dict) else None
-                        logger.info(
-                            "llm_cache_telemetry session_len=%s model=%s upstream=%s prompt_tok=%s cached_tok=%s cache_write=%s reasoning=%s latency_ms=%s",
-                            len(_session_id or ""),
-                            model_name,
-                            upstream or "?",
-                            usage_detail.get("prompt_tokens", "?") if isinstance(usage_detail, dict) else "?",
-                            _cached_tok if _cached_tok is not None else "?",
-                            _cache_write if _cache_write is not None else "?",
-                            _reasoning_tok if _reasoning_tok is not None else "?",
-                            int(elapsed_ms),
-                        )
-
-                        # Увеличить счетчик использования
-                        self.current_usage += 1
-
-                        tt = usage_detail.get("total_tokens")
-                        if tt is None and isinstance(raw_usage, dict):
-                            tt = raw_usage.get("total_tokens", 0)
-
-                        return {
-                            "success": True,
-                            "content": content,
-                            "model": model_name,
-                            "upstream_model": upstream,
-                            "tokens_used": int(tt or 0),
-                            "usage_detail": usage_detail,
-                            "latency_ms": round(elapsed_ms, 2),
-                        }
-                    error_text = await response.text()
-                    elapsed_ms = (time.perf_counter() - t0) * 1000.0
-                    transient = int(response.status) in _OPENROUTER_TRANSIENT_HTTP
-                    if transient and (http_try + 1) < http_retries:
-                        logger.warning(
-                            "OpenRouter HTTP %s — повтор %s/%s через %.1fs",
-                            response.status,
-                            http_try + 1,
-                            http_retries,
-                            http_gap,
-                        )
-                        last_http_err = {"error": error_text, "content": ""}
-                        continue
-                    if _looks_like_no_balance(int(response.status), error_text):
-                        fb_cand: Optional[str] = None
-                        if _no_balance_fallback_enabled() and not nb_done:
-                            fb_cand = _no_balance_fallback_model()
-                        try:
-                            from core.admin_ops_notify import maybe_notify_openrouter_quota
-
-                            maybe_notify_openrouter_quota(
-                                http_status=int(response.status),
-                                error_text=error_text,
-                                model=requested_model_name,
-                                fallback_model=fb_cand if fb_cand and fb_cand != model_name else None,
-                            )
-                        except Exception as e:
-                            logger.debug("admin_ops_notify quota hook: %s", e)
-                    record_openrouter_completion(
-                        ok=False,
-                        requested_model=model_name,
-                        upstream_model=None,
-                        latency_ms=elapsed_ms,
-                        usage=None,
-                        http_status=response.status,
-                        error=error_text[:500],
-                        content_chars=0,
-                        telemetry=_telemetry,
-                    )
-                    logger.error("OpenRouter API error: %s - %s", response.status, error_text)
-                    nb_done = bool(kwargs.get("_no_balance_retry_done"))
-                    if (
-                        _no_balance_fallback_enabled()
-                        and not nb_done
-                        and _looks_like_no_balance(int(response.status), error_text)
-                    ):
-                        fb_model = _no_balance_fallback_model()
-                        if fb_model and fb_model != model_name:
-                            cooldown = _no_balance_cooldown_sec()
-                            if cooldown > 0:
-                                self._no_balance_freeze_until = time.time() + float(cooldown)
-                            logger.warning(
-                                "OpenRouter no-balance fallback: %s -> %s (status=%s, cooldown=%ss)",
-                                requested_model_name,
-                                fb_model,
-                                response.status,
-                                cooldown,
-                            )
-                            fb = await self.generate(
-                                prompt=prompt,
-                                model=fb_model,
-                                system_prompt=system_prompt,
-                                max_tokens=max_tokens,
-                                temperature=temperature,
-                                vision_image_parts=vision_image_parts,
-                                api_key_override=api_key_override,
-                                _no_balance_retry_done=True,
-                                **kwargs,
-                            )
-                            if isinstance(fb, dict):
-                                fb["balance_fallback_used"] = True
-                                fb["balance_fallback_from"] = requested_model_name
-                                fb["balance_fallback_cooldown_sec"] = cooldown
-                            return fb
-                    return {"error": error_text, "content": ""}
+                        logger.error("OpenRouter API error: %s - %s", response.status, error_text)
+                        nb_done = bool(kwargs.get("_no_balance_retry_done"))
+                        if (
+                            _no_balance_fallback_enabled()
+                            and not nb_done
+                            and _looks_like_no_balance(int(response.status), error_text)
+                        ):
+                            fb_model = _no_balance_fallback_model()
+                            if fb_model and fb_model != model_name:
+                                cooldown = _no_balance_cooldown_sec()
+                                if cooldown > 0:
+                                    self._no_balance_freeze_until = time.time() + float(cooldown)
+                                logger.warning(
+                                    "OpenRouter no-balance fallback: %s -> %s (status=%s, cooldown=%ss)",
+                                    requested_model_name,
+                                    fb_model,
+                                    response.status,
+                                    cooldown,
+                                )
+                                fb = await self.generate(
+                                    prompt=prompt,
+                                    model=fb_model,
+                                    system_prompt=system_prompt,
+                                    max_tokens=max_tokens,
+                                    temperature=temperature,
+                                    vision_image_parts=vision_image_parts,
+                                    api_key_override=api_key_override,
+                                    _no_balance_retry_done=True,
+                                    **kwargs,
+                                )
+                                if isinstance(fb, dict):
+                                    fb["balance_fallback_used"] = True
+                                    fb["balance_fallback_from"] = requested_model_name
+                                    fb["balance_fallback_cooldown_sec"] = cooldown
+                                return fb
+                        breaker.record_failure()
+                        return {"error": error_text, "content": ""}
 
             except Exception as e:
                 elapsed_ms = (time.perf_counter() - t0) * 1000.0
@@ -695,6 +739,7 @@ class OpenRouterProvider:
                     )
                     last_http_err = {"error": err_s, "content": ""}
                     continue
+                breaker.record_failure()
                 record_openrouter_completion(
                     ok=False,
                     requested_model=model_name,
@@ -730,6 +775,11 @@ class OpenRouterProvider:
         api_key = (api_key_override or "").strip() or self._get_current_api_key()
         if not api_key:
             return {"error": "API key not configured", "content": ""}
+
+        blocked = _openrouter_preflight_block()
+        if blocked:
+            logger.warning("OpenRouter stream blocked: %s", blocked.get("error"))
+            return blocked
 
         _telem_tag = (kwargs.pop("telemetry_tag", None) or "").strip() or None
         _telem_kind_in = (kwargs.pop("telemetry_kind", None) or "").strip() or None
@@ -786,6 +836,10 @@ class OpenRouterProvider:
         t0 = time.perf_counter()
         parts: List[str] = []
         finish_reason = ""
+        from core.resilience import openrouter_circuit_breaker
+
+        breaker = openrouter_circuit_breaker()
+        sem = openrouter_llm_semaphore()
         try:
             session = await self._shared_http_session()
             headers = {
@@ -798,9 +852,11 @@ class OpenRouterProvider:
             if _session_id and _session_headers_enabled():
                 headers["X-Session-Id"] = _session_id
 
-            async with session.post(self.api_url, headers=headers, json=payload) as response:
-                if response.status != 200:
-                    error_text = await response.text()
+            async with sem:
+                async with session.post(self.api_url, headers=headers, json=payload) as response:
+                    if response.status != 200:
+                        breaker.record_failure()
+                        error_text = await response.text()
                     elapsed_ms = (time.perf_counter() - t0) * 1000.0
                     try:
                         from core.admin_ops_notify import maybe_notify_openrouter_quota
@@ -826,27 +882,29 @@ class OpenRouterProvider:
                     )
                     return {"error": error_text, "content": ""}
 
-                while True:
-                    if cancel_event is not None and cancel_event.is_set():
-                        break
-                    line_b = await response.content.readline()
-                    if not line_b:
-                        break
-                    line = line_b.decode("utf-8", errors="replace")
-                    fr = merge_stream_finish_reason(line)
-                    if fr:
-                        finish_reason = fr
-                    chunk = parse_openrouter_sse_chunk(line)
-                    if chunk.reasoning and on_reasoning_delta is not None:
-                        await on_reasoning_delta(chunk.reasoning)
-                    if chunk.content:
-                        parts.append(chunk.content)
-                        if on_delta is not None:
-                            await on_delta(chunk.content)
+                    while True:
+                        if cancel_event is not None and cancel_event.is_set():
+                            break
+                        line_b = await response.content.readline()
+                        if not line_b:
+                            break
+                        line = line_b.decode("utf-8", errors="replace")
+                        fr = merge_stream_finish_reason(line)
+                        if fr:
+                            finish_reason = fr
+                        chunk = parse_openrouter_sse_chunk(line)
+                        if chunk.reasoning and on_reasoning_delta is not None:
+                            await on_reasoning_delta(chunk.reasoning)
+                        if chunk.content:
+                            parts.append(chunk.content)
+                            if on_delta is not None:
+                                await on_delta(chunk.content)
 
             content = "".join(parts)
             elapsed_ms = (time.perf_counter() - t0) * 1000.0
             cancelled = bool(cancel_event is not None and cancel_event.is_set())
+            if content.strip() and not cancelled:
+                breaker.record_success()
             if finish_reason == "length" and content.strip():
                 raw_sfx = os.getenv("OPENROUTER_LENGTH_FINISH_SUFFIX")
                 if raw_sfx is None:
@@ -877,6 +935,7 @@ class OpenRouterProvider:
                 "latency_ms": round(elapsed_ms, 2),
             }
         except Exception as e:
+            breaker.record_failure()
             elapsed_ms = (time.perf_counter() - t0) * 1000.0
             record_openrouter_completion(
                 ok=False,

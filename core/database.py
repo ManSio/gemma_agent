@@ -5,8 +5,9 @@ Database layer with SQLAlchemy ORM for Universal Social Assistant.
 import logging
 import os
 from pathlib import Path
+from typing import Any, Dict
 
-from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, JSON, String, Text, create_engine
+from sqlalchemy import Column, DateTime, ForeignKey, Index, Integer, JSON, String, Text, create_engine, text
 from sqlalchemy.engine.url import URL
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.sql import func
@@ -52,6 +53,17 @@ def init_db():
     except Exception as e:
         logger.error("Database initialization failed: %s", e)
         raise
+
+
+def check_database_health() -> Dict[str, Any]:
+    """Ping database for /api/v1/health."""
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"ok": True}
+    except Exception as e:
+        logger.warning("Database health check failed: %s", e)
+        return {"ok": False, "error": str(e)[:200]}
 
 
 class User(Base):

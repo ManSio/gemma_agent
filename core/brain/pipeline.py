@@ -186,6 +186,19 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
     context = context if isinstance(context, dict) else {}
     context.pop("operational_diag_short_circuit", None)
     user_text = _safe_text(user_text)
+    try:
+        from core.request_context import ensure_request_id, get_request_id
+
+        rid = str(context.get("request_id") or "").strip()
+        ensure_request_id(rid or None)
+        if get_request_id():
+            logger.info(
+                "brain pipeline start text_len=%s",
+                len(user_text or ""),
+                extra={"gemma_request_id": get_request_id()},
+            )
+    except Exception:
+        pass
     # Свежий recent_dialogue с диска (контекст из plan мог устареть; архив в промпте — отдельно).
     # Используется lazy loading с LRU cache — только recent_messages без полной загрузки JSON.
     try:

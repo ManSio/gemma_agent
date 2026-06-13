@@ -2,11 +2,20 @@
 Policy Engine для контроля доступа и ограничений
 """
 import logging
+import os
 from typing import Dict, Any, List
 from enum import Enum
 from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
+
+
+def _call_history_retention_minutes() -> int:
+    try:
+        return max(1, min(120, int((os.getenv("POLICY_CALL_HISTORY_RETENTION_MIN") or "10").strip())))
+    except (TypeError, ValueError):
+        return 10
+
 
 class Role(str, Enum):
     """Роли пользователей"""
@@ -101,7 +110,21 @@ class PolicyEngine:
             )
             return True
 
+        self._prune_call_history()
         return False
+    
+    def _prune_call_history(self) -> None:
+        """Drop expired timestamps and remove empty keys from call_history."""
+        cutoff = datetime.now() - timedelta(minutes=_call_history_retention_minutes())
+        stale_keys = []
+        for key, entries in list(self.call_history.items()):
+            fresh = [call_time for call_time in entries if call_time > cutoff]
+            if fresh:
+                self.call_history[key] = fresh
+            else:
+                stale_keys.append(key)
+        for key in stale_keys:
+            self.call_history.pop(key, None)
     
     def _record_call(self, user_role: Role, module_name: str):
         """Записать вызов в историю"""
@@ -110,13 +133,7 @@ class PolicyEngine:
             self.call_history[key] = []
         
         self.call_history[key].append(datetime.now())
-        
-        # Очищаем старые записи (оставляем только последние 10 минут)
-        cutoff = datetime.now() - timedelta(minutes=10)
-        self.call_history[key] = [
-            call_time for call_time in self.call_history[key] 
-            if call_time > cutoff
-        ]
+        self._prune_call_history()
     
     def get_allowed_modules(self, user_role: Role, context: Dict[str, Any]) -> List[str]:
         """Получить список разрешённых модулей для роли.

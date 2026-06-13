@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import os
+import threading
 import time
 from collections import deque
 from typing import Any, Awaitable, Callable, Deque, Dict, Optional
 
 from core.error_analysis import record_error_event
+from core.number_parse import parse_env_float, parse_env_int
 
 
 class QueueGuard:
@@ -114,3 +116,94 @@ def fallback_result(message: str, *, extra: Optional[Dict[str, Any]] = None) -> 
 
 DEFAULT_TIMEOUT_SEC = float(os.getenv("OP_TIMEOUT_SEC", "90"))
 DEFAULT_RETRIES = int(os.getenv("OP_RETRIES", "2"))
+
+
+class CircuitBreaker:
+    """Closed/open/half-open breaker for external dependency storms."""
+
+    def __init__(
+        self,
+        *,
+        failure_threshold: int,
+        window_sec: float,
+        open_sec: float,
+        name: str,
+    ) -> None:
+        self.failure_threshold = max(1, failure_threshold)
+        self.window_sec = max(1.0, window_sec)
+        self.open_sec = max(0.05, open_sec)
+        self.name = name
+        self._failures: Deque[float] = deque()
+        self._open_until: float = 0.0
+        self._half_open: bool = False
+        self._lock = threading.Lock()
+
+    def _now(self) -> float:
+        """Monotonic clock for breaker windows."""
+        return time.monotonic()
+
+    def allow_request(self) -> bool:
+        """Return False when circuit is open and cooling down."""
+        with self._lock:
+            now = self._now()
+            if self._half_open:
+                return True
+            if self._open_until > 0.0:
+                if now < self._open_until:
+                    return False
+                self._half_open = True
+                self._open_until = 0.0
+                return True
+            return True
+
+    def record_success(self) -> None:
+        """Close circuit after a successful probe or call."""
+        with self._lock:
+            self._failures.clear()
+            self._half_open = False
+            self._open_until = 0.0
+
+    def record_failure(self) -> None:
+        """Count failure; open circuit when threshold exceeded."""
+        with self._lock:
+            now = self._now()
+            if self._half_open:
+                self._half_open = False
+                self._open_until = now + self.open_sec
+                record_error_event(
+                    "resilience",
+                    f"circuit {self.name} reopened",
+                    extra={"open_sec": self.open_sec},
+                )
+                return
+            cutoff = now - self.window_sec
+            while self._failures and self._failures[0] < cutoff:
+                self._failures.popleft()
+            self._failures.append(now)
+            if len(self._failures) >= self.failure_threshold:
+                self._open_until = now + self.open_sec
+                self._failures.clear()
+                record_error_event(
+                    "resilience",
+                    f"circuit {self.name} opened",
+                    extra={
+                        "failure_threshold": self.failure_threshold,
+                        "open_sec": self.open_sec,
+                    },
+                )
+
+
+_openrouter_breaker: Optional[CircuitBreaker] = None
+
+
+def openrouter_circuit_breaker() -> CircuitBreaker:
+    """Shared OpenRouter circuit breaker (env-tuned)."""
+    global _openrouter_breaker
+    if _openrouter_breaker is None:
+        _openrouter_breaker = CircuitBreaker(
+            failure_threshold=max(1, parse_env_int("CIRCUIT_BREAKER_FAILURE_THRESHOLD", 5)),
+            window_sec=parse_env_float("CIRCUIT_BREAKER_WINDOW_SEC", 60.0),
+            open_sec=parse_env_float("CIRCUIT_BREAKER_OPEN_SEC", 300.0),
+            name="openrouter",
+        )
+    return _openrouter_breaker

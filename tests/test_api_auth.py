@@ -7,6 +7,7 @@ from core.api_auth import (
     is_default_api_token,
     is_production_app_env,
     normalize_api_token,
+    token_matches_allowed,
 )
 
 
@@ -59,3 +60,8 @@ def test_enforce_allows_custom_token_in_production(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("API_ENABLED", "true")
     enforce_startup_api_token_config("configured-secret-token")
+
+
+def test_token_matches_allowed_timing_safe():
+    assert token_matches_allowed("secret-a", {"secret-a", "secret-b"}) is True
+    assert token_matches_allowed("wrong", {"secret-a"}) is False

@@ -23,6 +23,7 @@ from typing import Any, Deque, Dict, Optional
 from core.log_paths import resolved_process_log_file_path
 from core.path_redaction import redact_public_path
 from core.report_timezone import get_report_tz, json_iso_timestamp, log_line_timestamp
+from core.request_context import get_request_id
 
 
 RESET = "\033[0m"
@@ -50,6 +51,16 @@ def _use_color() -> bool:
     return sys.stdout.isatty()
 
 
+class RequestIdFilter(logging.Filter):
+    """Attach correlation id to every log record when bound."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        rid = get_request_id()
+        if rid and not getattr(record, "gemma_request_id", None):
+            record.gemma_request_id = rid
+        return True
+
+
 class UtcFormatter(logging.Formatter):
     """Время в зоне GEMMA_REPORT_TIMEZONE / LOG_TIMEZONE (иначе UTC, как раньше)."""
 
@@ -64,11 +75,19 @@ class ConsoleFormatter(UtcFormatter):
     """Читаемые колонки: время │ уровень │ логгер │ сообщение."""
 
     def __init__(self, *, use_color: bool) -> None:
-        super().__init__(fmt="%(asctime)s │ %(levelname)-8s │ %(name)s │ %(message)s")
+        super().__init__(
+            fmt="%(asctime)s │ %(levelname)-8s │ %(name)s │ %(message)s",
+        )
         self._use_color = use_color
 
     def format(self, record: logging.LogRecord) -> str:
         line = super().format(record)
+        rid = getattr(record, "gemma_request_id", None) or get_request_id()
+        if rid:
+            parts = line.split(" │ ", 3)
+            if len(parts) >= 4:
+                parts[3] = f"[{rid}] {parts[3]}"
+                line = " │ ".join(parts)
         if not self._use_color:
             return line
         lvl = record.levelname
@@ -366,6 +385,7 @@ def setup_logging() -> None:
     root.setLevel(level)
     root.addFilter(PathRedactionFilter())
     root.addFilter(TransientTelegramErrorFilter())
+    root.addFilter(RequestIdFilter())
 
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setLevel(level)
