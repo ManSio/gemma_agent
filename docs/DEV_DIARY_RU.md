@@ -20,6 +20,29 @@
 
 ---
 
+## 2026-06-13 — Audit fixes: Qdrant fail-fast, polling webhook, healers, Docker
+
+**Контекст:** независимый code-review (Qdrant fail-open, polling 409, heal allowlist, Dockerfile).
+
+### Сделано
+
+- `core/qdrant_startup.py` + `QDRANT_STARTUP_STRICT` (default true)
+- `input_layer.start_polling` → `delete_webhook` перед polling
+- `HEAVY_MODULES_UNDER_PRESSURE` в heal env allowlist; sanitize module names
+- `MaintenanceBridge` / `AutoHostPressureHealer` — warning вместо silent debug
+- Dockerfile: multi-stage debian, USER 1000, chown `/app/data`
+
+### Verify
+
+```bash
+python -m pytest tests/test_qdrant_startup.py tests/test_telegram_polling.py tests/test_heal_executor.py tests/test_event_healers.py -q
+python scripts/release_guard.py --smoke
+```
+
+Полный pytest не гоняли.
+
+---
+
 ## 2026-06-13 — CodeQL wave 3: 7 open alerts (#41–#120)
 
 **Контекст:** после wave 2 на GitHub остались 7 High alerts (clear-text logging/storage).

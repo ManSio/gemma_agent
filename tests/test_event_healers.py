@@ -1,5 +1,6 @@
 """Тесты healers событийной шины."""
 import asyncio
+import os
 import time
 import unittest
 from unittest.mock import patch, AsyncMock
@@ -221,6 +222,24 @@ class TestAutoHostPressureHealer(unittest.TestCase):
                     asyncio.run(self.healer({"interval_sec": 300}))
         snap = self.healer.snapshot()
         self.assertEqual(snap["actions_taken"], 0)
+
+    def test_critical_pressure_applies_heavy_modules_env(self):
+        with patch(
+            "core.host_resources.get_host_resource_snapshot",
+            return_value={
+                "pressure": {"level": "critical", "reasons": ["mem"]},
+                "available": True,
+            },
+        ):
+            with patch("core.host_resources.resource_pressure_escalation_enabled", return_value=True):
+                with patch("core.host_resources.resource_pressure_degrades_system", return_value=True):
+                    with patch("core.heal_executor.apply_steps", new_callable=AsyncMock) as mock_apply:
+                        mock_apply.return_value = {"ok": True, "summary": "ok"}
+                        with patch.dict(os.environ, {"HEALERS_ENV_MUTATION_ENABLED": "true"}, clear=False):
+                            asyncio.run(self.healer({"interval_sec": 300}))
+        mock_apply.assert_awaited_once()
+        step = mock_apply.await_args.args[0][0]
+        self.assertIn("HEAVY_MODULES_UNDER_PRESSURE", step)
 
 
 class TestHealersRegistration(unittest.TestCase):

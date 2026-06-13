@@ -22,6 +22,12 @@ from typing import Any, Deque, Dict, List, Optional
 
 from core.event_bus import bus
 
+# Maintenance tick subsystems (module-level import; no circular dep with event_healers)
+from core.auto_rollback import get_rollback_engine
+from core.code_evolution import get_auto_optimizer
+from core.meta_cognitive_engine import get_mce
+from core.self_healing import SelfHealingEngine
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,6 +51,11 @@ class ModuleFailureHealer:
     async def __call__(self, payload: Dict[str, Any]) -> None:
         module_name = (payload.get("module_name") or "").strip()
         if not module_name:
+            return
+        from core.heal_executor import _valid_module_name
+
+        if not _valid_module_name(module_name):
+            logger.warning("[healer] ignored invalid module_name=%r", module_name)
             return
         self._failures[module_name] += 1
         cnt = self._failures[module_name]
@@ -350,33 +361,26 @@ class MaintenanceBridge:
 
     async def __call__(self, payload: Dict[str, Any]) -> None:
         try:
-            from core.self_healing import SelfHealingEngine
             engine = SelfHealingEngine.get_instance()
             if engine and hasattr(engine, "maintenance_tick"):
                 await engine.maintenance_tick()
         except Exception as e:
-            logger.debug("[healer] MaintenanceBridge error: %s", e)
+            logger.warning("[healer] MaintenanceBridge self_healing tick failed: %s", e, exc_info=True)
 
-        # Фаза 6: AutoRollback проверка pending undo-записей
         try:
-            from core.auto_rollback import get_rollback_engine
             await get_rollback_engine().check_pending()
         except Exception as e:
-            logger.debug("[healer] MaintenanceBridge rollback check error: %s", e)
+            logger.warning("[healer] MaintenanceBridge rollback check failed: %s", e, exc_info=True)
 
-        # Фаза 7: Meta-Cognitive Engine tick
         try:
-            from core.meta_cognitive_engine import get_mce
             await get_mce().tick()
         except Exception as e:
-            logger.debug("[healer] MaintenanceBridge MCE tick error: %s", e)
+            logger.warning("[healer] MaintenanceBridge MCE tick failed: %s", e, exc_info=True)
 
-        # Фаза 9: Code Evolution — auto-optimizer tick
         try:
-            from core.code_evolution import get_auto_optimizer
             get_auto_optimizer().tick()
         except Exception as e:
-            logger.debug("[healer] MaintenanceBridge code-evol tick error: %s", e)
+            logger.warning("[healer] MaintenanceBridge code-evol tick failed: %s", e, exc_info=True)
 
 
 # ─── AutoLatencyHealer ──────────────────────────────────────────────────
@@ -638,11 +642,16 @@ class AutoHostPressureHealer:
                     steps = [
                         "env HEAVY_MODULES_UNDER_PRESSURE=rag,books_rag,vision_describe,vision_ocr,image_generator"
                     ]
-                    await apply_steps(steps, reason=f"auto_heal_host_pressure:{level}")
+                    result = await apply_steps(steps, reason=f"auto_heal_host_pressure:{level}")
+                    if not result.get("ok"):
+                        logger.warning(
+                            "[healer] AutoHostPressureHealer: apply_steps failed: %s",
+                            result.get("summary") or result,
+                        )
                 except Exception as e:
-                    logger.debug('%s optional failed: %s', 'event_healers', e, exc_info=True)
+                    logger.warning("[healer] AutoHostPressureHealer heal step error: %s", e, exc_info=True)
         except Exception as e:
-            logger.debug("[healer] AutoHostPressureHealer error: %s", e)
+            logger.warning("[healer] AutoHostPressureHealer error: %s", e, exc_info=True)
 
     def snapshot(self) -> Dict[str, Any]:
         return {

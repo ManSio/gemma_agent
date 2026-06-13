@@ -1,18 +1,36 @@
-FROM python:3.15-rc-alpine3.22
+# syntax=docker/dockerfile:1
+# Multi-stage production image (bot or API via APP_MODE).
+# Build: docker build -t gemma-bot:latest .
+# Native venv on VPS remains the primary path — see docs/DEPLOY.md.
+
+FROM python:3.11-slim-bookworm AS builder
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    gcc curl make ffmpeg \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc make \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 COPY . .
+RUN python scripts/merge_plugin_requirements.py --write requirements-plugins.generated.txt --install \
+    && pip install --no-cache-dir --prefix=/install -r requirements-plugins.generated.txt
 
-# Пакеты из module.json -> pip_requirements (modules + core_libraries); только на этапе сборки
-RUN python scripts/merge_plugin_requirements.py --write requirements-plugins.generated.txt --install
+
+FROM python:3.11-slim-bookworm AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 1000 gemma \
+    && useradd --uid 1000 --gid gemma --create-home --shell /usr/sbin/nologin gemma
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+COPY --chown=gemma:gemma . .
 
 RUN mkdir -p /app/data/rag \
     /app/data/cache \
@@ -28,7 +46,10 @@ RUN mkdir -p /app/data/rag \
     /app/data/mem0 \
     /app/data/runtime \
     /app/data/passport_backups \
-    /app/data/autonomy_backups
+    /app/data/autonomy_backups \
+    && chown -R gemma:gemma /app/data
+
+USER gemma
 
 EXPOSE 8000
 

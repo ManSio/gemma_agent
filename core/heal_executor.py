@@ -23,7 +23,14 @@ from core.event_bus import bus
 
 logger = logging.getLogger(__name__)
 
-# Разрешённые env-переменные (белый список — нельзя менять токены и секреты)
+_MODULE_NAME_RE = re.compile(r"^[\w.-]+$")
+
+
+def _valid_module_name(name: str) -> bool:
+    """Допустимое имя модуля для heal-команд (без shell-метасимволов)."""
+    return bool((name or "").strip() and _MODULE_NAME_RE.match(name.strip()))
+
+
 _ALLOWED_ENV_KEYS: frozenset = frozenset({
     "HEALER_MODULE_MAX_FAILURES",
     "HEALER_ANOMALY_WINDOW_SEC",
@@ -32,6 +39,7 @@ _ALLOWED_ENV_KEYS: frozenset = frozenset({
     "LLM_TRIAGE_AUTOFLUSH_COUNT",
     "LLM_TRIAGE_MAX_CONTEXT_CHARS",
     "MODEL_SWITCH_THRESHOLD",
+    "HEAVY_MODULES_UNDER_PRESSURE",
     "EVENT_BUS_HISTORY_SIZE",
     "RESILIENCE_SAFE_ERROR_TOTAL",
     "RESILIENCE_RECOVERY_OK_CYCLES",
@@ -195,6 +203,8 @@ async def apply_steps(
         result["action"] = action
         result["_raw"] = cmd.get("_raw", "")
         results.append(result)
+        if not result.get("ok"):
+            all_ok = False
 
     summary = _build_summary(results)
     bus.emit("healer.action", {
@@ -233,6 +243,8 @@ def _build_summary(results: List[Dict[str, Any]]) -> str:
 
 
 async def _exec_disable_module(name: str) -> Dict[str, Any]:
+    if not _valid_module_name(name):
+        return {"ok": False, "error": f"invalid module name: {name!r}"}
     try:
         from core.plugin_registry import plugin_registry
         ok = plugin_registry.disable_module(name)
@@ -244,6 +256,8 @@ async def _exec_disable_module(name: str) -> Dict[str, Any]:
 
 
 async def _exec_enable_module(name: str) -> Dict[str, Any]:
+    if not _valid_module_name(name):
+        return {"ok": False, "error": f"invalid module name: {name!r}"}
     try:
         from core.plugin_registry import plugin_registry
         ok = plugin_registry.enable_module(name)
@@ -264,6 +278,8 @@ def _exec_set_env(key: str, value: str) -> Dict[str, Any]:
 
 
 def _exec_reset_module_failures(module: str) -> Dict[str, Any]:
+    if not _valid_module_name(module):
+        return {"ok": False, "error": f"invalid module name: {module!r}"}
     try:
         from core.event_healers import get_module_failure_healer
         healer = get_module_failure_healer()

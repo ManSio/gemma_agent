@@ -2695,6 +2695,7 @@ class InputLayer:
             "telegram │ polling │ start",
             extra={"gemma_event": "telegram_poll"},
         )
+        await self.bot.delete_webhook(drop_pending_updates=True)
         await self.dp.start_polling(self.bot)
 
     async def start_webhook(

@@ -70,29 +70,10 @@ async def ensure_runtime_files() -> None:
             path.touch()
             logger.info("[guardian] created missing file: %s", file)
 
-    # Hard validation: Qdrant — обязательная зависимость
-    qdrant_url = os.getenv("QDRANT_URL")
-    qdrant_key = os.getenv("QDRANT_API_KEY")
-    if not qdrant_url:
-        raise ValueError("QDRANT_URL is required — set in .env or environment")
-    if not qdrant_key:
-        raise ValueError("QDRANT_API_KEY is required — set in .env or environment")
+    # Qdrant: env обязателен; при QDRANT_STARTUP_STRICT=true (default) — fail-fast без связи
+    from core.qdrant_startup import ensure_qdrant_at_startup
 
-    # Проверка и создание коллекций Qdrant
-    try:
-        from core.qdrant_http import QdrantHTTP, Distance, VectorParams
-        qdrant = QdrantHTTP(url=qdrant_url, api_key=qdrant_key)
-        result = qdrant.get_collections()
-        existing = {c.name for c in result.collections}
-        for name in ["gemma_classifier_cache", "gemma_lessons_cache"]:
-            if name not in existing:
-                qdrant.create_collection(
-                    name,
-                    vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
-                )
-                logger.info("[guardian] created missing Qdrant collection: %s", name)
-    except Exception as e:
-        logger.warning("[guardian] Qdrant check skipped: %s", e)
+    ensure_qdrant_at_startup()
 
 
 async def main():

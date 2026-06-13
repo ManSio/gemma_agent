@@ -1,3 +1,26 @@
+## [2026-06-13] — v3.5.7: audit fixes (Qdrant startup, polling, healers, Docker)
+
+### Исправлено
+- **Qdrant startup**: `core/qdrant_startup.py` — fail-fast при недоступном API (`QDRANT_STARTUP_STRICT`, default true)
+- **Telegram polling**: `delete_webhook` перед `start_polling` (409 после webhook)
+- **Heal executor**: `HEAVY_MODULES_UNDER_PRESSURE` в env allowlist; валидация имён модулей
+- **MaintenanceBridge**: module-level imports; ошибки tick → `warning` + traceback
+- **AutoHostPressureHealer**: warning при неуспешном `apply_steps`
+- **Dockerfile**: multi-stage `python:3.11-slim-bookworm`, non-root `USER gemma`, `chown` data dirs
+
+### Добавлено
+- `tests/test_qdrant_startup.py`, `tests/test_telegram_polling.py`
+- тесты healers / heavy modules env
+
+### Verify
+```bash
+python -m pytest tests/test_qdrant_startup.py tests/test_telegram_polling.py tests/test_heal_executor.py tests/test_event_healers.py -q
+python -m py_compile core/qdrant_startup.py core/heal_executor.py core/event_healers.py main.py
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.6: P1/P2 hardening (policy, API, LLM guards)
 
 ### Исправлено

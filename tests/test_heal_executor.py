@@ -32,6 +32,37 @@ class TestParseSteps(unittest.TestCase):
         parsed = parse_steps(steps)
         self.assertEqual(parsed[0]["action"], "set_env_blocked")
 
+    def test_parse_env_heavy_modules_allowed(self):
+        steps = ["env HEAVY_MODULES_UNDER_PRESSURE=rag,books_rag"]
+        parsed = parse_steps(steps)
+        self.assertEqual(parsed[0]["action"], "set_env")
+        self.assertEqual(parsed[0]["key"], "HEAVY_MODULES_UNDER_PRESSURE")
+
+    def test_apply_heavy_modules_env(self):
+        import asyncio
+
+        old = os.environ.get("HEAVY_MODULES_UNDER_PRESSURE", "")
+        result = asyncio.run(
+            apply_steps(
+                ["env HEAVY_MODULES_UNDER_PRESSURE=rag,books_rag"],
+                reason="test",
+            )
+        )
+        self.assertTrue(result["ok"])
+        self.assertEqual(os.environ["HEAVY_MODULES_UNDER_PRESSURE"], "rag,books_rag")
+        if old:
+            os.environ["HEAVY_MODULES_UNDER_PRESSURE"] = old
+        else:
+            os.environ.pop("HEAVY_MODULES_UNDER_PRESSURE", None)
+
+    def test_invalid_module_name_rejected(self):
+        import asyncio
+
+        result = asyncio.run(
+            apply_steps(["/admin_plugin_disable bad;rm"], reason="test")
+        )
+        self.assertFalse(result["ok"])
+
     def test_parse_reset_module_failures(self):
         steps = ["reset module failures my_mod"]
         parsed = parse_steps(steps)
