@@ -54,12 +54,69 @@ def turn_state_audit_for_emit(
     return None
 
 
-def turn_meaning_audit_for_emit(pre_ctx: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """Компактный audit TurnMeaning для turn.outcome."""
-    if isinstance(pre_ctx, dict):
-        tma = pre_ctx.get("turn_meaning_audit")
-        if isinstance(tma, dict):
-            return dict(tma)
+def turn_meaning_audit_for_emit(
+    pre_ctx: Optional[Dict[str, Any]],
+    plan: Any = None,
+) -> Optional[Dict[str, Any]]:
+    """Компактный audit TurnMeaning для turn.outcome (fallback из turn_state / plan)."""
+    _AUDIT_KEYS = (
+        "speech_act",
+        "referent",
+        "thread_action",
+        "meaning_source",
+        "meaning_confidence",
+        "meaning_reason",
+        "inherit_thread",
+    )
+
+    def _pick(d: Dict[str, Any]) -> Dict[str, Any]:
+        out: Dict[str, Any] = {}
+        for key in _AUDIT_KEYS:
+            if d.get(key) is not None:
+                out[key] = d.get(key)
+        return out
+
+    if plan is not None:
+        try:
+            steps = getattr(plan, "steps", None) or []
+            if steps:
+                args = getattr(steps[0], "args", None)
+                if isinstance(args, dict):
+                    ctx = args.get("context")
+                    if isinstance(ctx, dict):
+                        tma = ctx.get("turn_meaning_audit")
+                        if isinstance(tma, dict) and tma:
+                            return dict(tma)
+                        tm = ctx.get("turn_meaning")
+                        if isinstance(tm, dict):
+                            picked = _pick(tm)
+                            if picked:
+                                picked.setdefault("meaning_source", tm.get("source"))
+                                return picked
+        except Exception as e:
+            logger.debug("turn_meaning_audit plan: %s", e)
+
+    if not isinstance(pre_ctx, dict):
+        return None
+    tma = pre_ctx.get("turn_meaning_audit")
+    if isinstance(tma, dict) and tma:
+        return dict(tma)
+    tm = pre_ctx.get("turn_meaning")
+    if isinstance(tm, dict):
+        picked = _pick(tm)
+        if picked:
+            picked.setdefault("meaning_source", tm.get("source"))
+            return picked
+    tsa = pre_ctx.get("turn_state_audit")
+    if isinstance(tsa, dict):
+        picked = _pick(tsa)
+        if picked:
+            return picked
+    bt = pre_ctx.get("brain_turn_telemetry")
+    if isinstance(bt, dict):
+        picked = _pick(bt)
+        if picked:
+            return picked
     return None
 
 

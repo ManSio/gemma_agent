@@ -1100,6 +1100,31 @@ def apply_pre_send(
         logger.debug("product_behavior pre_send: %s", e)
 
     try:
+        from core.outbound_thread_guard import (
+            detect_thread_followup_issues,
+            recover_thread_followup_reply,
+        )
+
+        _tf_issues = detect_thread_followup_issues(ut, txt, output_meta)
+        if _tf_issues:
+            hits.append(
+                ScenarioHit(
+                    id="pre_send_thread_followup",
+                    phase="pre_send",
+                    severity="critical",
+                    action="replace_fallback",
+                    reason=f"thread_guard:{','.join(_tf_issues)}",
+                )
+            )
+            txt = recover_thread_followup_reply(
+                ut, txt, _tf_issues, output_meta=output_meta
+            )
+            if output_meta is not None and isinstance(output_meta, dict):
+                output_meta["outbound_thread_guard_issues"] = list(_tf_issues)
+    except Exception as e:
+        logger.debug("outbound_thread_guard pre_send: %s", e)
+
+    try:
         from core.input_layer import _reply_suspect_incomplete
 
         if _reply_suspect_incomplete(txt) and _TRUNCATION_NOTE not in txt:

@@ -20,6 +20,20 @@
 
 ---
 
+## 2026-06-13 — outbound guard v3.5.16 + intent/audit glue
+
+**Контекст:** review P3 — meta на followup, пустой turn_meaning_audit, intent параллельно meaning.
+
+**Сделано:**
+- `outbound_thread_guard` — pre_send detect/recover на immediate followup.
+- `intent_hint_from_turn_meaning` в `_detect_intent`.
+- `turn_meaning_audit_for_emit` — multi-source fallback.
+- discourse/turn_meaning в output.meta для pre_send.
+
+**Verify:** `pytest tests/test_outbound_thread_guard.py …`; `release_guard --smoke`.
+
+---
+
 ## 2026-06-13 — turn decision spine v3.5.15 (post-reconcile glue)
 
 **Контекст:** code review — ephemeral до discourse, profile override затирался classifier; не short-fix.

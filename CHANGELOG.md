@@ -1,3 +1,19 @@
+## [2026-06-13] — v3.5.16: outbound thread guard + intent from TurnMeaning + audit emit
+
+- **Added:** `core/outbound_thread_guard.py` — pre_send: блок agent-meta на immediate followup активной нити.
+- **Wired:** `scenario_engine.apply_pre_send` — `thread_guard` recover без regen LLM.
+- **Added:** `intent_hint_from_turn_meaning` в planner (`_detect_intent`) до keyword heuristics.
+- **Fix:** `turn_meaning_audit_for_emit` — fallback из `turn_meaning` / `turn_state_audit` / plan context.
+- **Wired:** discourse/turn_meaning в `output.meta` для pre_send (`chat_orchestrator`, `input_layer`).
+- **Env:** `OUTBOUND_THREAD_GUARD_ENABLED`, `OUTBOUND_THREAD_MIN_TOKEN_OVERLAP`.
+
+### Verify
+```bash
+python -m pytest tests/test_outbound_thread_guard.py tests/test_turn_decision_spine.py tests/test_turn_reconcile.py -q
+```
+
+---
+
 ## [2026-06-13] — v3.5.15: turn decision spine (post-reconcile glue)
 
 - **Added:** `core/turn_decision_spine.py` — после meaning/discourse/collapse: ephemeral + `meaning_profile_lock`.

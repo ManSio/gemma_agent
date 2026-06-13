@@ -90,3 +90,37 @@ def apply_meaning_profile_lock(
     except Exception as e:
         logger.debug("apply_meaning_profile_lock: %s", e)
     return prof
+
+
+def intent_hint_from_turn_meaning(context: Optional[Dict[str, Any]]) -> str:
+    """Intent для planner из TurnMeaning (до keyword heuristics)."""
+    ctx = context if isinstance(context, dict) else {}
+    tm = ctx.get("turn_meaning")
+    if not isinstance(tm, dict):
+        return ""
+    referent = str(tm.get("referent") or "").strip().lower()
+    action = str(tm.get("thread_action") or "").strip().lower()
+    if action == "correct":
+        dr = ctx.get("discourse_resolution")
+        if isinstance(dr, dict):
+            inh = str(dr.get("inherit_intent") or "").strip().lower()
+            if inh and inh not in {"", "empty", "unknown"}:
+                return inh
+        ds = ctx.get("dialogue_state")
+        if isinstance(ds, dict):
+            li = str(ds.get("last_intent") or "").strip().lower()
+            if li and li not in {"", "empty", "unknown"}:
+                return li
+        return "general"
+    if referent == "agent":
+        return "explain"
+    if action in {"stay", "branch"} and referent in {"thread", "world", "user"}:
+        try:
+            from core.brain.discourse_resolver import inherited_intent_from_context
+
+            inh = inherited_intent_from_context(ctx)
+            if inh and inh not in {"", "empty", "unknown"}:
+                return inh
+        except Exception as e:
+            logger.debug("intent_hint inherit: %s", e)
+    return ""

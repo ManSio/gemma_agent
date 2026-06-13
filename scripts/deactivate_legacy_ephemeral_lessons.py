@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Деактивировать legacy ephemeral lessons без anchor_user_q (prod cleanup)."""
+"""Деактивировать legacy ephemeral lessons без anchor_user_q (prod cleanup).
+
+На VPS: ./venv/bin/python scripts/deactivate_legacy_ephemeral_lessons.py
+"""
 from __future__ import annotations
 
 import sys

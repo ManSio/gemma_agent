@@ -140,7 +140,20 @@ class ChatOrchestratorModule:
 
         reply, geo_meta = await expand_telegram_geo_placeholders(reply)
 
-        out_meta = {"module": "chat-orchestrator"}
+        out_meta = {"module": "chat-orchestrator", "user_text": text}
+        if isinstance(context, dict):
+            for _mk in (
+                "discourse_resolution",
+                "turn_meaning",
+                "turn_meaning_audit",
+                "discourse_audit",
+                "recent_dialogue",
+                "session_task",
+                "user_id",
+                "group_id",
+            ):
+                if context.get(_mk) is not None:
+                    out_meta[_mk] = context.get(_mk)
         if isinstance(context, dict) and context.get("operational_diag_short_circuit"):
             out_meta["operational_diag_short_circuit"] = True
         inline_rows: list = []

@@ -1993,6 +1993,16 @@ class InputLayer:
                         tsa = _pctx.get("turn_state_audit")
                         if isinstance(tsa, dict):
                             meta_ut["turn_state_audit"] = dict(tsa)
+                        for _mk in (
+                            "discourse_resolution",
+                            "turn_meaning",
+                            "turn_meaning_audit",
+                            "discourse_audit",
+                            "recent_dialogue",
+                            "session_task",
+                        ):
+                            if _pctx.get(_mk) is not None:
+                                meta_ut[_mk] = _pctx.get(_mk)
                 out.meta = meta_ut
             _edited = await self._send_output(
                 message, out, reply_markup=use_kb, progress_message_id=progress_mid

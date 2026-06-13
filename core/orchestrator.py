@@ -2711,6 +2711,17 @@ class Orchestrator:
         if not raw:
             return "empty"
         try:
+            from core.turn_decision_spine import intent_hint_from_turn_meaning
+
+            if isinstance(planner_context, dict):
+                _meaning_intent = intent_hint_from_turn_meaning(planner_context)
+                if _meaning_intent:
+                    logger.info("[PLAN] intent -> %s (turn_meaning)", _meaning_intent)
+                    MONITOR.inc("planner_intent_from_turn_meaning_total")
+                    return _meaning_intent
+        except Exception as e:
+            logger.debug("intent turn_meaning: %s", e)
+        try:
             from core.intent_heuristics import is_system_operator_directive
 
             if is_system_operator_directive(raw):
@@ -3707,7 +3718,7 @@ class Orchestrator:
                         _turn_payload["turn_state_audit"] = _tsa_emit
                     from core.turn_reconcile import turn_meaning_audit_for_emit
 
-                    _tma_emit = turn_meaning_audit_for_emit(pre_ctx)
+                    _tma_emit = turn_meaning_audit_for_emit(pre_ctx, plan)
                     if _tma_emit:
                         _turn_payload["turn_meaning_audit"] = _tma_emit
                     _da_emit = None
