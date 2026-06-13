@@ -180,7 +180,7 @@ def main() -> int:
             print(f"      recent_messages: {nmsg}  last_intent={li!r} last_outcome={lo!r}")
             print(f"      ref_ts={tsr}")
             if lu:
-                print(f"      last_user_excerpt: {lu!r}")
+                print(f"      last_user_len={len(str(lu))}")
         if len(rows) > 40:
             print(f"  … +{len(rows) - 40} more files")
     else:

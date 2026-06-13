@@ -1,3 +1,23 @@
+## [2026-06-13] — v3.5.4: API_TOKEN startup guard + ops stdout hardening
+
+### Исправлено
+- **P1 security:** `enforce_startup_api_token_config()` — отказ старта API с placeholder `API_TOKEN` при `APP_ENV=production` или `API_ENABLED=true`
+- `api.py` вызывает guard до `initialize_modules()`
+- `scripts/agent_security_audit.py` — проверка API_TOKEN при включённом API
+- Ops: `day_conversation_audit.py` — длина последнего user-сообщения вместо excerpt; `check_connectivity.py` — public JSON без message bodies
+
+### Добавлено
+- `tests/test_api_auth.py` — 8 тестов на token guard
+- `connectivity_report_public()` / `connectivity_stdout_json()` в `core/connectivity_check.py`
+
+### Verify
+```bash
+python -m pytest tests/test_api_auth.py -q
+python -m py_compile core/api_auth.py api.py core/connectivity_check.py
+```
+
+---
+
 ## [2026-06-13] — v3.5.3: CodeQL wave 3 — 7 remaining alerts
 
 ### Исправлено

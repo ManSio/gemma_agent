@@ -25,6 +25,14 @@ ROOT = Path(__file__).resolve().parent.parent
 
 from core.sensitive_export import SECURITY_AUDIT_CHECK_KEYS
 
+from core.api_auth import (
+    DEFAULT_API_TOKEN,
+    is_api_enabled_from_env,
+    is_default_api_token,
+    is_production_app_env,
+    normalize_api_token,
+)
+
 for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         try:
@@ -146,7 +154,19 @@ def check_required_secrets_set(*, ci: bool = False) -> Dict[str, Any]:
         notes.append("ADMIN_USER_IDS empty — admin commands disabled")
     if guest_open:
         notes.append("USER_ACCESS_APPROVAL_REQUIRED=false — open access to any Telegram user")
-    return {"ok": missing_count == 0, "notes": notes, "open_access": guest_open}
+    api_token_bad = False
+    api_enabled = is_api_enabled_from_env()
+    if api_enabled and is_default_api_token(normalize_api_token(os.getenv("API_TOKEN", DEFAULT_API_TOKEN))):
+        api_token_bad = True
+        notes.append(
+            "API_ENABLED but API_TOKEN is default/empty — set a strong API_TOKEN in .env"
+            + (" (production APP_ENV)" if is_production_app_env() else "")
+        )
+    return {
+        "ok": missing_count == 0 and not api_token_bad,
+        "notes": notes,
+        "open_access": guest_open,
+    }
 
 
 def check_security_tests(quick: bool) -> Dict[str, Any]:

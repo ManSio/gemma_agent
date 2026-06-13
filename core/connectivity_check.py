@@ -45,6 +45,39 @@ def _external_row_key(result: Dict[str, Any]) -> str:
     return f"{svc}:{role}" if role else svc
 
 
+def _connectivity_service_public(row: Any) -> Dict[str, Any]:
+    """Per-service connectivity row safe for CLI JSON (no message bodies)."""
+    if not isinstance(row, dict):
+        return {}
+    return {
+        "ok": bool(row.get("ok")),
+        "skipped": bool(row.get("skipped")),
+        "service": str(row.get("service") or "")[:32],
+        "role": str(row.get("role") or "")[:32] if row.get("role") else None,
+        "error_code": str(row.get("error_code") or "")[:64] if row.get("error_code") else None,
+        "http_status": row.get("http_status"),
+        "roundtrip_ms": row.get("roundtrip_ms"),
+    }
+
+
+def connectivity_report_public(report: Dict[str, Any]) -> Dict[str, Any]:
+    """Connectivity CLI JSON without operator message strings."""
+    rep = report if isinstance(report, dict) else {}
+    return {
+        "ok": bool(rep.get("ok")),
+        "timeout_sec": rep.get("timeout_sec"),
+        "telegram": _connectivity_service_public(rep.get("telegram")),
+        "openrouter": _connectivity_service_public(rep.get("openrouter")),
+        "mem0": _connectivity_service_public(rep.get("mem0")),
+        "mem0_mirror": _connectivity_service_public(rep.get("mem0_mirror")),
+    }
+
+
+def connectivity_stdout_json(report: Dict[str, Any]) -> str:
+    """JSON text for check_connectivity.py stdout."""
+    return json.dumps(connectivity_report_public(report), ensure_ascii=False, indent=2)
+
+
 def record_external_service_check(result: Dict[str, Any], *, source: str) -> None:
     """Обновляет снимок по сервису (telegram / openrouter / mem0 + role)."""
     if not isinstance(result, dict):

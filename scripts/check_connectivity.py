@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import sys
 from pathlib import Path
 
@@ -36,13 +35,21 @@ def main() -> int:
     except Exception:
         pass
 
-    from core.connectivity_check import run_connectivity_checks
+    from core.connectivity_check import (
+        connectivity_report_public,
+        connectivity_stdout_json,
+        run_connectivity_checks,
+    )
 
     report = asyncio.run(run_connectivity_checks(include_http_probes=args.http_probes))
-    print(json.dumps(report, ensure_ascii=False, indent=2))
-    for ln in report.get("lines") or []:
-        if ln:
-            print("—", ln)
+    print(connectivity_stdout_json(report))
+    pub = connectivity_report_public(report)
+    for svc in ("telegram", "openrouter", "mem0", "mem0_mirror"):
+        row = (pub.get(svc) or {}) if isinstance(pub, dict) else {}
+        if not isinstance(row, dict) or not row:
+            continue
+        code = row.get("error_code") or ("ok" if row.get("ok") else "fail")
+        print(f"— {svc}: {code} http={row.get('http_status')}")
     print("timeout_sec:", report.get("timeout_sec"))
     print("OK" if report.get("ok") else "FAIL")
     return 0 if report.get("ok") else 2

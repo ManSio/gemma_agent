@@ -53,11 +53,15 @@ if autopilot_enabled():
     )
 
 # API Configuration
-from core.api_auth import allowed_api_tokens, normalize_api_token, verify_api_token
+from core.api_auth import (
+    DEFAULT_API_TOKEN,
+    enforce_startup_api_token_config,
+    normalize_api_token,
+    verify_api_token,
+)
 
-API_TOKEN = normalize_api_token(os.getenv("API_TOKEN", "your_secure_api_token_here"))
-if API_TOKEN == "your_secure_api_token_here":
-    logger.warning("Using default API token - this is insecure in production!")
+API_TOKEN = normalize_api_token(os.getenv("API_TOKEN", DEFAULT_API_TOKEN))
+enforce_startup_api_token_config(API_TOKEN)
 
 class ChatRequest(BaseModel):
     user_id: str

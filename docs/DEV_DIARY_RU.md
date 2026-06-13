@@ -127,6 +127,30 @@ pip install -r requirements.txt   # без ResolutionImpossible
 
 ---
 
+## 2026-06-13 — API_TOKEN guard + ops stdout (v3.5.4)
+
+### Проблема
+- Placeholder `API_TOKEN` из `.env.example` мог остаться в production при включённом HTTP API.
+- Ops-скрипты печатали excerpts user-текста / полный connectivity report в stdout.
+
+### Решение
+- `core/api_auth.py`: `enforce_startup_api_token_config()` — `SystemExit` если token default и (`APP_ENV=production|prod` **или** `API_ENABLED=true`).
+- `api.py`: guard до инициализации модулей.
+- `scripts/agent_security_audit.py`: fail при `API_ENABLED` + default token.
+- `day_conversation_audit.py`: `last_user_len` вместо excerpt.
+- `check_connectivity.py` + `connectivity_report_public()`: только ok/error_code/http_status.
+
+### Verify
+```bash
+python -m pytest tests/test_api_auth.py -q
+python scripts/release_guard.py --smoke
+```
+
+### Deploy (API)
+- VPS: задать сильный `API_TOKEN`, `APP_ENV=production`, перезапуск `gemma_api.sh` / panel.
+
+---
+
 ## 2026-06-08 — News Reliability Hardening (v3.5.0)
 
 См. `CHANGELOG.md` · runbook: `docs/NEWS_RELIABILITY_GUIDE.md` · commit на `master` после merge PR news-модулей.
