@@ -44,7 +44,7 @@ class UserFactsIdentityRecallTests(unittest.TestCase):
             return_value=(facts, {}),
         ):
             got = try_pre_llm_direct_plan(
-                user_id="591226766",
+                user_id="test-user-1",
                 group_id=None,
                 text="как меня зовут?",
                 persisted={"user_facts": {}},

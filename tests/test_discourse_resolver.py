@@ -92,6 +92,11 @@ class DiscourseResolverTests(unittest.TestCase):
         self.assertEqual(t1, t2)
         self.assertTrue(c2.get("_discourse_applied"))
 
+    def test_apply_preserves_context_identity(self) -> None:
+        ctx = _ai_ctx("как бы ты сейчас назвал правильно")
+        _, out = apply_discourse_to_context("как бы ты сейчас назвал правильно", ctx)
+        self.assertIs(out, ctx)
+
     def test_profile_registry_continuation(self) -> None:
         ctx = _ai_ctx("как бы ты сейчас назвал правильно")
         _, ctx = apply_discourse_to_context("как бы ты сейчас назвал правильно", ctx)

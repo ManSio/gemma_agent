@@ -613,19 +613,32 @@ def _ctx_for_judge_upgrade(ctx: Dict[str, Any]) -> Dict[str, Any]:
     return {k: v for k, v in ctx.items() if k not in skip}
 
 
+def _publish_discourse_context(
+    owner: Optional[Dict[str, Any]],
+    updated: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Записать результат discourse в исходный dict (callers сохраняют ссылку на context)."""
+    if isinstance(owner, dict):
+        owner.clear()
+        owner.update(updated)
+        return owner
+    return dict(updated)
+
+
 def apply_discourse_to_context(
     user_text: str,
     context: Optional[Dict[str, Any]],
 ) -> Tuple[str, Dict[str, Any]]:
     """Применить discourse resolution к context (идемпотентно, без LLM)."""
-    ctx = dict(context) if isinstance(context, dict) else {}
+    owner = context if isinstance(context, dict) else {}
+    ctx = dict(owner)
     if ctx.get("_discourse_applied"):
         eff = str(ctx.get("user_text") or user_text or "").strip()
-        return eff or (user_text or "").strip(), ctx
+        return eff or (user_text or "").strip(), _publish_discourse_context(owner, ctx)
 
     res = resolve_discourse(user_text, ctx)
     ctx = _merge_discourse_into_context(ctx, res)
-    return res.effective_user_text, ctx
+    return res.effective_user_text, _publish_discourse_context(owner, ctx)
 
 
 async def apply_discourse_to_context_async(
@@ -635,20 +648,21 @@ async def apply_discourse_to_context_async(
     llm: Any = None,
 ) -> Tuple[str, Dict[str, Any]]:
     """Применить discourse resolution с LLM thread judge (идемпотентно)."""
-    ctx = dict(context) if isinstance(context, dict) else {}
+    owner = context if isinstance(context, dict) else {}
+    ctx = dict(owner)
     if ctx.get("_discourse_applied"):
         if _needs_judge_upgrade(ctx):
             raw = str(ctx.get("raw_user_text") or user_text or "").strip()
             base = _ctx_for_judge_upgrade(ctx)
             res = await resolve_discourse_async(raw or user_text, base, llm=llm)
-            ctx = _merge_discourse_into_context(base, res)
-            return res.effective_user_text, ctx
+            merged = _merge_discourse_into_context(base, res)
+            return res.effective_user_text, _publish_discourse_context(owner, merged)
         eff = str(ctx.get("user_text") or user_text or "").strip()
-        return eff or (user_text or "").strip(), ctx
+        return eff or (user_text or "").strip(), _publish_discourse_context(owner, ctx)
 
     res = await resolve_discourse_async(user_text, ctx, llm=llm)
     ctx = _merge_discourse_into_context(ctx, res)
-    return res.effective_user_text, ctx
+    return res.effective_user_text, _publish_discourse_context(owner, ctx)
 
 
 def strip_ephemeral_discourse_state(dialogue_state: Optional[Dict[str, Any]]) -> Dict[str, Any]:
