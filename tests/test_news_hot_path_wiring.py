@@ -59,7 +59,11 @@ class NewsHotPathWiringTests(unittest.TestCase):
             row = json.loads(lines[0])
             self.assertEqual(row["type"], "news_generation")
             self.assertEqual(row["total_sources"], 1)
-            self.assertIn("sources", row)
+            self.assertNotIn("sources", row)
+            self.assertNotIn("query", row)
+            self.assertNotIn("reply", row)
+            self.assertIn("fetch_methods_used", row)
+            self.assertIn("avg_confidence", row)
 
     def test_return_news_with_telemetry_none_on_empty(self) -> None:
         async def run() -> None:

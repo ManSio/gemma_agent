@@ -116,6 +116,26 @@ def test_reset_records(tmp_log):
     assert store.load_records() == []
 
 
+def test_news_generation_log_redacts_sensitive_fields(tmp_log):
+    """Persisted news_generation rows keep aggregates only (CodeQL alert-autofix)."""
+    row = store.news_generation_log(
+        user_id="42",
+        query="секретный запрос",
+        sources=[{"url": "https://example.com/x", "domain": "example.com", "fetch_method": "web_search", "parsing_confidence": 0.5}],
+        reply="секретный ответ",
+    )
+    store.append_record(row)
+    loaded = store.load_records()
+    assert len(loaded) == 1
+    persisted = loaded[0]
+    assert persisted["type"] == "news_generation"
+    assert persisted["total_sources"] == 1
+    assert "sources" not in persisted
+    assert "query" not in persisted
+    assert "reply" not in persisted
+    assert "user_id" not in persisted
+
+
 def test_persist_disabled_does_not_write(tmp_log, monkeypatch):
     monkeypatch.setenv("GEMMA_LLM_USAGE_PERSIST", "false")
     store.append_record(_row_at(days_ago=0, total_tokens=1))

@@ -101,6 +101,8 @@ htmlcov/
 /mem0.pid
 /panel_nohup_bot.log
 /panel_nohup_bot.log.prev
+scripts/gemma_panel.local.conf
+scripts/_tmp*.py
 # Local scratch / debug dumps (never commit)
 tmp_*.txt
 tests/_tmp*
