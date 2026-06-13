@@ -111,6 +111,35 @@ logger = logging.getLogger(__name__)
 _USAGE_LOCK = threading.Lock()
 
 
+def _sanitize_row_for_persistence(row: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Удаляем/маскируем потенциально чувствительные поля перед записью на диск.
+    """
+    safe = dict(row or {})
+
+    for k in ("user_id", "query", "reply"):
+        if k in safe:
+            safe[k] = "[redacted]"
+
+    src = safe.get("sources")
+    if isinstance(src, list):
+        sanitized_sources: List[Dict[str, Any]] = []
+        for item in src:
+            if not isinstance(item, dict):
+                continue
+            sanitized_sources.append(
+                {
+                    "fetch_method": str(item.get("fetch_method", "unknown")),
+                    "fetch_success": bool(item.get("fetch_success", True)),
+                    "text_length": int(item.get("text_length", 0)),
+                    "parsing_confidence": float(item.get("parsing_confidence", 0.0)),
+                }
+            )
+        safe["sources"] = sanitized_sources
+
+    return safe
+
+
 def _truthy(name: str, default: bool = True) -> bool:
     raw = os.getenv(name)
     if raw is None:
@@ -136,7 +165,8 @@ def append_record(row: Dict[str, Any]) -> None:
     path = log_path()
     try:
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        line = json.dumps(row, ensure_ascii=False, default=str) + "\n"
+        safe_row = _sanitize_row_for_persistence(row)
+        line = json.dumps(safe_row, ensure_ascii=False, default=str) + "\n"
         with _USAGE_LOCK:
             with open(path, "a", encoding="utf-8") as f:
                 f.write(line)
