@@ -185,6 +185,21 @@ def _is_substantive_new_question(user_text: str) -> bool:
         return False
 
 
+def _prior_assistant_turn_unsatisfactory(context: Optional[Dict[str, Any]]) -> bool:
+    """Предыдущий ответ бота не закрыл запрос (метаданные хода, не regex)."""
+    ctx = context if isinstance(context, dict) else {}
+    bad = frozenset({"clarify", "error", "fail", "partial", "empty"})
+    for bucket in (ctx.get("session_task"), ctx.get("dialogue_state")):
+        if not isinstance(bucket, dict):
+            continue
+        outcome = str(bucket.get("last_outcome") or "").strip().lower()
+        if outcome in bad:
+            return True
+        if bucket.get("last_tool_ok") is False:
+            return True
+    return False
+
+
 def _inherit_profile_from_state(ds: Dict[str, Any]) -> str:
     """Профиль для наследования из dialogue_state."""
     try:
@@ -313,6 +328,19 @@ def structural_thread_continuation(
         return False, "short_last_assistant"
 
     try:
+        from core.brain.user_facing_contract import classify_short_user_turn
+
+        kind = classify_short_user_turn(
+            ut,
+            _recent_dialogue(context),
+            last_assistant=last_a,
+        )
+        if kind == "normal" and _prior_assistant_turn_unsatisfactory(context):
+            return False, "prior_unsatisfactory"
+    except Exception as e:
+        logger.debug("discourse prior_unsatisfactory: %s", e)
+
+    try:
         from core.prompt_routing import infer_assistant_expects_reply
 
         if not infer_assistant_expects_reply(
@@ -380,6 +408,9 @@ def build_active_thread_block(res: DiscourseResolution) -> str:
         parts.append(
             "Пользователь поправляет или отвергает прошлый ответ — отвечай на исправленную нить, "
             "не смешивай с другими темами из истории."
+        )
+        parts.append(
+            "Не перечисляй факты профиля и личные данные, если пользователь не спрашивал об этом."
         )
     else:
         parts.append(
@@ -468,6 +499,13 @@ def resolve_discourse(
     inherit, reason = structural_thread_continuation(raw, context)
     res.reason = reason
     if not inherit:
+        if reason == "prior_unsatisfactory":
+            res.action = ACTION_CORRECT
+            res.last_user_q, res.last_assistant_a = _last_qa_from_context(context)
+            res.topic_summary = _topic_summary_from_context(context, res.last_user_q)
+            res.hint = _build_hint(res)
+            MONITOR.inc("discourse_correct_total")
+            return res
         MONITOR.inc("discourse_branch_total")
         return res
 

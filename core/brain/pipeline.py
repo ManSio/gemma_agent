@@ -208,10 +208,18 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
         _uid_fresh = str(context.get("user_id") or "").strip()
         if _uid_fresh:
             _lim = _ctx_recent_lim()
-            _rm_f = BehaviorStore().load_recent_messages(_uid_fresh, context.get("group_id"), limit=_lim)
+            _bs_fresh = BehaviorStore()
+            _rm_f = _bs_fresh.load_recent_messages(_uid_fresh, context.get("group_id"), limit=_lim)
             if _rm_f:
                 context["recent_dialogue"] = _rm_f
                 context["recent_messages"] = _rm_f
+            try:
+                from core.turn_reconcile import hydrate_session_task
+
+                _rec_f = _bs_fresh.load(_uid_fresh, context.get("group_id"))
+                hydrate_session_task(context, _rec_f)
+            except Exception as e:
+                logger.debug("brain hydrate session_task: %s", e)
             from core.behavior_store import topic_tracking_for_turn
 
             context["topic_tracking"] = topic_tracking_for_turn(
@@ -228,12 +236,14 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
     except Exception as e:
         logger.debug("brain fresh recent_dialogue: %s", e)
     try:
-        from core.brain.discourse_resolver import apply_discourse_to_context_async
         from core.brain.runtime import _llm
+        from core.turn_reconcile import apply_discourse_and_collapse_async
 
-        user_text, context = await apply_discourse_to_context_async(user_text, context, llm=_llm)
+        user_text, context = await apply_discourse_and_collapse_async(
+            user_text, context, llm=_llm
+        )
     except Exception as e:
-        logger.debug("discourse_resolver brain: %s", e)
+        logger.debug("discourse_and_collapse brain: %s", e)
     try:
         from core.telegram_output_guard import _overlap_with_user_query
 

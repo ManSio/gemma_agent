@@ -74,3 +74,26 @@ class TestDialogueSlots(unittest.TestCase):
         long_summary = "Исходя из вашего запроса " + ("планировка " * 40)
         on_assistant_reply(rec, long_summary, user_text="план по фото")
         self.assertEqual(get_active_slot(rec).get("kind"), SLOT_SPATIAL_PROJECT)
+
+    def test_weather_slot_clears_on_substantive_unrelated(self) -> None:
+        rec: dict = {}
+        set_slot(rec, SLOT_WEATHER_CITY, {}, turns=3)
+        ctx = resolve_slot_for_turn(
+            "почему название ии не соответствует сегодняшним реалям",
+            [{"role": "assistant", "text": "Какой именно город вас интересует?"}],
+            rec,
+        )
+        self.assertFalse(ctx.force_weather)
+        self.assertIsNone(get_active_slot(rec))
+
+    def test_weather_slot_decays_on_short_chitchat(self) -> None:
+        rec: dict = {}
+        set_slot(rec, SLOT_WEATHER_CITY, {}, turns=3)
+        resolve_slot_for_turn("привет", [], rec)
+        self.assertIsNone(get_active_slot(rec))
+
+    def test_weather_slot_clears_on_topic_redirect(self) -> None:
+        rec: dict = {}
+        set_slot(rec, SLOT_WEATHER_CITY, {}, turns=3)
+        resolve_slot_for_turn("я про другое", [], rec)
+        self.assertIsNone(get_active_slot(rec))

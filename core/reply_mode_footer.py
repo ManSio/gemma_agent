@@ -121,9 +121,15 @@ def build_mode_footer_fields(
     skill = str(rc.get("route_skill") or om.get("skill") or "").strip()
 
     slot_kind = ""
-    slot = get_active_slot(persisted if isinstance(persisted, dict) else None)
-    if slot:
-        slot_kind = str(slot.get("kind") or "").strip()
+    tsa = rc.get("turn_state_audit")
+    if isinstance(tsa, dict) and tsa.get("active_slot_kind"):
+        slot_kind = str(tsa.get("active_slot_kind") or "").strip()
+    if not slot_kind:
+        slot_kind = str(rc.get("active_dialogue_slot_kind") or "").strip()
+    if not slot_kind:
+        slot = get_active_slot(persisted if isinstance(persisted, dict) else None)
+        if slot:
+            slot_kind = str(slot.get("kind") or "").strip()
     om_module = str(om.get("module") or plan_module or "").strip().lower()
     om_phase = str(om.get("phase") or om.get("spatial_phase") or "").strip().lower()
     if om_module == "spatial_design" and om_phase:

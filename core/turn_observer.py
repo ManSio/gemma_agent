@@ -259,6 +259,16 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
             row["discourse_action"] = str(_da.get("action"))
         if _da.get("reason"):
             row["discourse_reason"] = str(_da.get("reason"))[:120]
+    _tsa = payload.get("turn_state_audit")
+    if isinstance(_tsa, dict) and _tsa:
+        if _tsa.get("slot_cleared") is not None:
+            row["slot_cleared"] = bool(_tsa.get("slot_cleared"))
+        if _tsa.get("expects_correction") is not None:
+            row["expects_correction"] = bool(_tsa.get("expects_correction"))
+        if _tsa.get("prior_outcome"):
+            row["prior_outcome"] = str(_tsa.get("prior_outcome"))[:32]
+        if _tsa.get("short_turn_kind"):
+            row["short_turn_kind"] = str(_tsa.get("short_turn_kind"))[:24]
     tt = payload.get("topic_tracking")
     if isinstance(tt, dict):
         cur = str(tt.get("current") or "").strip()

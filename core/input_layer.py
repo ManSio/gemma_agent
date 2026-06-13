@@ -1986,6 +1986,13 @@ class InputLayer:
                             meta_ut["route_pre_llm"] = str(_pctx.get("planner_bypass") or "")
                         if _pctx.get("skill_name"):
                             meta_ut["route_skill"] = str(_pctx.get("skill_name") or "")
+                        if "active_dialogue_slot_kind" in _pctx:
+                            meta_ut["active_dialogue_slot_kind"] = str(
+                                _pctx.get("active_dialogue_slot_kind") or ""
+                            )
+                        tsa = _pctx.get("turn_state_audit")
+                        if isinstance(tsa, dict):
+                            meta_ut["turn_state_audit"] = dict(tsa)
                 out.meta = meta_ut
             _edited = await self._send_output(
                 message, out, reply_markup=use_kb, progress_message_id=progress_mid

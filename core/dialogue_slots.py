@@ -162,6 +162,25 @@ class SlotTurnContext:
     weather_country: str = ""
 
 
+def _slot_turn_accepts(kind: str, user_text: str, recent_dialogue: Any = None, *, persisted: Any = None) -> bool:
+    """Контракт слота: принимает ли реплика ожидаемый ввод для kind."""
+    from core.slot_registry import slot_accepts_turn
+
+    return slot_accepts_turn(kind, user_text, recent_dialogue, persisted=persisted)
+
+
+def _turn_binds_weather_slot(user_text: str) -> bool:
+    """Реплика относится к уточнению города или запросу погоды."""
+    from core.brain.text_helpers import _user_text_looks_like_weather_query, safe_text
+
+    t = safe_text(user_text).strip()
+    if not t:
+        return False
+    if _message_looks_like_city_only(t):
+        return True
+    return bool(_user_text_looks_like_weather_query(t.lower()))
+
+
 def _message_looks_like_city_only(user_text: str) -> bool:
     from core.brain.text_helpers import (
         _explicit_major_city_from_user_text,
@@ -350,7 +369,7 @@ def slot_external_hint(
     img = _image_edit_session_hint(user_text, user_id=user_id, chat_id=chat_id)
     if img:
         parts.append(img)
-    if slot and str(slot.get("kind")) == SLOT_WEATHER_CITY:
+    if slot and str(slot.get("kind")) == SLOT_WEATHER_CITY and _turn_binds_weather_slot(user_text):
         parts.append(
             "WEATHER_SLOT: пользователь уточняет город для прогноза — дай погоду по этому городу, "
             "без лишних вопросов."
@@ -394,6 +413,11 @@ def resolve_slot_for_turn(
     rec = persisted if isinstance(persisted, dict) else {}
     slot = get_active_slot(rec)
     kind = str(slot.get("kind") or "") if slot else ""
+
+    if kind and not _slot_turn_accepts(kind, user_text, recent_dialogue, persisted=rec):
+        clear_slot(rec)
+        kind = ""
+        slot = None
 
     if kind == SLOT_WEATHER_CITY and _message_looks_like_city_only(user_text):
         from core.brain.text_helpers import weather_city_country_resolve

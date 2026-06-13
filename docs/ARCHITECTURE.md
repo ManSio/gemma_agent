@@ -34,6 +34,33 @@ flowchart LR
 
 Most chat goes: **input → orchestrator → chat_orchestrator → OpenRouter → guards → Telegram**.
 
+### Turn state collapse (v3.5.11+)
+
+Before routing/brain/footer, each user message is collapsed into one **TurnStateVector** (`core/turn_state.py`):
+
+```mermaid
+flowchart TB
+  subgraph superposition [Hypotheses before collapse]
+    W[weather slot active?]
+    D[discourse stay/branch/correct?]
+    P[prior outcome clarify?]
+  end
+  subgraph collapse [Single measurement]
+    DR[discourse_resolver]
+    SR[slot_registry.accepts_turn]
+    TSV[TurnStateVector]
+  end
+  superposition --> DR
+  DR --> SR
+  SR --> TSV
+  TSV --> ROUTER[intent / profile]
+  TSV --> FOOT[reply_mode_footer]
+  TSV --> AUDIT[turns.jsonl]
+```
+
+Entry point: `core/turn_reconcile.py` (orchestrator `plan()`, `pipeline.call_brain`, `resolve_brain_route`).  
+Slot contracts: `core/slot_registry.py` (like `profile_registry` for brain profiles).
+
 ---
 
 ## Layers

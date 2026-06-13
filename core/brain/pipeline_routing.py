@@ -38,16 +38,18 @@ async def resolve_brain_route(
     ctx = context if isinstance(context, dict) else {}
 
     try:
-        from core.brain.discourse_resolver import (
-            apply_discourse_to_context_async,
-            inherited_profile_from_context,
-        )
+        from core.brain.discourse_resolver import inherited_profile_from_context
 
-        user_text, ctx = await apply_discourse_to_context_async(user_text, ctx, llm=llm)
-        if isinstance(context, dict):
-            context.update(ctx)
-            ctx = context
-        _disc_profile = inherited_profile_from_context(ctx)
+        if ctx.get("_turn_state_collapsed") and isinstance(ctx.get("turn_state"), dict):
+            _disc_profile = inherited_profile_from_context(ctx)
+        else:
+            from core.turn_reconcile import apply_discourse_and_collapse_async
+
+            user_text, ctx = await apply_discourse_and_collapse_async(user_text, ctx, llm=llm)
+            if isinstance(context, dict):
+                context.update(ctx)
+                ctx = context
+            _disc_profile = inherited_profile_from_context(ctx)
     except Exception as e:
         logger.debug("discourse_resolver route: %s", e)
         _disc_profile = ""

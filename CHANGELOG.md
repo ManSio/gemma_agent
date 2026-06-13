@@ -1,3 +1,33 @@
+## [2026-06-13] — v3.5.11: TurnStateVector + slot_registry (turn collapse)
+
+- **Added:** `core/turn_state.py` — TurnStateVector: single collapsed state per turn (discourse + slots + prior outcome).
+- **Added:** `core/slot_registry.py` — slot contracts `accepts_turn` per kind (weather/article/spatial).
+- **Wired:** `turn_reconcile` → `collapse_turn_state`; `turn_observer` fields `slot_cleared`, `expects_correction`.
+- **Docs:** `ARCHITECTURE.md` — turn state collapse diagram.
+
+### Verify
+```bash
+python -m pytest tests/test_turn_state.py tests/test_turn_reconcile.py tests/test_dialogue_slots.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
+## [2026-06-13] — v3.5.10: turn reconcile (slots + discourse), stale weather footer fix
+
+- **Added:** `core/turn_reconcile.py` — single per-turn slot reconcile after discourse; `active_dialogue_slot_kind` for footer; metrics `dialogue_slot_cleared_*`.
+- **Fix:** `dialogue_slots` slot contract — non-binding turn clears `weather_await_city` (no keyword decay lists).
+- **Fix:** `discourse_resolver` — `prior_unsatisfactory` from `session_task.last_outcome` → `ACTION_CORRECT` (not facts dump on short reply).
+- **Wired:** orchestrator `plan()`, `pipeline.call_brain`, `resolve_brain_route`; footer reads reconciled slot kind.
+
+### Verify
+```bash
+python -m pytest tests/test_turn_reconcile.py tests/test_dialogue_slots.py tests/test_discourse_resolver.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.9: cache/latency metrics docs, identity recall, discourse context CI
 
 - **Added:** `scripts/snapshot_cache_latency.py` — ops snapshot (llm_usage, turns, metrics_timeseries, stage_ms).

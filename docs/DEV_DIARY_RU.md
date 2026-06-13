@@ -20,6 +20,45 @@
 
 ---
 
+## 2026-06-13 — TurnStateVector + slot_registry (коллапс хода)
+
+**Контекст:** уйти от разрозненных regex/слотов — один наблюдаемый вектор на ход.
+
+**Сделано:**
+- `core/turn_state.py` — TSV: discourse + slot before/after + prior_outcome + expects_correction.
+- `core/slot_registry.py` — контракты `accepts_turn` (как profile_registry).
+- `turn_reconcile` → `collapse_turn_state`; audit в `turns.jsonl`.
+- `ARCHITECTURE.md` — диаграмма collapse.
+
+**Verify:** `pytest tests/test_turn_state.py tests/test_turn_reconcile.py … -q` (37+ cases).
+
+---
+
+## 2026-06-13 — Аудит prod: залипший weather_await_city + drift → correct (без новых regex)
+
+**Контекст:** Wratmak — футер «погода» на нерелевантных темах; «я про другое» после ответа не по теме → дамп user_facts.
+
+**Корень (архитектура, не keyword-списки):**
+- Слот `weather_await_city` не имел контракта «принять/отклонить реплику» — залипал в behavior store.
+- Discourse catch-all `structural` наследовал нить даже когда `classify_short_user_turn=normal` и ответ бота не совпадал с последним содержательным вопросом (overlap).
+
+**Сделано:**
+- `dialogue_slots`: `_slot_turn_accepts` — реплика вне контракта слота → `clear_slot` (без keyword decay).
+- `discourse_resolver`: после неудачного хода (`session_task.last_outcome=clarify|…`) короткая реплика → `ACTION_CORRECT`, не STAY.
+- `orchestrator._assemble_brain_context`: прокидывает `session_task` в discourse (метаданные, не regex).
+- `core/turn_reconcile.py`: единая сверка слотов на каждом plan() + `active_dialogue_slot_kind` для footer.
+- `reply_mode_footer` / `input_layer`: footer читает reconciled kind, не залипший persisted.
+- `pipeline.call_brain` + `resolve_brain_route`: reconcile после async discourse; `hydrate_session_task`.
+- Метрики: `dialogue_slot_cleared_total`, `dialogue_slot_cleared_<kind>`.
+- VERSION → 3.5.10.
+- Убраны добавленные regex (`user_correcting_bot`, расширение `_TOPIC_CHANGE_PATTERNS`, overlap-heuristic).
+
+**Verify:** `pytest tests/test_turn_reconcile.py tests/test_dialogue_slots.py tests/test_discourse_resolver.py -q`; `release_guard --smoke`.
+
+**Deploy:** не выкатывали.
+
+---
+
 ## 2026-06-13 — Документация: кэш, задержки, синхронизация docs
 
 **Контекст:** снят prod-снимок cache/latency (VPS 24h); нужен runbook и порядок в индексах.

@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from core.brain.discourse_resolver import (
+    ACTION_CORRECT,
     ACTION_STAY,
     apply_discourse_to_context,
     resolve_discourse,
@@ -71,6 +72,33 @@ class DiscourseResolverTests(unittest.TestCase):
         inherit, reason = structural_thread_continuation(user, ctx)
         self.assertFalse(inherit)
         self.assertTrue(reason.startswith("tone:"))
+
+    def test_prior_unsatisfactory_triggers_correct_not_stay(self) -> None:
+        user = "я про другое"
+        prev_u = "почему название ии не соответствует сегодняшним реалям"
+        last_a = (
+            "Из системы: вас зовут Михаил, вы из аг. Михановичи, кошка Мурза, "
+            "часовой пояс Europe/Minsk."
+        )
+        rd = [
+            {"role": "user", "text": prev_u},
+            {"role": "assistant", "text": last_a},
+            {"role": "user", "text": user},
+        ]
+        ctx = {
+            "user_text": user,
+            "recent_dialogue": rd,
+            "dialogue_state": {
+                "last_intent": "explain",
+                "last_brain_profile": "quick_explain",
+            },
+            "session_task": {"last_outcome": "clarify"},
+        }
+        res = resolve_discourse(user, ctx)
+        self.assertEqual(res.action, ACTION_CORRECT)
+        self.assertEqual(res.reason, "prior_unsatisfactory")
+        self.assertIn("почему название ии", res.last_user_q)
+        self.assertIn("факты профиля", res.hint)
 
     def test_explicit_continuation_davay(self) -> None:
         user = "давай"

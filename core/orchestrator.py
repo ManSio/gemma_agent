@@ -105,6 +105,10 @@ def _sync_brain_context_to_plan_step(step: PlanStep, exec_ctx: Dict[str, Any]) -
         "kv_session_debug",
         "brain_profile",
         "router_profile",
+        "active_dialogue_slot_kind",
+        "discourse_action",
+        "turn_state",
+        "turn_state_audit",
     ):
         if key not in exec_ctx:
             continue
@@ -692,6 +696,9 @@ class Orchestrator:
                 "phase": "idle",
             },
         }
+        _st = persisted.get("session_task")
+        if isinstance(_st, dict):
+            context["session_task"] = dict(_st)
 
         if not user_id:
             return context
@@ -2165,11 +2172,17 @@ class Orchestrator:
         except Exception as e:
             logger.debug("batch_continuation hint: %s", e)
         try:
-            from core.brain.discourse_resolver import apply_discourse_to_context
+            from core.turn_reconcile import apply_discourse_and_collapse_sync
 
-            text, pre_ctx = apply_discourse_to_context(text, pre_ctx)
+            text, pre_ctx, _slots_mutated = apply_discourse_and_collapse_sync(
+                text,
+                pre_ctx,
+                persisted=persisted if isinstance(persisted, dict) else None,
+            )
+            if _slots_mutated and user_id and isinstance(persisted, dict):
+                self.behavior_store.save(user_id, group_id, persisted)
         except Exception as e:
-            logger.debug("discourse_resolver plan: %s", e)
+            logger.debug("turn_reconcile plan: %s", e)
         _obs_mark(input_meta, "plan_context")
         maintenance = self._maintenance.maybe_run(interval_sec=self._maintenance_interval_sec)
         if maintenance.get("ran"):
@@ -3613,6 +3626,19 @@ class Orchestrator:
                         )
                     ),
                 }
+                try:
+                    from core.turn_reconcile import turn_state_audit_for_emit
+
+                    _tsa_emit = turn_state_audit_for_emit(pre_ctx, plan)
+                    if _tsa_emit:
+                        _turn_payload["turn_state_audit"] = _tsa_emit
+                    _da_emit = None
+                    if isinstance(pre_ctx, dict) and isinstance(pre_ctx.get("discourse_audit"), dict):
+                        _da_emit = pre_ctx.get("discourse_audit")
+                    if _da_emit:
+                        _turn_payload["discourse_audit"] = _da_emit
+                except Exception as e:
+                    logger.debug("turn_state_audit emit: %s", e)
                 try:
                     from core.policy_memory_runtime import merge_memory_telemetry_into_turn_payload
 
