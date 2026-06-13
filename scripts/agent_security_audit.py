@@ -12,23 +12,18 @@ Does NOT claim "military-grade" — reports what is checked and what is not.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any, Dict, List
 
 ROOT = Path(__file__).resolve().parent.parent
 
-_AUDIT_CHECK_KEYS = (
-    "env_not_tracked",
-    "dotenv_permissions",
-    "privacy_scan",
-    "secrets_configured",
-    "security_layer_tests",
-    "release_guard_smoke",
-)
+from core.sensitive_export import SECURITY_AUDIT_CHECK_KEYS
 
 for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
@@ -198,18 +193,20 @@ def main() -> int:
 
     report = build_report(quick=args.quick, ci=args.ci)
 
-    from core.sensitive_export import security_audit_public_json_text, security_audit_public_report
+    from core.sensitive_export import security_audit_stdout_json, security_audit_public_report
 
     pub = security_audit_public_report(report)
     if args.json:
-        print(security_audit_public_json_text(report))
+        print(security_audit_stdout_json(report))
     else:
         print("=== Gemma Agent security audit (honest) ===")
         print("Root: gemma_agent (public build)")
-        for name in _AUDIT_CHECK_KEYS:
+        for name in SECURITY_AUDIT_CHECK_KEYS:
             data = (pub.get("checks") or {}).get(name) or {}
-            mark = "OK" if data.get("ok") or data.get("skipped") else "FAIL"
-            print(f"\n[{mark}] {name}")
+            if data.get("ok") or data.get("skipped"):
+                print(f"\n[OK] {name}")
+            else:
+                print(f"\n[FAIL] {name}")
             note_n = len(data.get("notes") or [])
             if note_n:
                 print(f"  - notes={note_n} (use --json for detail)")

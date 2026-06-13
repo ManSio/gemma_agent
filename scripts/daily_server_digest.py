@@ -13,6 +13,7 @@ import argparse
 import json
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -61,14 +62,18 @@ def main() -> int:
     root = Path(args.root).resolve()
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     hosts: list = []
+    host_labels: list[str] = []
     if args.remote:
         for label in ("HOST_LAN", "VPS_PROD"):
             try:
                 hosts.append(_audit_remote(label, _ssh_target(label), args.days))
+                host_labels.append(label)
             except Exception as e:
                 hosts.append({"host": label, "error_type": type(e).__name__})
+                host_labels.append(label)
     else:
         hosts.append(_audit_local(root, "local", args.days))
+        host_labels.append("local")
 
     from core.sensitive_export import (
         write_audit_document_json,
@@ -78,8 +83,22 @@ def main() -> int:
     out_doc = {"ts": datetime.now(timezone.utc).isoformat(), "stamp": stamp, "hosts": hosts}
     json_path = Path(args.json_out or root / "data/benchmarks" / f"daily_digest_{stamp.replace('-', '')}.json")
     md_path = Path(args.md_out or root / "docs" / "archive" / f"DAILY_OPS_{stamp}_RU.md")
-    write_audit_document_json(json_path, out_doc)
-    write_audit_document_md(md_path, out_doc)
+    epoch = int(time.time())
+    labels = tuple(host_labels)
+    write_audit_document_json(
+        json_path,
+        out_doc,
+        host_labels=labels,
+        stamp_day=stamp,
+        exported_at_epoch=epoch,
+    )
+    write_audit_document_md(
+        md_path,
+        out_doc,
+        host_labels=labels,
+        stamp_day=stamp,
+        exported_at_epoch=epoch,
+    )
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")
     return 0

@@ -1,6 +1,6 @@
 library: false
 warnOnImplicitThis: false
-name: gemma-agent/python-extensions
+name: gemma_agent/python-extensions
 version: 0.0.1
 extensionTargets:
   codeql/python-all: "*"

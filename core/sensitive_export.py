@@ -4,7 +4,16 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
+SECURITY_AUDIT_CHECK_KEYS: Tuple[str, ...] = (
+    "env_not_tracked",
+    "dotenv_permissions",
+    "privacy_scan",
+    "secrets_configured",
+    "security_layer_tests",
+    "release_guard_smoke",
+)
 
 _MEM0_ERROR_CODES = frozenset(
     {
@@ -113,24 +122,113 @@ def _safe_label_pairs(raw: Any, *, limit: int = 15) -> List[List[Union[str, int]
     return out
 
 
-def write_audit_document_json(path: Union[str, Path], doc: Dict[str, Any]) -> None:
-    """Write sanitized server audit/digest JSON."""
-    safe = audit_document_public(doc if isinstance(doc, dict) else {})
+def _count_nonneg(value: Any) -> int:
+    """Non-negative int for CodeQL-safe export payloads."""
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def audit_host_counts_row(host: Dict[str, Any]) -> Dict[str, int]:
+    """Per-host ops counters only (no string fields from runtime logs)."""
+    if not isinstance(host, dict):
+        return {}
+    turns = host.get("turns") if isinstance(host.get("turns"), dict) else {}
+    archives = host.get("archives") if isinstance(host.get("archives"), dict) else {}
+    errors = host.get("errors") if isinstance(host.get("errors"), dict) else {}
+    return {
+        "turns_count": _count_nonneg(turns.get("count")),
+        "incomplete_count": _count_nonneg(turns.get("suspect_incomplete_excerpt")),
+        "long_q_short_a": _count_nonneg(turns.get("long_q_short_a")),
+        "brain_recent_limit_turns": _count_nonneg(turns.get("with_brain_recent_limit")),
+        "archive_leaks": _count_nonneg(archives.get("findings_count") or archives.get("leaks")),
+        "archive_messages": _count_nonneg(
+            archives.get("messages_scanned") or archives.get("messages")
+        ),
+        "errors_count": _count_nonneg(errors.get("count")),
+    }
+
+
+def audit_document_counts_payload(
+    doc: Dict[str, Any],
+    *,
+    host_labels: Sequence[str] = (),
+    stamp_day: str = "",
+    exported_at_epoch: int = 0,
+) -> Dict[str, Any]:
+    """Audit JSON body with ints/bools only — breaks CodeQL string taint to disk."""
+    hosts_in = doc.get("hosts") if isinstance(doc.get("hosts"), list) else []
+    rows = [audit_host_counts_row(h) for h in hosts_in if isinstance(h, dict)]
+    payload: Dict[str, Any] = {
+        "exported_at_epoch": max(0, int(exported_at_epoch)),
+        "hosts_count": len(rows),
+        "hosts": rows,
+    }
+    if stamp_day:
+        payload["stamp_day"] = str(stamp_day)[:10]
+    if host_labels:
+        payload["host_labels"] = [str(x)[:64] for x in host_labels[:32]]
+    return payload
+
+
+def scan_counts_payload(raw: Dict[str, Any]) -> Dict[str, int]:
+    """Archive scan counters only (no paths or leak snippets)."""
+    rep = raw if isinstance(raw, dict) else {}
+    return {
+        "files_scanned": _count_nonneg(rep.get("files_scanned")),
+        "messages_scanned": _count_nonneg(rep.get("messages_scanned")),
+        "findings_count": _count_nonneg(rep.get("findings_count")),
+    }
+
+
+def write_audit_document_json(
+    path: Union[str, Path],
+    doc: Dict[str, Any],
+    *,
+    host_labels: Sequence[str] = (),
+    stamp_day: str = "",
+    exported_at_epoch: int = 0,
+) -> None:
+    """Write ops audit JSON (counts only, operator host labels)."""
+    payload = audit_document_counts_payload(
+        doc if isinstance(doc, dict) else {},
+        host_labels=host_labels,
+        stamp_day=stamp_day,
+        exported_at_epoch=exported_at_epoch,
+    )
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(safe, ensure_ascii=False, indent=2), encoding="utf-8")
+    p.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def write_scan_report_json(path: Union[str, Path], raw: Dict[str, Any]) -> None:
-    """Write sanitized archive leak scan JSON."""
-    safe = scan_report_public(raw if isinstance(raw, dict) else {})
+    """Write archive leak scan JSON (counts only)."""
+    payload = scan_counts_payload(raw if isinstance(raw, dict) else {})
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(safe, ensure_ascii=False, indent=2), encoding="utf-8")
+    p.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def security_audit_stdout_json(report: Dict[str, Any]) -> str:
+    """Security audit JSON for stdout (literal check keys, bool values only)."""
+    pub = security_audit_public_report(report if isinstance(report, dict) else {})
+    checks = {
+        name: {
+            "ok": bool((pub.get("checks") or {}).get(name, {}).get("ok")),
+            "skipped": bool((pub.get("checks") or {}).get(name, {}).get("skipped")),
+        }
+        for name in SECURITY_AUDIT_CHECK_KEYS
+    }
+    return json.dumps(
+        {"product": "gemma_agent", "passed": bool(pub.get("passed")), "checks": checks},
+        ensure_ascii=False,
+        indent=2,
+    )
 
 
 def security_audit_public_json_text(report: Dict[str, Any]) -> str:
-    """JSON text for security audit CLI (--json) without raw paths."""
+    """Full sanitized security audit JSON (for file export, not stdout)."""
     pub = security_audit_public_report(report if isinstance(report, dict) else {})
     return json.dumps(pub, ensure_ascii=False, indent=2)
 
@@ -149,46 +247,61 @@ def scan_summary_log_line(*, files: int, messages: int, leaks: int) -> str:
     )
 
 
-def render_audit_document_md(doc: Dict[str, Any]) -> str:
-    """Operator-safe markdown for audit/digest (counts only, no excerpts)."""
-    pub = audit_document_public(doc if isinstance(doc, dict) else {})
-    stamp = pub.get("stamp")
-    title = f"# Ops digest ({stamp})" if stamp else f"# Server audit {pub.get('ts', '')}"
+def render_audit_counts_md(
+    *,
+    hosts: List[Dict[str, int]],
+    host_labels: Sequence[str] = (),
+    stamp_day: str = "",
+) -> str:
+    """Ops markdown from counters and operator host labels only."""
+    title = f"# Ops digest ({stamp_day})" if stamp_day else "# Server audit"
     lines = [title, ""]
-    for host in pub.get("hosts") or []:
-        if not isinstance(host, dict):
-            continue
-        if host.get("error_type"):
-            lines += [
-                f"## {host.get('host', '?')}",
-                "",
-                f"- error_type: **{host.get('error_type')}**",
-                "",
-            ]
-            continue
-        turns = host.get("turns") if isinstance(host.get("turns"), dict) else {}
-        archives = host.get("archives") if isinstance(host.get("archives"), dict) else {}
-        errors = host.get("errors") if isinstance(host.get("errors"), dict) else {}
+    for idx, row in enumerate(hosts):
+        label = host_labels[idx] if idx < len(host_labels) else f"host_{idx + 1}"
         lines += [
-            f"## {host.get('host', '?')} (`{host.get('git_head', '')}`)",
+            f"## {label}",
             "",
-            f"- turns: **{int(turns.get('count') or 0)}**",
-            f"- latency p50: **{turns.get('latency_ms_p50')}** ms, p90: **{turns.get('latency_ms_p90')}** ms",
-            f"- outcomes_count: **{len(turns.get('outcomes') or {})}**",
-            f"- issues_count: **{int(turns.get('issues_count') or 0)}**",
-            f"- incomplete (excerpt heuristic): **{int(turns.get('suspect_incomplete_excerpt') or 0)}**",
-            f"- long Q / short A: **{int(turns.get('long_q_short_a') or 0)}**",
-            f"- turns with brain_recent_limit: **{int(turns.get('with_brain_recent_limit') or 0)}**",
-            f"- archive leaks: **{int(archives.get('findings_count') or 0)}** / msgs {int(archives.get('messages_scanned') or 0)}",
-            f"- errors: **{int(errors.get('count') or 0)}** kinds **{int(errors.get('kinds_count') or 0)}**",
+            f"- turns: **{row.get('turns_count', 0)}**",
+            f"- incomplete (excerpt heuristic): **{row.get('incomplete_count', 0)}**",
+            f"- long Q / short A: **{row.get('long_q_short_a', 0)}**",
+            f"- turns with brain_recent_limit: **{row.get('brain_recent_limit_turns', 0)}**",
+            f"- archive leaks: **{row.get('archive_leaks', 0)}** / msgs {row.get('archive_messages', 0)}",
+            f"- errors: **{row.get('errors_count', 0)}**",
             "",
         ]
     return "\n".join(lines)
 
 
-def write_audit_document_md(path: Union[str, Path], doc: Dict[str, Any]) -> None:
-    """Write sanitized audit/digest markdown (counts only, no excerpts)."""
-    md = render_audit_document_md(doc if isinstance(doc, dict) else {})
+def render_audit_document_md(doc: Dict[str, Any]) -> str:
+    """Operator-safe markdown for audit/digest (counts only, no excerpts)."""
+    payload = audit_document_counts_payload(doc if isinstance(doc, dict) else {})
+    return render_audit_counts_md(
+        hosts=payload.get("hosts") or [],
+        host_labels=payload.get("host_labels") or (),
+        stamp_day=str(payload.get("stamp_day") or ""),
+    )
+
+
+def write_audit_document_md(
+    path: Union[str, Path],
+    doc: Dict[str, Any],
+    *,
+    host_labels: Sequence[str] = (),
+    stamp_day: str = "",
+    exported_at_epoch: int = 0,
+) -> None:
+    """Write ops audit markdown (counts only, operator host labels)."""
+    payload = audit_document_counts_payload(
+        doc if isinstance(doc, dict) else {},
+        host_labels=host_labels,
+        stamp_day=stamp_day,
+        exported_at_epoch=exported_at_epoch,
+    )
+    md = render_audit_counts_md(
+        hosts=payload.get("hosts") or [],
+        host_labels=host_labels,
+        stamp_day=stamp_day,
+    )
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(md, encoding="utf-8")

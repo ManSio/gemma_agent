@@ -115,13 +115,13 @@ def main() -> int:
     args = ap.parse_args()
     root = Path(args.root).resolve()
     from core.sensitive_export import (
-        scan_report_public,
+        scan_counts_payload,
         scan_summary_log_line,
         write_scan_report_json,
     )
 
     raw = scan_archives(root)
-    rep = scan_report_public(raw)
+    counts = scan_counts_payload(raw)
     if args.json_out:
         out = Path(args.json_out)
         if not out.is_absolute():
@@ -130,12 +130,12 @@ def main() -> int:
         print(f"Wrote {out}")
     print(
         scan_summary_log_line(
-            files=rep["files_scanned"],
-            messages=rep["messages_scanned"],
-            leaks=rep["findings_count"],
+            files=counts["files_scanned"],
+            messages=counts["messages_scanned"],
+            leaks=counts["findings_count"],
         )
     )
-    return 1 if rep["findings_count"] else 0
+    return 1 if counts["findings_count"] else 0
 
 
 if __name__ == "__main__":

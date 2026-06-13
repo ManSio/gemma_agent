@@ -8,6 +8,7 @@ import os
 import statistics
 import subprocess
 import sys
+import time
 from collections import Counter, defaultdict
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -303,11 +304,19 @@ def main() -> int:
     )
 
     safe_doc = audit_document_public(out_doc)
+    stamp_day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    epoch = int(time.time())
     if args.json_out:
         p = Path(args.json_out)
         if not p.is_absolute():
             p = root / p
-        write_audit_document_json(p, out_doc)
+        write_audit_document_json(
+            p,
+            out_doc,
+            host_labels=(args.host_label,),
+            stamp_day=stamp_day,
+            exported_at_epoch=epoch,
+        )
         print(f"Wrote {p}")
     else:
         print(audit_summary_log_line(len(safe_doc.get("hosts") or [])))
@@ -315,7 +324,13 @@ def main() -> int:
         mp = Path(args.md_out)
         if not mp.is_absolute():
             mp = root / mp
-        write_audit_document_md(mp, out_doc)
+        write_audit_document_md(
+            mp,
+            out_doc,
+            host_labels=(args.host_label,),
+            stamp_day=stamp_day,
+            exported_at_epoch=epoch,
+        )
         print(f"Wrote {mp}")
     return 0
 
