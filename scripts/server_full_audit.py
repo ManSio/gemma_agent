@@ -295,16 +295,14 @@ def main() -> int:
     rep = audit_host(root, host_label=args.host_label, days=args.days)
     rep["ts"] = datetime.now(timezone.utc).isoformat()
     out_doc = {"ts": rep["ts"], "hosts": [rep]}
-    from core.sensitive_export import audit_document_public
+    from core.sensitive_export import audit_document_public, write_public_json_file
 
     safe_doc = audit_document_public(out_doc)
-    text = json.dumps(safe_doc, ensure_ascii=False, indent=2)
     if args.json_out:
         p = Path(args.json_out)
         if not p.is_absolute():
             p = root / p
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(text, encoding="utf-8")
+        write_public_json_file(p, out_doc, sanitizer=audit_document_public)
         print(f"Wrote {p}")
     else:
         hosts = safe_doc.get("hosts") or []

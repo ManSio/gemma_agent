@@ -20,6 +20,27 @@
 
 ---
 
+## 2026-06-13 — Security wave 2: CodeQL sanitization + workflow
+
+**Контекст:** на GitHub 27 open CodeQL alerts; Dependabot alerts пусто; pip-audit — 2 ignored CVE в aiohttp (aiogram pin).
+
+### Сделано
+
+- `write_public_json_file`, `build_heuristic_miss_row` в `sensitive_export.py`
+- Mem0 connectivity: без raw HTTP body в `user_message`; startup logs через `mem0_log_facets`
+- Audit scripts: запись только через sanitizer; probe scripts — len без контента
+- `.github/workflows/codeql.yml` — перескан после push
+- `docs/SECURITY_GITHUB_FINDINGS_RU.md`
+
+### Verify
+
+```bash
+python -m pytest tests/test_sensitive_export.py tests/test_heuristic_misses_log.py tests/test_news_disclaimer.py -q
+python -m pip_audit -r requirements.txt --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265
+```
+
+---
+
 ## 2026-06-13 — Hard context limit 15K, CI aiohttp, CodeQL sanitization
 
 **Контекст:** план «День 1» — жёсткий лимит контекста ~15K токенов; на GitHub CI красный после dependabot merge.

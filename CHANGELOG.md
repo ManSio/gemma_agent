@@ -1,3 +1,15 @@
+## [2026-06-13] — v3.5.2: CodeQL sanitization wave + security workflow
+
+### Исправлено
+- CodeQL: logging/storage — `write_public_json_file`, `build_heuristic_miss_row`, Mem0 connectivity без raw body
+- Probe/audit scripts: не печатают user content в stdout
+- Восстановлен `.github/workflows/codeql.yml` для пересканирования alerts
+
+### Документация
+- `docs/SECURITY_GITHUB_FINDINGS_RU.md` — статус CodeQL + pip-audit (aiohttp CVE ignored)
+
+---
+
 ## [2026-06-13] — v3.5.1: Hard context limit 15K, CI aiohttp pin, CodeQL sanitization
 
 ### Исправлено

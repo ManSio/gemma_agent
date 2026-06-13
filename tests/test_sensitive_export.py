@@ -1,6 +1,9 @@
+import json
+
 from core.sensitive_export import (
     audit_document_public,
     audit_host_public,
+    build_heuristic_miss_row,
     mem0_check_public_view,
     mem0_log_facets,
     mem0_path_log_facets,
@@ -20,6 +23,22 @@ def test_mem0_check_public_view_strips_tainted_fields():
     assert "user_message" not in pub
     assert pub["error_code"] == "invalid_key"
     assert pub["http_status"] == 401
+
+
+def test_build_heuristic_miss_row_no_raw_text():
+    row = build_heuristic_miss_row(
+        rule_id="geo_nearby",
+        verdict="blocked",
+        reason="prose_over_chars",
+        user_text="secret user phrase",
+        topic_current="topic secret",
+        user_id="12345",
+        ts="2026-06-13T00:00:00Z",
+    )
+    assert row["text_excerpt_redacted"] is True
+    assert "secret" not in json.dumps(row)
+    assert row["user_id_hash"]
+    assert row["topic_current_hash"]
 
 
 def test_mem0_path_log_facets_kinds():

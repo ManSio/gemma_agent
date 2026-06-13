@@ -114,16 +114,15 @@ def main() -> int:
     ap.add_argument("--json-out", default="")
     args = ap.parse_args()
     root = Path(args.root).resolve()
-    from core.sensitive_export import scan_report_public
+    from core.sensitive_export import scan_report_public, write_public_json_file
 
-    rep = scan_report_public(scan_archives(root))
-    text = json.dumps(rep, ensure_ascii=False, indent=2, sort_keys=True)
+    raw = scan_archives(root)
+    rep = scan_report_public(raw)
     if args.json_out:
         out = Path(args.json_out)
         if not out.is_absolute():
             out = root / out
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(text, encoding="utf-8")
+        write_public_json_file(out, raw, sanitizer=scan_report_public)
         print(f"Wrote {out}")
     print(
         f"SUMMARY files={rep['files_scanned']} msgs={rep['messages_scanned']} "

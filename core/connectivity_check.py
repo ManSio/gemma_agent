@@ -454,10 +454,9 @@ async def check_mem0_platform(
                                 "roundtrip_ms": round(roundtrip_ms, 2),
                                 "mem0_connectivity_path": "simple_search",
                             }
-                        detail2 = raw2[:500] if raw2 else ""
                         detail = (
-                            f"Platform {url} -> HTTP {status} {raw_text[:200]!r}; "
-                            f"fallback {simple_url} -> HTTP {st2} {detail2!r}"
+                            f"platform_status={status} body_len={len(raw_text or '')}; "
+                            f"fallback_status={st2} body_len={len(raw2 or '')}"
                         )
                         return {
                             "ok": False,
@@ -471,7 +470,7 @@ async def check_mem0_platform(
                             "http_status": st2,
                             "roundtrip_ms": round(roundtrip_ms, 2),
                         }
-                detail = raw_text[:500] if raw_text else ""
+                detail = f"http_status={status} body_len={len(raw_text or '')}"
                 return {
                     "ok": False,
                     "skipped": False,
@@ -501,7 +500,7 @@ async def check_mem0_platform(
             "service": "mem0",
             "role": role,
             "error_code": "network",
-            "user_message": MESSAGES["mem0_network"].format(role=role, detail=str(e)),
+            "user_message": MESSAGES["mem0_network"].format(role=role, detail=type(e).__name__),
             "http_status": None,
             "roundtrip_ms": None,
         }
@@ -509,47 +508,47 @@ async def check_mem0_platform(
 
 async def log_mem0_startup_status(mem0_memory: Mem0MemoryModule, log: logging.Logger) -> None:
     """Один запрос к Mem0 при старте процесса: явный INFO/WARNING в логах оператора."""
-    from core.sensitive_export import mem0_check_public_view
+    from core.sensitive_export import mem0_check_public_view, mem0_log_facets
 
     if not mem0_memory._cloud:
         return
-    _mp = mem0_check_public_view(
-        await check_mem0_platform(mem0_memory._api_key, api_url=mem0_memory._base, role="primary")
-    )
+    _raw_p = await check_mem0_platform(mem0_memory._api_key, api_url=mem0_memory._base, role="primary")
+    _mp = mem0_check_public_view(_raw_p)
     record_external_service_check(_mp, source="startup")
-    if _mp.get("ok"):
+    _ok, _http_status, _error_code = mem0_log_facets(_raw_p)
+    if _ok:
         log.info(
             "Mem0 primary check ok http_status=%s",
-            _mp.get("http_status"),
+            _http_status,
             extra={"gemma_event": "mem0_primary_ok"},
         )
     else:
         log.warning(
             "Mem0 primary check failed code=%s http_status=%s — см. /admin_connectivity",
-            _mp.get("error_code"),
-            _mp.get("http_status"),
+            _error_code,
+            _http_status,
             extra={"gemma_event": "mem0_primary_check_failed"},
         )
     if mem0_memory._mirror_key:
-        _mm = mem0_check_public_view(
-            await check_mem0_platform(
-                mem0_memory._mirror_key,
-                api_url=mem0_memory._mirror_base,
-                role="mirror",
-            )
+        _raw_m = await check_mem0_platform(
+            mem0_memory._mirror_key,
+            api_url=mem0_memory._mirror_base,
+            role="mirror",
         )
+        _mm = mem0_check_public_view(_raw_m)
         record_external_service_check(_mm, source="startup")
-        if _mm.get("ok"):
+        _ok_m, _http_status_m, _error_code_m = mem0_log_facets(_raw_m)
+        if _ok_m:
             log.info(
                 "Mem0 mirror check ok http_status=%s",
-                _mm.get("http_status"),
+                _http_status_m,
                 extra={"gemma_event": "mem0_mirror_ok"},
             )
         else:
             log.warning(
                 "Mem0 mirror check failed code=%s http_status=%s — см. /admin_connectivity",
-                _mm.get("error_code"),
-                _mm.get("http_status"),
+                _error_code_m,
+                _http_status_m,
                 extra={"gemma_event": "mem0_mirror_check_failed"},
             )
             if getattr(mem0_memory, "_mirror_write", False):

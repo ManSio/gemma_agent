@@ -201,8 +201,9 @@ def main() -> int:
         for name, data in pub["checks"].items():
             mark = "OK" if data.get("ok") or data.get("skipped") else "FAIL"
             print(f"\n[{mark}] {name}")
-            for line in data.get("notes") or []:
-                print(f"  - {str(line)[:280]}")
+            note_n = len(data.get("notes") or [])
+            if note_n:
+                print(f"  - notes={note_n} (use --json for detail)")
             if data.get("skipped"):
                 print("  - skipped")
         print("\n--- Known limitations (not bugs) ---")

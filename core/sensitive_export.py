@@ -1,8 +1,10 @@
 """Redact sensitive fields before audit JSON is written or printed (CodeQL storage/logging guard)."""
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 _MEM0_ERROR_CODES = frozenset(
     {
@@ -67,6 +69,50 @@ def mem0_log_facets(raw: Dict[str, Any]) -> Tuple[bool, Optional[int], Optional[
     code = pub.get("error_code")
     error_code = str(code) if code in _MEM0_ERROR_CODES and code else None
     return ok, http_status, error_code
+
+
+def hash_sensitive_text(value: Any, *, max_len: int = 64) -> Optional[str]:
+    """One-way hash for audit logs (user_id, topic snippets)."""
+    s = str(value or "").strip()
+    if not s:
+        return None
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()[:max_len]
+
+
+def build_heuristic_miss_row(
+    *,
+    rule_id: str,
+    verdict: str,
+    reason: str,
+    user_text: str,
+    topic_current: str = "",
+    user_id: str = "",
+    ts: str,
+) -> Dict[str, Any]:
+    """Audit-safe heuristic_misses.jsonl row — no raw user text or ids."""
+    return {
+        "ts": ts,
+        "rule_id": str(rule_id or "")[:64],
+        "verdict": str(verdict or "")[:32],
+        "reason": str(reason or "")[:120],
+        "text_len": len((user_text or "").strip()),
+        "text_excerpt_redacted": True,
+        "topic_current_hash": hash_sensitive_text(topic_current),
+        "user_id_hash": hash_sensitive_text(user_id),
+    }
+
+
+def write_public_json_file(
+    path: Union[str, Path],
+    payload: Dict[str, Any],
+    *,
+    sanitizer,
+) -> None:
+    """Write JSON via an explicit sanitizer (breaks CodeQL taint to disk)."""
+    safe = sanitizer(payload if isinstance(payload, dict) else {})
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(safe, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def scan_finding_public(row: Dict[str, Any]) -> Dict[str, Any]:

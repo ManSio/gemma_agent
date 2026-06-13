@@ -131,15 +131,14 @@ def main() -> int:
     else:
         hosts.append(_audit_local(root, "local", args.days))
 
-    from core.sensitive_export import audit_document_public
+    from core.sensitive_export import audit_document_public, write_public_json_file
 
     out_doc = {"ts": datetime.now(timezone.utc).isoformat(), "stamp": stamp, "hosts": hosts}
-    safe_doc = audit_document_public(out_doc)
     json_path = Path(args.json_out or root / "data/benchmarks" / f"daily_digest_{stamp.replace('-', '')}.json")
     md_path = Path(args.md_out or root / "docs" / "archive" / f"DAILY_OPS_{stamp}_RU.md")
+    safe_doc = audit_document_public(out_doc)
     md_hosts = _hosts_for_md(safe_doc.get("hosts") or [])
-    json_path.parent.mkdir(parents=True, exist_ok=True)
-    json_path.write_text(json.dumps(safe_doc, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_public_json_file(json_path, out_doc, sanitizer=audit_document_public)
     md_path.write_text(_render_md(md_hosts, stamp=stamp), encoding="utf-8")
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")

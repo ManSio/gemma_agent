@@ -30,8 +30,7 @@ async def main() -> int:
     if not digest:
         print("FAIL: no digest")
         return 1
-    print("=== DIGEST (first 1200 chars) ===")
-    print(digest[:1200])
+    print(f"=== DIGEST len={len(digest)} chars (content redacted in probe) ===")
     print()
 
     recent = [
@@ -58,8 +57,7 @@ async def main() -> int:
     if not detail:
         print(f"FAIL: no detail for pick {pick}")
         return 1
-    print(f"=== ITEM {pick} ===")
-    print(detail[:2000])
+    print(f"=== ITEM {pick} len={len(detail)} chars (content redacted in probe) ===")
     low = detail.lower()
     bad = ("что будем искать", "прайс-лист", "медиакит")
     if any(b in low for b in bad):
