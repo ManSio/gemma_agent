@@ -20,6 +20,16 @@
 
 ---
 
+## 2026-06-13 — v3.5.18: news narrative self-verify (P2)
+
+**Сделано:** `_apply_news_self_verify` после LLM narrative digest; `source_context` из `NewsSource`; `self_verify_run/result` в `llm_usage.jsonl`. Flag `NEWS_SELF_VERIFY_ENABLED`.
+
+**Verify:** `pytest tests/test_news_hot_path_wiring.py`; smoke.
+
+**Не в scope:** ConsistencyChecker (P3).
+
+---
+
 ## 2026-06-13 — v3.5.17: news hot path wiring (P0+P1)
 
 **Контекст:** модули News Reliability были в репо, но не в hot path (audit gaps 1–3, 6).

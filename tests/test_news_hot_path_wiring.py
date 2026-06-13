@@ -1,4 +1,4 @@
-"""Integration: news hot path sources, validator fetch, generation log."""
+"""Integration: news hot path sources, validator fetch, generation log, self-verify."""
 from __future__ import annotations
 
 import asyncio
@@ -10,9 +10,11 @@ from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from core.news_reply import (
+    _apply_news_self_verify,
     _emit_news_generation_log,
     _fetch_page_article,
     _return_news_with_telemetry,
+    _source_context_for_verify,
     _source_from_fetched_article,
     _sources_from_search_results,
 )
@@ -106,6 +108,63 @@ class NewsHotPathWiringTests(unittest.TestCase):
                 self.assertGreater(float(got.get("parsing_confidence") or 0), 0.0)
 
         asyncio.run(run())
+
+
+class NewsSelfVerifyWiringTests(unittest.IsolatedAsyncioTestCase):
+    async def test_source_context_for_verify(self) -> None:
+        ctx = _source_context_for_verify(
+            _sources_from_search_results(
+                [{"url": "https://ex.com/a", "title": "Headline", "snippet": "x" * 50}]
+            )
+        )
+        self.assertIn("Headline", ctx)
+        self.assertIn("https://ex.com/a", ctx)
+
+    async def test_apply_news_self_verify_applies_fix(self) -> None:
+        sources = _sources_from_search_results(
+            [{"url": "https://ex.com/a", "title": "Earthquake", "snippet": "Turkey quake"}]
+        )
+        with patch.dict(os.environ, {"NEWS_SELF_VERIFY_ENABLED": "true"}, clear=False):
+            with patch(
+                "core.brain.self_verify_pass.run_self_verify",
+                new_callable=AsyncMock,
+                return_value="fix: Verified summary only from sources.",
+            ):
+                with patch(
+                    "core.brain.self_verify_pass.self_verify_fix_quality",
+                    return_value=True,
+                ):
+                    with patch(
+                        "core.openrouter_provider.get_openrouter_provider",
+                        return_value=object(),
+                    ):
+                        out, ver = await _apply_news_self_verify(
+                            "Hallucinated extra president name.",
+                            user_query="новости",
+                            sources=sources,
+                        )
+        self.assertTrue(out.startswith("Verified"))
+        self.assertTrue(ver.startswith("fix:"))
+
+    async def test_emit_log_records_self_verify_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            log_path = Path(td) / "llm_usage.jsonl"
+            with patch.dict(
+                os.environ,
+                {"GEMMA_LLM_USAGE_PERSIST": "true", "GEMMA_LLM_USAGE_PATH": str(log_path)},
+                clear=False,
+            ):
+                _emit_news_generation_log(
+                    user_id="1",
+                    query="новости",
+                    sources=[],
+                    reply="ok",
+                    self_verify_run=True,
+                    self_verify_result="ok",
+                )
+            row = json.loads(log_path.read_text(encoding="utf-8").strip())
+            self.assertTrue(row["self_verify_run"])
+            self.assertEqual(row["self_verify_result"], "ok")
 
 
 if __name__ == "__main__":

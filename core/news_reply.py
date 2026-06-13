@@ -695,6 +695,63 @@ def _source_from_fetched_article(
     )
 
 
+def _news_self_verify_enabled() -> bool:
+    """Whether narrative news replies run self-verify with source_context."""
+    return _env_truthy("NEWS_SELF_VERIFY_ENABLED", default=True)
+
+
+def _source_context_for_verify(sources: Optional[List[Dict[str, Any]]]) -> str:
+    """Compact allowed-facts block for news self-verify."""
+    lines: List[str] = []
+    for row in sources or []:
+        if not isinstance(row, dict):
+            continue
+        title = str(row.get("title_used") or row.get("title") or "").strip()
+        url = str(row.get("url") or "").strip()
+        if not title and not url:
+            continue
+        conf = float(row.get("parsing_confidence") or 0.0)
+        lines.append(
+            f"- {title[:160]} | {url[:220]} | confidence={conf:.0%}"
+        )
+        if len(lines) >= _news_sources_max():
+            break
+    return "\n".join(lines)
+
+
+async def _apply_news_self_verify(
+    reply: str,
+    *,
+    user_query: str,
+    sources: Optional[List[Dict[str, Any]]] = None,
+) -> tuple[str, str]:
+    """Run self-verify grounded in NewsSource rows; return (reply, verify_result)."""
+    text = (reply or "").strip()
+    if not text or not _news_self_verify_enabled():
+        return text, "N/A"
+    ctx = _source_context_for_verify(sources)
+    if not ctx.strip():
+        return text, "N/A"
+    try:
+        from core.brain.self_verify_pass import run_self_verify, self_verify_fix_quality
+        from core.openrouter_provider import get_openrouter_provider
+
+        ver = await run_self_verify(
+            text,
+            user_query or "новости",
+            get_openrouter_provider(),
+            source_context=ctx,
+        )
+        if ver.startswith("fix:"):
+            fix_text = ver[4:].strip()
+            if fix_text and self_verify_fix_quality(fix_text):
+                return fix_text, ver
+        return text, ver if ver else "ok"
+    except Exception as exc:
+        logger.debug("news self_verify: %s", exc)
+        return text, "N/A"
+
+
 def _emit_news_generation_log(
     *,
     user_id: str,
@@ -702,6 +759,8 @@ def _emit_news_generation_log(
     sources: Optional[List[Dict[str, Any]]],
     reply: str,
     llm_model: str = "",
+    self_verify_run: bool = False,
+    self_verify_result: str = "N/A",
 ) -> None:
     """Append news_generation row to llm_usage.jsonl."""
     if not (reply or "").strip():
@@ -716,8 +775,8 @@ def _emit_news_generation_log(
                 sources=list(sources or []),
                 reply=str(reply).strip(),
                 llm_model=llm_model or _news_llm_model(),
-                self_verify_run=False,
-                self_verify_result="N/A",
+                self_verify_run=bool(self_verify_run),
+                self_verify_result=str(self_verify_result or "N/A")[:500],
             )
         )
     except Exception as exc:
@@ -731,6 +790,8 @@ def _return_news_with_telemetry(
     query: str = "",
     sources: Optional[List[Dict[str, Any]]] = None,
     llm_model: str = "",
+    self_verify_run: Optional[bool] = None,
+    self_verify_result: str = "N/A",
 ) -> Optional[str]:
     """Normalize news reply and persist generation telemetry."""
     if not reply or not str(reply).strip():
@@ -742,8 +803,20 @@ def _return_news_with_telemetry(
         sources=sources,
         reply=text,
         llm_model=llm_model,
+        self_verify_run=bool(self_verify_run) if self_verify_run is not None else False,
+        self_verify_result=self_verify_result,
     )
     return text
+
+
+def _telemetry_log_kwargs(telemetry: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Map compose telemetry dict to news_generation_log fields."""
+    if not isinstance(telemetry, dict):
+        return {}
+    return {
+        "self_verify_run": telemetry.get("self_verify_run"),
+        "self_verify_result": str(telemetry.get("self_verify_result") or "N/A"),
+    }
 
 
 def _set_last_news_picked_index(persisted: Optional[Dict[str, Any]], pick: int) -> None:
@@ -1000,6 +1073,8 @@ async def _llm_digest_narrative_brief(
     expanded: bool = False,
     user_id: str = "",
     world_feed: bool = False,
+    sources: Optional[List[Dict[str, Any]]] = None,
+    telemetry: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Один связный дайджест по заголовкам RSS — без нумерованного списка в чате."""
     if not displayed or not _news_digest_llm_enabled():
@@ -1132,11 +1207,18 @@ async def _llm_digest_narrative_brief(
     except Exception as e:
         logger.debug("news_digest narrative llm: %s", e)
         return ""
-    return (
-        body
-        if _narrative_digest_body_usable(body, displayed=rows, narrative_style=narr_style)
-        else ""
+    if not _narrative_digest_body_usable(body, displayed=rows, narrative_style=narr_style):
+        return ""
+    src = sources if sources is not None else _sources_from_displayed(rows)
+    verified, ver_result = await _apply_news_self_verify(
+        body,
+        user_query=uq or user_query,
+        sources=src,
     )
+    if isinstance(telemetry, dict):
+        telemetry["self_verify_run"] = ver_result != "N/A"
+        telemetry["self_verify_result"] = ver_result
+    return verified
 
 
 def _news_country_iso2(facts: Dict[str, Any]) -> str:
@@ -3864,6 +3946,7 @@ async def compose_news_digest_from_search(
             world_feed=world_feed,
         )
     sources = _sources_from_displayed(shown) or _sources_from_search_results(all_raw)
+    telemetry: Dict[str, Any] = {}
     reply = await _compose_digest_reply(
         shown,
         user_query=text,
@@ -3872,6 +3955,7 @@ async def compose_news_digest_from_search(
         country=filter_co,
         world_feed=world_feed,
         sources=sources,
+        telemetry=telemetry,
     )
     return _return_news_with_telemetry(
         reply,
@@ -3879,6 +3963,7 @@ async def compose_news_digest_from_search(
         query=text,
         sources=sources,
         llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
+        **_telemetry_log_kwargs(telemetry),
     )
 
 
@@ -3908,6 +3993,7 @@ async def _compose_digest_reply(
     country: str = "",
     world_feed: bool = False,
     sources: Optional[List[Dict[str, Any]]] = None,
+    telemetry: Optional[Dict[str, Any]] = None,
 ) -> str:
     from core.telegram_output_guard import format_news_from_displayed
 
@@ -3963,6 +4049,8 @@ async def _compose_digest_reply(
             expanded=expanded,
             user_id=str(user_id or ""),
             world_feed=world_feed,
+            sources=src,
+            telemetry=telemetry,
         )
         if narr:
             out = _finish_narrative_digest(
@@ -4097,6 +4185,8 @@ async def try_news_reply(
                 meta = _dialogue_state(persisted).get("last_news_digest_meta") or {}
                 if isinstance(meta, dict):
                     _wc_exp = bool(meta.get("world_feed"))
+            sources_cached = _sources_from_displayed(cached)
+            telemetry: Dict[str, Any] = {}
             reply = await _compose_digest_reply(
                 cached,
                 user_query=news_q,
@@ -4104,15 +4194,17 @@ async def try_news_reply(
                 user_id=str(user_id or ""),
                 country=news_co,
                 world_feed=_wc_exp,
-                sources=_sources_from_displayed(cached),
+                sources=sources_cached,
+                telemetry=telemetry,
             )
             if reply and str(reply).strip():
                 return _return_news_with_telemetry(
                     reply,
                     user_id=str(user_id or ""),
                     query=text,
-                    sources=_sources_from_displayed(cached),
+                    sources=sources_cached,
                     llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
+                    **_telemetry_log_kwargs(telemetry),
                 )
 
     enrich = (os.getenv("NEWS_ENRICH_SEARCH_SNIPPETS") or "true").strip().lower() in {
@@ -4239,6 +4331,7 @@ async def try_news_reply(
         )
 
     sources: List[Dict[str, Any]] = []
+    telemetry: Dict[str, Any] = {}
     if rss_items:
         shown = await stash_news_digest_context_async(
             persisted,
@@ -4257,6 +4350,7 @@ async def try_news_reply(
             country=news_co,
             world_feed=bool(world_feed),
             sources=sources,
+            telemetry=telemetry,
         )
     elif search_body:
         sources = _sources_from_search_results(search_prefetch_results)
@@ -4279,6 +4373,7 @@ async def try_news_reply(
         query=text,
         sources=sources,
         llm_model=_news_llm_model() if _news_digest_llm_enabled() else "",
+        **_telemetry_log_kwargs(telemetry),
     )
 
 
