@@ -20,6 +20,21 @@
 
 ---
 
+## 2026-06-13 — Turn shortcut gate v3.5.13 (P0: meaning до weather/geo)
+
+**Контекст:** аудит — planner shortcuts (`weather_direct`, geo, pre_llm) шли до TurnMeaning; prod: погода/футер на identity-вопросах.
+
+**Сделано:**
+- `core/turn_shortcut_gate.py` — `prepare_plan_turn_gate`, `planner_shortcut_allowed`, slot bind для weather.
+- `orchestrator.plan()` — gate всех direct shortcuts; inject early meaning в `pre_ctx`.
+- `turn_meaning` — structural referent user/agent до substantive_question.
+- `turn_reconcile` — skip повторного structural если `turn_meaning` уже в context.
+- VERSION → 3.5.13.
+
+**Verify:** `pytest tests/test_turn_shortcut_gate.py tests/test_turn_meaning.py tests/test_prod_thread_wratmak.py -q`; `release_guard --smoke`.
+
+---
+
 ## 2026-06-13 — TurnMeaning v3.5.12 (смысл хода + judge bypass)
 
 **Контекст:** аудит — thread judge обходился из-за `_turn_state_collapsed` в plan(); «слова вместо смысла» на referent (agent vs world).

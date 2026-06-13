@@ -290,9 +290,14 @@ def apply_discourse_and_collapse_sync(
     if persisted is not None:
         hydrate_session_task(ctx, persisted)
 
-    meaning = resolve_turn_meaning_structural(user_text, ctx)
-    ctx = apply_turn_meaning_to_context(ctx, meaning)
-    _merge_routing_hint(ctx, routing_hint_for_meaning(meaning.to_dict()))
+    if not ctx.get("turn_meaning"):
+        meaning = resolve_turn_meaning_structural(user_text, ctx)
+        ctx = apply_turn_meaning_to_context(ctx, meaning)
+        _merge_routing_hint(ctx, routing_hint_for_meaning(meaning.to_dict()))
+    elif not str(ctx.get("routing_prefs_hint") or "").strip():
+        tm = ctx.get("turn_meaning")
+        if isinstance(tm, dict):
+            _merge_routing_hint(ctx, routing_hint_for_meaning(tm))
 
     text, ctx = apply_discourse_to_context(user_text, ctx)
     reconciled, mutated = reconcile_turn_state(text, ctx, persisted=persisted)

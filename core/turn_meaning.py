@@ -68,6 +68,43 @@ def _recent_dialogue_nonempty(context: Optional[Dict[str, Any]]) -> bool:
     return isinstance(rd, list) and len(rd) >= 2
 
 
+def _structural_referent_from_text(user_text: str) -> tuple[str, str]:
+    """Structural referent user/agent из существующих identity-маркеров."""
+    raw = (user_text or "").strip()
+    if not raw:
+        return "", ""
+    try:
+        from core.user_facts import plain_text_requests_user_facts_identity
+
+        if plain_text_requests_user_facts_identity(raw):
+            return REFERENT_USER, "user_facts_identity"
+    except Exception as e:
+        logger.debug("structural referent user: %s", e)
+    try:
+        from core.user_facts import _BOT_NAME_QUESTION_RE
+
+        if _BOT_NAME_QUESTION_RE.search(raw):
+            return REFERENT_AGENT, "bot_name_question"
+    except Exception as e:
+        logger.debug("structural referent agent name: %s", e)
+    low = raw.lower()
+    if "?" in raw or low.startswith(
+        ("какие ", "что ", "где ", "когда ", "почему ", "зачем ", "кто ", "как ")
+    ):
+        agent_markers = (
+            " у тебя",
+            " тебе ",
+            " тебя ",
+            " ты ",
+            "ты ",
+            " your ",
+            " you ",
+        )
+        if any(m in f" {low} " for m in agent_markers):
+            return REFERENT_AGENT, "second_person_question"
+    return "", ""
+
+
 def resolve_turn_meaning_structural(
     user_text: str,
     context: Optional[Dict[str, Any]] = None,
@@ -125,6 +162,22 @@ def resolve_turn_meaning_structural(
                     confidence=0.9,
                     reason="prior_unsatisfactory",
                 )
+
+        referent, ref_reason = _structural_referent_from_text(raw)
+        if referent:
+            speech = SPEECH_QUESTION if "?" in raw else SPEECH_STATEMENT
+            MONITOR.inc("turn_meaning_structural_total")
+            MONITOR.inc("turn_meaning_branch_total")
+            MONITOR.inc(f"turn_meaning_referent_{referent}_total")
+            return TurnMeaning(
+                speech_act=speech,
+                referent=referent,
+                thread_action=ACTION_BRANCH,
+                inherit_thread=False,
+                source="structural",
+                confidence=0.82,
+                reason=ref_reason,
+            )
 
         if _is_substantive_new_question(raw):
             MONITOR.inc("turn_meaning_structural_total")

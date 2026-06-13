@@ -1429,12 +1429,27 @@ class Orchestrator:
         if user_id and self.behavior_store:
             _persisted_plan = self.behavior_store.load(user_id, group_id)
 
-        if user_id and self.behavior_store:
-            _persisted_plan = self.behavior_store.load(user_id, group_id)
+        _plan_meaning = None
+        _plan_gate_ctx: Dict[str, Any] = {}
+        if user_id and text_stripped and isinstance(_persisted_plan, dict):
+            try:
+                from core.turn_shortcut_gate import prepare_plan_turn_gate
+
+                _plan_meaning, _plan_gate_ctx = prepare_plan_turn_gate(
+                    text_stripped,
+                    str(user_id),
+                    group_id,
+                    _persisted_plan,
+                )
+                if isinstance(input_meta, dict):
+                    input_meta["plan_turn_meaning"] = _plan_meaning.to_dict()
+            except Exception as e:
+                logger.debug("plan_turn_gate: %s", e)
 
         if user_id and text_stripped and not str(text_stripped).lstrip().startswith("/"):
             try:
                 from core.pre_llm_plan import try_pre_llm_direct_plan
+                from core.turn_shortcut_gate import planner_shortcut_allowed
 
                 _pre_llm = try_pre_llm_direct_plan(
                     user_id=str(user_id),
@@ -1443,6 +1458,11 @@ class Orchestrator:
                     persisted=_persisted_plan if isinstance(_persisted_plan, dict) else None,
                     input_meta=input_meta if isinstance(input_meta, dict) else None,
                 )
+                if _pre_llm is not None and not planner_shortcut_allowed(
+                    str(_pre_llm[0] or ""),
+                    _plan_meaning,
+                ):
+                    _pre_llm = None
                 if _pre_llm is not None:
                     _pre_reason, _pre_reply = _pre_llm
                     _tid_pre = (input_meta.get("trace_id") if isinstance(input_meta, dict) else None) or ""
@@ -1623,6 +1643,14 @@ class Orchestrator:
                     meta=input_meta if isinstance(input_meta, dict) else None,
                 )
                 if _loc_reply and str(_loc_reply).strip():
+                    from core.turn_shortcut_gate import planner_shortcut_allowed
+
+                    if not planner_shortcut_allowed(
+                        "telegram_location_direct",
+                        _plan_meaning,
+                    ):
+                        _loc_reply = None
+                if _loc_reply and str(_loc_reply).strip():
                     _tid_loc = (input_meta.get("trace_id") if isinstance(input_meta, dict) else None) or ""
                     record_planner_pulse(
                         intent="geo",
@@ -1668,6 +1696,11 @@ class Orchestrator:
                     meta=input_meta if isinstance(input_meta, dict) else None,
                     persisted=_persisted_plan if user_id else persisted,
                 )
+                if _geo_reply and str(_geo_reply).strip():
+                    from core.turn_shortcut_gate import planner_shortcut_allowed
+
+                    if not planner_shortcut_allowed("geo_nearby", _plan_meaning):
+                        _geo_reply = None
                 if _geo_reply and str(_geo_reply).strip():
                     _tid_g = (input_meta.get("trace_id") if isinstance(input_meta, dict) else None) or ""
                     record_planner_pulse(
@@ -1717,6 +1750,7 @@ class Orchestrator:
                     if isinstance(_persisted_wx, dict)
                     else None
                 )
+                _pre_lane = None
                 try:
                     from core.intent_heuristics import detect_pre_llm_shortcut
 
@@ -1750,6 +1784,26 @@ class Orchestrator:
                     user_id=str(user_id),
                     group_id=group_id,
                 )
+                if _wx_reply and str(_wx_reply).strip():
+                    from core.turn_shortcut_gate import (
+                        planner_shortcut_allowed,
+                        weather_turn_binds_slot,
+                    )
+
+                    _wx_kind = (
+                        "weather_followup"
+                        if _pre_lane == "weather_followup"
+                        else "weather_direct"
+                    )
+                    if not planner_shortcut_allowed(
+                        _wx_kind,
+                        _plan_meaning,
+                        weather_slot_bind=weather_turn_binds_slot(
+                            text_stripped,
+                            _persisted_wx if isinstance(_persisted_wx, dict) else None,
+                        ),
+                    ):
+                        _wx_reply = None
                 if _wx_reply and str(_wx_reply).strip():
                     _tid_w = (input_meta.get("trace_id") if isinstance(input_meta, dict) else None) or ""
                     record_planner_pulse(
@@ -1799,6 +1853,14 @@ class Orchestrator:
                     text_stripped,
                     recent_dialogue=_recent_math,
                 )
+                if _math_ref and str(_math_ref).strip():
+                    from core.turn_shortcut_gate import planner_shortcut_allowed
+
+                    if not planner_shortcut_allowed(
+                        "referential_math_direct",
+                        _plan_meaning,
+                    ):
+                        _math_ref = None
                 if _math_ref and str(_math_ref).strip():
                     _tid_m = (input_meta.get("trace_id") if isinstance(input_meta, dict) else None) or ""
                     record_planner_pulse(
@@ -2154,6 +2216,12 @@ class Orchestrator:
         except Exception as e:
             logger.debug("%s optional failed: %s", 'orchestrator', e, exc_info=True)
         pre_ctx = self._assemble_brain_context(user_id, group_id, persisted=persisted)
+        try:
+            from core.turn_shortcut_gate import inject_plan_meaning_into_context
+
+            inject_plan_meaning_into_context(pre_ctx, _plan_gate_ctx)
+        except Exception as e:
+            logger.debug("inject_plan_meaning: %s", e)
         # Batch continuation hint: если есть неотвеченные пункты и запрос на продолжение
         try:
             from core.batch_continuation import get_pending, is_continuation, build_continuation_hint

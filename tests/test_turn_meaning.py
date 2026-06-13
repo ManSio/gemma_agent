@@ -9,6 +9,7 @@ from core.turn_meaning import (
     ACTION_CORRECT as MEANING_CORRECT,
     REFERENT_AGENT,
     REFERENT_THREAD,
+    REFERENT_USER,
     SPEECH_CORRECTION,
     apply_turn_meaning_to_context,
     resolve_turn_meaning_structural,
@@ -56,6 +57,14 @@ class TurnMeaningStructuralTests(unittest.TestCase):
         )
         res = resolve_discourse("я про другое", ctx)
         self.assertEqual(res.action, ACTION_CORRECT)
+
+    def test_structural_user_referent(self) -> None:
+        meaning = resolve_turn_meaning_structural("как меня зовут?", {})
+        self.assertEqual(meaning.referent, REFERENT_USER)
+
+    def test_structural_agent_referent(self) -> None:
+        meaning = resolve_turn_meaning_structural("какие проблемы у тебя сейчас есть?", {})
+        self.assertEqual(meaning.referent, REFERENT_AGENT)
 
     def test_agent_referent_hint(self) -> None:
         hint = routing_hint_for_meaning(

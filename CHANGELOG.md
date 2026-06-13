@@ -1,3 +1,18 @@
+## [2026-06-13] — v3.5.13: TurnMeaning gates planner shortcuts (weather/geo/pre_llm)
+
+- **Added:** `core/turn_shortcut_gate.py` — structural TurnMeaning до planner shortcuts; блок weather/geo при `referent=agent|user`, correction, weather-on-thread-stay без slot bind.
+- **Wired:** `orchestrator.plan()` — gate `pre_llm`, `weather_direct`, `geo_nearby`, `telegram_location`, `referential_math`; ранний `turn_meaning` в `pre_ctx` без повторного structural.
+- **Added:** structural referent user/agent в `turn_meaning.py` (identity markers + second-person questions).
+- **Env:** `TURN_SHORTCUT_GATE_ENABLED` (default true).
+
+### Verify
+```bash
+python -m pytest tests/test_turn_shortcut_gate.py tests/test_turn_meaning.py tests/test_prod_thread_wratmak.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.12: TurnMeaning + judge bypass fix + ops hardening
 
 - **Added:** `core/turn_meaning.py` — единый verdict хода (speech_act, referent, thread_action) до discourse/collapse; LLM judge на пограничных structural stay и вопросах в активной нити.
