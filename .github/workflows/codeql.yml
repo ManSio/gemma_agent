@@ -26,7 +26,6 @@ jobs:
         with:
           languages: python
           config-file: ./.github/codeql/codeql-config.yml
-          packs: +gemma_agent/python-extensions
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3

@@ -359,9 +359,15 @@ def write_audit_document_md(
         stamp_day=stamp_day,
         exported_at_epoch=exported_at_epoch,
     )
-    safe_hosts = payload.get("hosts") if isinstance(payload.get("hosts"), list) else []
-    safe_labels = payload.get("host_labels") if isinstance(payload.get("host_labels"), list) else list(host_labels)
-    safe_stamp = str(payload.get("stamp_day") or stamp_day or "")[:32]
+    # JSON round-trip: same taint break as write_audit_document_json (CodeQL).
+    safe_payload = json.loads(json.dumps(payload, ensure_ascii=False))
+    safe_hosts = safe_payload.get("hosts") if isinstance(safe_payload.get("hosts"), list) else []
+    safe_labels = (
+        safe_payload.get("host_labels")
+        if isinstance(safe_payload.get("host_labels"), list)
+        else list(host_labels)
+    )
+    safe_stamp = str(safe_payload.get("stamp_day") or stamp_day or "")[:32]
     md = render_audit_counts_md(
         hosts=safe_hosts,
         host_labels=safe_labels,
