@@ -371,8 +371,13 @@ def write_daily_ops_md(
     backfill_note: str = "",
 ) -> None:
     """Write daily ops markdown (counts + latency; no user excerpts)."""
+    pub_hosts = [
+        audit_host_public(h)
+        for h in (hosts if isinstance(hosts, list) else [])
+        if isinstance(h, dict)
+    ]
     md = render_daily_ops_md(
-        hosts=hosts if isinstance(hosts, list) else [],
+        hosts=pub_hosts,
         host_labels=host_labels,
         stamp_day=stamp_day,
         backfill_note=backfill_note,

@@ -11,7 +11,13 @@ import logging
 import os
 import re
 
-from core.regex_safe import collapse_whitespace, safe_re_search
+from core.regex_safe import (
+    cap_regex_input,
+    collapse_whitespace,
+    regex_input_max_len,
+    safe_re_search,
+    safe_re_sub,
+)
 
 # URL и похожие фрагменты вырезаем перед проверкой «есть цифры и +-*/=»
 _URL_LIKE = re.compile(
@@ -28,10 +34,10 @@ _TZ_UTC_GMT_OFFSET = re.compile(
 logger = logging.getLogger(__name__)
 
 def _strip_tz_offsets_for_math_probe(s: str) -> str:
-    s = (s or "").strip()
+    s = cap_regex_input(s, max_len=regex_input_max_len())
     if not s:
         return s
-    s = _TZ_UTC_GMT_OFFSET.sub(" ", s)
+    s = safe_re_sub(_TZ_UTC_GMT_OFFSET, " ", s, max_len=regex_input_max_len())
     return collapse_whitespace(s)
 
 

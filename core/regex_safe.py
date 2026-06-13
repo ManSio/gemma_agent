@@ -43,6 +43,9 @@ def safe_re_search(
 ) -> Optional[Match[str]]:
     """re.search on capped user text."""
     t = cap_regex_input(text, max_len=max_len)
+    cap = max_len if max_len is not None else regex_input_max_len()
+    if len(t) > cap:
+        t = t[:cap]
     if isinstance(pattern, re.Pattern):
         return pattern.search(t)
     return re.search(pattern, t, flags)
@@ -57,6 +60,9 @@ def safe_re_match(
 ) -> Optional[Match[str]]:
     """re.match on capped user text."""
     t = cap_regex_input(text, max_len=max_len)
+    cap = max_len if max_len is not None else regex_input_max_len()
+    if len(t) > cap:
+        t = t[:cap]
     if isinstance(pattern, re.Pattern):
         return pattern.match(t)
     return re.match(pattern, t, flags)
@@ -73,6 +79,9 @@ def safe_re_sub(
 ) -> str:
     """re.sub on capped user text."""
     t = cap_regex_input(text, max_len=max_len)
+    cap = max_len if max_len is not None else regex_input_max_len()
+    if len(t) > cap:
+        t = t[:cap]
     if isinstance(pattern, re.Pattern):
         return pattern.sub(repl, t, count=count)
     return re.sub(pattern, repl, t, count=count, flags=flags)

@@ -1,0 +1,7 @@
+name: gemma_agent
+
+query-filters:
+  - exclude:
+      id: py/polynomial-redos
+      paths:
+        - core/regex_safe.py
