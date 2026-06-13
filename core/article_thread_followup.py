@@ -39,6 +39,34 @@ _SHORT_ARTICLE_FOLLOWUP_CUE_RE = re.compile(
     r"(?i)(?:подробн|что\s+ещ|разверн|развёрн|детальн|слышн|говор|пиш\w|по\s+тем)"
 )
 
+_ARTICLE_OPINION_FOLLOWUP_RE = re.compile(
+    r"(?i)(?:"
+    r"правда\s*\?"
+    r"|правда\s+ли"
+    r"|насколько\s+прав"
+    r"|как\s+ты\s+дума"
+    r"|что\s+дума"
+    r"|ты\s+вер"
+    r"|веришь"
+    r"|можно\s+ли\s+вер"
+    r"|можно\s+довер"
+    r"|согласен"
+    r"|согласн"
+    r"|достовер"
+    r")"
+)
+
+_ARTICLE_CLARIFICATION_RE = re.compile(
+    r"(?i)(?:"
+    r"я\s+про\s+стать"
+    r"|имел\s+в\s+виду\s+стать"
+    r"|имела\s+в\s+виду\s+стать"
+    r"|про\s+статью\s+выше"
+    r"|про\s+эт\w*\s+стать"
+    r"|имел\s+в\s+виду\s+текст"
+    r")"
+)
+
 _THREAD_ENTITY_MARKERS = (
     "мюнхен",
     "munich",
@@ -106,6 +134,37 @@ def looks_like_article_thread_followup(user_text: str) -> bool:
         return True
     low = t.lower()
     if len(low) <= 32 and _SHORT_ARTICLE_FOLLOWUP_CUE_RE.search(low):
+        return True
+    return False
+
+
+def looks_like_article_thread_opinion_followup(user_text: str) -> bool:
+    """Оценка правдивости/достоверности статьи — brain, не search shortcut."""
+    t = (user_text or "").strip()
+    if not t or len(t) > 160:
+        return False
+    return bool(_ARTICLE_OPINION_FOLLOWUP_RE.search(t))
+
+
+def looks_like_article_thread_clarification(user_text: str) -> bool:
+    """Уточнение «я про статью» — brain, не search shortcut."""
+    t = (user_text or "").strip()
+    if not t or len(t) > 120:
+        return False
+    return bool(_ARTICLE_CLARIFICATION_RE.search(t))
+
+
+def article_thread_brain_followup_active(
+    user_text: str,
+    recent_dialogue: Any = None,
+    persisted: Optional[Dict[str, Any]] = None,
+) -> bool:
+    """Follow-up по статье, который должен идти в brain с ARTICLE_THREAD hint."""
+    if not article_thread_context_active(recent_dialogue, persisted):
+        return False
+    if looks_like_article_thread_opinion_followup(user_text):
+        return True
+    if looks_like_article_thread_clarification(user_text):
         return True
     return False
 
@@ -433,16 +492,12 @@ def should_handle_article_thread_followup(
     recent_dialogue: Any = None,
     persisted: Optional[Dict[str, Any]] = None,
 ) -> bool:
+    """Search follow-up («что ещё известно») — не opinion/clarify."""
     if not article_thread_context_active(recent_dialogue, persisted):
         return False
-    if looks_like_article_thread_followup(user_text):
-        return True
-    try:
-        from core.dialogue_slots import user_refers_to_article_thread
-
-        return user_refers_to_article_thread(user_text, recent_dialogue)
-    except Exception:
+    if article_thread_brain_followup_active(user_text, recent_dialogue, persisted):
         return False
+    return looks_like_article_thread_followup(user_text)
 
 
 async def try_article_thread_followup_reply(

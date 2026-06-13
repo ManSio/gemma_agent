@@ -733,7 +733,10 @@ def detect_pre_llm_shortcut(
         if slot_ctx.force_weather:
             return "weather_followup"
         if slot_ctx.kind == "article_thread" or slot_ctx.suppress_image:
-            return "article_thread"
+            from core.article_thread_followup import should_handle_article_thread_followup
+
+            if should_handle_article_thread_followup(t, recent_dialogue, persisted):
+                return "article_thread"
     except Exception as e:
         logger.debug("detect_pre_llm_shortcut slots: %s", e)
     try:

@@ -1,3 +1,15 @@
+## [2026-06-13] — v3.5.21: article_thread opinion/clarify (no search fallback)
+
+- **Fix:** «как ты думаешь правда?» / «я про статью» после paste — brain + slot hint, не search `__fallback__`.
+- **Split:** search follow-up (`что ещё известно`) vs opinion/clarify brain follow-up.
+
+### Verify
+```bash
+python -m pytest tests/test_article_thread_followup.py tests/test_dialogue_slots.py -q
+```
+
+---
+
 ## [2026-06-13] — v3.5.20: hot_path slim shared guards
 
 - **Fix:** `brain_hot_path_slim_eligible` now rejects thread URLs (`urls_chron`), Telegram reply threads, and document intake (same as chat_context_slim).

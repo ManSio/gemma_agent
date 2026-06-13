@@ -34,6 +34,18 @@ def _article_accepts_turn(
     """Слот статьи — пока реплика в нити статьи или follow-up по paste."""
     from core.dialogue_slots import user_refers_to_article_thread
 
+    try:
+        from core.article_thread_followup import (
+            looks_like_article_thread_clarification,
+            looks_like_article_thread_opinion_followup,
+        )
+
+        if looks_like_article_thread_clarification(user_text):
+            return True
+        if looks_like_article_thread_opinion_followup(user_text):
+            return True
+    except Exception as e:
+        logger.debug("slot_registry article opinion/clarify: %s", e)
     if user_refers_to_article_thread(user_text, recent_dialogue):
         return True
     low = (user_text or "").strip().lower()

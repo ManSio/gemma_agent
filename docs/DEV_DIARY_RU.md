@@ -20,6 +20,16 @@
 
 ---
 
+## 2026-06-13 — v3.5.21: article_thread opinion/clarify follow-ups
+
+**Контекст:** после paste статьи «как ты думаешь правда?» → философия; «я про статью» → search fallback вместо brain.
+
+**Сделано:** opinion/clarify patterns; search follow-up отделён от brain; slot не сбрасывается на opinion; ARTICLE_THREAD_OPINION/CLARIFY hints.
+
+**Verify:** `pytest tests/test_article_thread_followup.py tests/test_dialogue_slots.py`.
+
+---
+
 ## 2026-06-13 — v3.5.20: hot_path slim shared guards
 
 **Сделано:** `_brain_slim_shared_rejects` — общие предикаты для hot_path и chat_context_slim. Fix: hot_path не отключался при `urls_chron`, `telegram_reply_context`, `document_intake`. Симметрия operator/ephemeral для chat_context_slim.

@@ -9,7 +9,9 @@ from core.article_thread_followup import (
     build_thread_search_query,
     extract_article_thread_subject,
     format_article_thread_followup_from_items,
+    looks_like_article_thread_clarification,
     looks_like_article_thread_followup,
+    looks_like_article_thread_opinion_followup,
     looks_like_news_digest_leak,
     sanitize_article_thread_direct_reply,
     should_handle_article_thread_followup,
@@ -84,6 +86,7 @@ class ArticleThreadFollowupTests(unittest.TestCase):
         ]
         self.assertTrue(user_refers_to_article_thread("Что ещё известно", dlg))
         self.assertTrue(should_handle_article_thread_followup("Что ещё известно", dlg))
+        self.assertFalse(should_handle_article_thread_followup("я про статью", dlg))
 
     def test_extract_subject_from_paste(self) -> None:
         paste = (
@@ -361,6 +364,56 @@ class ArticleThreadFollowupTests(unittest.TestCase):
             )
         self.assertIsNotNone(out)
         self.assertIn("мало нового", (out or "").lower())
+
+    def test_opinion_followup_detected(self) -> None:
+        self.assertTrue(looks_like_article_thread_opinion_followup("как ты думаешь правда?"))
+        self.assertTrue(looks_like_article_thread_opinion_followup("правда ли это?"))
+        self.assertFalse(looks_like_article_thread_opinion_followup("расскажи анекдот"))
+
+    def test_clarification_detected(self) -> None:
+        self.assertTrue(looks_like_article_thread_clarification("я про статью"))
+        self.assertTrue(looks_like_article_thread_clarification("Я про статью"))
+
+    def test_opinion_and_clarify_do_not_trigger_search_followup(self) -> None:
+        paste = (
+            "МИД Украины прокомментировал раскрытие данных о биолабораториях США в стране. "
+            + ("Все лаборатории связаны с гражданской деятельностью. " * 8)
+        )
+        dlg = [
+            {"role": "user", "text": paste},
+            {"role": "assistant", "text": "МИД Украины опровергло военное назначение лабораторий."},
+        ]
+        for phrase in ("как ты думаешь правда?", "я про статью"):
+            self.assertFalse(
+                should_handle_article_thread_followup(phrase, dlg),
+                msg=phrase,
+            )
+
+    def test_search_followup_still_handles(self) -> None:
+        paste = "МИД Украины прокомментировал биолаборатории. " * 10
+        dlg = [
+            {"role": "user", "text": paste},
+            {"role": "assistant", "text": "Краткий пересказ."},
+        ]
+        self.assertTrue(should_handle_article_thread_followup("что ещё известно", dlg))
+
+    def test_article_slot_accepts_opinion_followup(self) -> None:
+        from core.slot_registry import slot_accepts_turn, SLOT_ARTICLE_THREAD
+
+        paste = "МИД Украины прокомментировал биолаборатории. " * 10
+        dlg = [
+            {"role": "user", "text": paste},
+            {"role": "assistant", "text": "Краткий пересказ."},
+        ]
+        rec = {"recent_messages": dlg}
+        self.assertTrue(
+            slot_accepts_turn(
+                SLOT_ARTICLE_THREAD,
+                "как ты думаешь правда?",
+                dlg,
+                persisted=rec,
+            )
+        )
 
 
 if __name__ == "__main__":

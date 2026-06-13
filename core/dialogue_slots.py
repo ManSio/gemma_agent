@@ -349,7 +349,38 @@ def slot_external_hint(
     parts: List[str] = []
     slot = get_active_slot(persisted) if persisted else None
     art_topic = ""
-    if slot and str(slot.get("kind")) == SLOT_ARTICLE_THREAD:
+    try:
+        from core.article_thread_followup import (
+            article_thread_context_active,
+            looks_like_article_thread_clarification,
+            looks_like_article_thread_opinion_followup,
+        )
+    except Exception:
+        article_thread_context_active = None  # type: ignore
+        looks_like_article_thread_clarification = None  # type: ignore
+        looks_like_article_thread_opinion_followup = None  # type: ignore
+
+    if callable(looks_like_article_thread_opinion_followup) and looks_like_article_thread_opinion_followup(
+        user_text
+    ) and (
+        (slot and str(slot.get("kind")) == SLOT_ARTICLE_THREAD)
+        or (callable(article_thread_context_active) and article_thread_context_active(recent_dialogue, persisted))
+    ):
+        parts.append(
+            "ARTICLE_THREAD_OPINION: пользователь спрашивает о достоверности присланной/обсуждаемой статьи; "
+            "ответь по сути материала из recent_messages (что заявлено официально, что спорно, где пробелы); "
+            "не уходи в абстрактную философию про «истину вообще»."
+        )
+        art_topic = _article_thread_topic_line(recent_dialogue, persisted)
+    elif callable(looks_like_article_thread_clarification) and looks_like_article_thread_clarification(
+        user_text
+    ):
+        parts.append(
+            "ARTICLE_THREAD_CLARIFY: пользователь уточняет, что речь о статье из диалога; "
+            "ответь на его предыдущий вопрос, опираясь на пересказ и текст статьи в recent_messages."
+        )
+        art_topic = _article_thread_topic_line(recent_dialogue, persisted)
+    elif slot and str(slot.get("kind")) == SLOT_ARTICLE_THREAD:
         parts.append(
             "ARTICLE_THREAD: продолжай обсуждение текста статьи из recent_messages; "
             "не описывай картинку репоста; не проси прислать jpg, если текст уже был в чате."
