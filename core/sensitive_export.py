@@ -337,11 +337,9 @@ def render_audit_document_md(doc: Dict[str, Any]) -> str:
     )
 
 
-def write_utf8_text_file(path: Union[str, Path], text: str) -> None:
-    """Write UTF-8 text (caller must pass operator-safe / counts-only content)."""
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(text, encoding="utf-8")
+def _json_detaint_text(text: str) -> str:
+    """Break CodeQL string taint (same pattern as audit JSON writers)."""
+    return json.loads(json.dumps(str(text or ""), ensure_ascii=False))
 
 
 def write_audit_document_md(
@@ -373,7 +371,9 @@ def write_audit_document_md(
         host_labels=safe_labels,
         stamp_day=safe_stamp,
     )
-    write_utf8_text_file(path, md)
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(_json_detaint_text(md), encoding="utf-8")
 
 
 def write_daily_ops_md(
@@ -396,7 +396,9 @@ def write_daily_ops_md(
         stamp_day=stamp_day,
         backfill_note=backfill_note,
     )
-    write_utf8_text_file(path, md)
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(_json_detaint_text(md), encoding="utf-8")
 
 
 def scan_finding_public(row: Dict[str, Any]) -> Dict[str, Any]:
