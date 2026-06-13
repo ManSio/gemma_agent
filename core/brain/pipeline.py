@@ -695,6 +695,28 @@ async def call_brain(user_text: str, context: Dict[str, Any], system_prompt: str
         logger.debug("news item short circuit: %s", e)
 
     try:
+        from core.phantom_article_guard import try_phantom_article_guard_reply
+
+        _phantom = try_phantom_article_guard_reply(
+            user_text or "",
+            recent_dialogue=recent_dialogue,
+        )
+        if _phantom and str(_phantom).strip():
+            MONITOR.inc("brain_phantom_article_guard_total")
+            context["phantom_article_guard_short_circuit"] = True
+            reply = str(_phantom).strip()
+            try:
+                reply = _persona_apply_polished(user_id, reply)
+                if not skip_memory_writes:
+                    await get_memory().on_after_response(user_id, reply)
+            except Exception as e:
+                logger.debug("phantom_article_guard short circuit: %s", e)
+            if _safe_text(reply):
+                return reply
+    except Exception as e:
+        logger.debug("phantom_article_guard short circuit: %s", e)
+
+    try:
         from core.article_thread_followup import try_article_thread_followup_reply
 
         _art_follow = await try_article_thread_followup_reply(

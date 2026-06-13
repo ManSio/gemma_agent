@@ -20,6 +20,18 @@
 
 ---
 
+## 2026-06-13 — v3.5.22: phantom article guard + clarify expects_reply (P0)
+
+**Контекст:** prod log — «Прочитай статью про ИИ 2026» → clarify без paste → «А какие у них реальные проблемы?» → generic HR-галлюцинация; повтор после коррекции. Root: `expects_reply=False` на коротком clarify без `?` → discourse `no_expects_reply` → referent=world; LLM без текста статьи.
+
+**Сделано:** `core/phantom_article_guard.py` — short-circuit в pipeline до article_thread; `infer_assistant_expects_reply` — regex на «уточните/пришлите текст/ссылку». Flag `PHANTOM_ARTICLE_GUARD_ENABLED`.
+
+**Verify:** `pytest tests/test_phantom_article_guard.py tests/test_prompt_routing.py::test_infer_assistant_expects_reply`.
+
+**Не гоняли:** full suite, prod deploy (pending).
+
+---
+
 ## 2026-06-13 — v3.5.21: article_thread opinion/clarify follow-ups
 
 **Контекст:** после paste статьи «как ты думаешь правда?» → философия; «я про статью» → search fallback вместо brain.

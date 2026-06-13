@@ -47,6 +47,10 @@ def test_infer_assistant_expects_reply():
     assert infer_assistant_expects_reply("x" * 430)
     assert infer_assistant_expects_reply("x" * 250, task_tier="deep", last_intent="general")
     assert infer_assistant_expects_reply("x" * 170, last_intent="explain")
+    assert infer_assistant_expects_reply(
+        "Пожалуйста, уточните, что именно вы хотите обсудить из статьи про ИИ.",
+        last_intent="explain",
+    )
 
 
 def test_private_dm_chitchat_continuity_override():

@@ -134,7 +134,15 @@ def infer_assistant_expects_reply(
     tier = (task_tier or "").strip().lower()
     intent = (last_intent or "").strip().lower()
     tail = t[-400:] if len(t) > 400 else t
+    low_tail = tail.lower()
     if "?" in tail:
+        return True
+    if re.search(
+        r"(?i)(?:уточн\w+|пришл\w*\s+(?:текст|ссылк|стать)|"
+        r"подел\w*\s+(?:текст|ссылк|стать)|встав\w+|отправ\w+\s+(?:текст|ссылк)|"
+        r"please\s+(?:clarify|send|share))",
+        low_tail,
+    ):
         return True
     heavy_intent = intent in {"reasoning", "logic", "explain", "teacher", "test"}
     deep_tier = tier in {"deep", "nested"}

@@ -1,3 +1,16 @@
+## [2026-06-13] — v3.5.22: phantom article guard + clarify expects_reply (P0)
+
+- **Fix:** «Прочитай статью…» без paste → эллипсис «у них/проблемы» — честный ответ, не LLM-галлюцинация (`phantom_article_guard`).
+- **Fix:** короткий clarify без `?` («уточните…») → `infer_assistant_expects_reply=True` → discourse continuation держит нить.
+- **Env:** `PHANTOM_ARTICLE_GUARD_ENABLED` (default true).
+
+### Verify
+```bash
+python -m pytest tests/test_phantom_article_guard.py tests/test_prompt_routing.py::test_infer_assistant_expects_reply -q
+```
+
+---
+
 ## [2026-06-13] — v3.5.21: article_thread opinion/clarify (no search fallback)
 
 - **Fix:** «как ты думаешь правда?» / «я про статью» после paste — brain + slot hint, не search `__fallback__`.
