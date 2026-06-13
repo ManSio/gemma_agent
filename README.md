@@ -14,7 +14,7 @@ Uses **[OpenRouter](https://openrouter.ai/)** (you choose the model). This repos
 |---------------|---------------|
 | On-device LLM only | Cloud models via **OpenRouter** (GPT, Claude, Gemini, …) |
 | LangChain-style agent framework | **Telegram product** with plugins and ops tooling |
-| Demo without tests | **2580+** pytest cases, CI on every PR — see [CI.md](docs/CI.md) |
+| Demo without tests | **2779+** pytest cases, CI on every PR — see [CI.md](docs/CI.md) |
 
 **In one line:** a production-minded **Telegram assistant** (default) with an optional power-agent mode.
 
@@ -22,9 +22,9 @@ Uses **[OpenRouter](https://openrouter.ai/)** (you choose the model). This repos
 
 <p align="center">
   <a href="https://github.com/ManSio/gemma_agent/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ManSio/gemma_agent/ci.yml?branch=master&label=CI&style=for-the-badge" alt="CI"></a>
-  <a href="docs/CI.md"><img src="https://img.shields.io/badge/tests-2580%2B-brightgreen?style=for-the-badge" alt="Tests"></a>
+  <a href="docs/CI.md"><img src="https://img.shields.io/badge/tests-2779%2B-brightgreen?style=for-the-badge" alt="Tests"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge" alt="License"></a>
-  <a href="VERSION"><img src="https://img.shields.io/badge/version-3.4.0-orange?style=for-the-badge" alt="Version"></a>
+  <a href="VERSION"><img src="https://img.shields.io/badge/version-3.5.16-orange?style=for-the-badge" alt="Version"></a>
 </p>
 
 <p align="center">
@@ -49,7 +49,7 @@ Uses **[OpenRouter](https://openrouter.ai/)** (you choose the model). This repos
 
 ```bash
 python scripts/print_repo_stats.py          # verify test count & CI files
-python -m pytest tests/ --collect-only -q   # 2580+ collected
+python -m pytest tests/ --collect-only -q   # 2779+ collected
 ```
 
 ---
@@ -59,7 +59,7 @@ python -m pytest tests/ --collect-only -q   # 2580+ collected
 | | |
 |---|---|
 | **Users** | 3–8 trusted people with admin approval |
-| **Tests** | **410** files · **2580+** cases — [`tests/`](tests/) · [`pytest.ini`](pytest.ini) |
+| **Tests** | **440+** files · **2779+** cases — [`tests/`](tests/) · [`pytest.ini`](pytest.ini) |
 | **CI** | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — every push/PR: ruff + smoke + full pytest + privacy |
 | **Modules** | 19 plugins (public build) |
 | **Deploy** | Native systemd, Docker Compose, or panel scripts |
@@ -77,7 +77,7 @@ python -m pytest tests/ --collect-only -q   # 2580+ collected
 | STM / MTM / LTM? | Labels for **three storage layers** — `behavior_store`, compactor, Mem0 ([MEMORY.md](docs/MEMORY.md)). |
 | Self-healing? | Event bus healers + safe mode — **not** only `try/except` ([SELF_HEALING.md](docs/SELF_HEALING.md), `core/event_healers.py`). |
 | Agent vs assistant? | **Assistant by default.** Plan→tool→verify needs `GOAL_RUNNER_ENABLED=true` ([HONEST_POSITIONING.md](docs/HONEST_POSITIONING.md)). |
-| Strongest asset? | **Engineering discipline** — 2580+ tests, CI, acceptance gates (verifiable below). |
+| Strongest asset? | **Engineering discipline** — 2779+ tests, CI, acceptance gates (verifiable below). |
 | MetaGPT / OpenHands tier? | **No** — default **6/10**, power mode **7.5/10** agent-ness ([HONEST_POSITIONING.md](docs/HONEST_POSITIONING.md)). |
 
 ---
@@ -137,7 +137,7 @@ SearXNG in Docker (optional): `cd infra/searxng && docker compose up -d`
 ```bash
 pip install -r requirements-dev.txt
 python scripts/print_repo_stats.py            # test file count, workflows
-python -m pytest tests/ -q                    # full suite (2580+)
+python -m pytest tests/ -q                    # full suite (2779+)
 python scripts/release_guard.py --smoke       # = CI smoke job (~1 min)
 python scripts/release_guard.py               # smoke + 90 anti-regression tests
 ```

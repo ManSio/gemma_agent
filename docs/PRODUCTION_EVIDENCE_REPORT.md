@@ -35,7 +35,7 @@ This is a **presentation-style summary** of measured production data from a priv
 
 | You can verify without prod SSH | You must trust the operator (or skip prod claims) |
 |---------------------------------|---------------------------------------------------|
-| 2580+ pytest, CI, `release_guard` in git | Per-turn rows in private `turns.jsonl` |
+| 2779+ pytest, CI, `release_guard` in git | Per-turn rows in private `turns.jsonl` |
 | Scripts named in this report exist in repo | Exact €/month on operator VPS |
 | Commit history of metric-driven fixes | Subjective “users felt pain” on a given day |
 | §10 caveats (median ≠ UX, CI ≠ TG) | Independent third-party audit |
@@ -48,7 +48,7 @@ This is a **presentation-style summary** of measured production data from a priv
 
 | Question | Answer | Evidence |
 |----------|--------|----------|
-| Are there real tests? | **Yes — 2580+** in public repo, CI on every PR | [`tests/`](../tests/), [CI.md](CI.md) |
+| Are there real tests? | **Yes — 2779+** in public repo, CI on every PR | [`tests/`](../tests/), [CI.md](CI.md) |
 | Is prod stable now? | **Yes** — 0 runtime errors (14d window, 03–04 Jun) | DAILY_OPS archives (private ops) |
 | Did tokens shrink? | **Yes — −70%** on `brain_first` prompt (median) | METRICS_PERIODS phase table |
 | Is latency fixed? | **Partially** — VPS p90 **107s → ~20s** (window-dependent); chat still **~13–15s** p50 | METRICS_FULL §4.1–4.2 |
@@ -88,7 +88,7 @@ timeline
 | VPS turn latency p90 (14d) | **107.1 s** (31 May) | **20.1 s** (03 Jun) | **−81%** |
 | Runtime errors (14d, both hosts) | **56 + 16** (25 May LAN+VPS) | **0 + 0** (03 Jun) | **→ 0** |
 | pytest collected (private prod) | **2 184** (26 May) | **2 714** (03 Jun) | **+24.3%** |
-| Public export tests | — | **2 580+** (410 files) | verifiable in this repo |
+| Public export tests | — | **2779+** (440+ files) | verifiable in this repo |
 
 ---
 
@@ -201,8 +201,8 @@ python -m pytest tests/ --collect-only -q
 
 | Layer | Public repo | What it proves |
 |-------|-------------|----------------|
-| **Collected cases** | **2 578+** | Breadth — parsers, routing, guards, plugins |
-| **Test files** | **410** × `test_*.py` | Visible in tree + `pytest.ini` |
+| **Collected cases** | **2779+** | Breadth — parsers, routing, guards, plugins |
+| **Test files** | **440+** × `test_*.py` | Visible in tree + `pytest.ini` |
 | **CI** | `.github/workflows/ci.yml` | ruff → smoke → full pytest → privacy on every PR |
 | **release_guard** | **90** anti-regression files | Product behavior, not config smoke |
 | **Private prod snapshot** | **2 714** (03 Jun) | Full fork before export trim |
@@ -294,7 +294,7 @@ Schema: `config/metrics_period_registry.json`.
 |-------|---------|
 | “Sub-second chat” | p50 turns **~13–15 s** on VPS in June — honest |
 | “26k every request” | Peak observation; median was **~10k**, now **~3k** on slim |
-| “2580 tests = 100% TG coverage” | Mixed suite; prod turns + ACC close the gap |
+| “2779 tests = 100% TG coverage” | Mixed suite; prod turns + ACC close the gap |
 | “On-device LLM runtime” | **OpenRouter** cloud models |
 | “Enterprise SaaS” | **3–8 users**, family bot |
 

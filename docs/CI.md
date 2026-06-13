@@ -48,8 +48,8 @@ find tests -name 'test_*.py' | wc -l          # file count
 
 | Metric | Typical value |
 |--------|---------------|
-| Test files | **430** (`tests/test_*.py`) |
-| Collected cases | **2718+** |
+| Test files | **440+** (`tests/test_*.py`) |
+| Collected cases | **2779+** |
 | Anti-regression subset | **90** files in `release_guard.py` |
 | Config | [`pytest.ini`](../pytest.ini), [`pyproject.toml`](../pyproject.toml) |
 

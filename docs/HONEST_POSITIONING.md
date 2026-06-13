@@ -13,7 +13,7 @@ What this project is, what it is not, and known limits — for humans and tools.
 |-----------|------|---------------|
 | **Production use** | 2026-05-02 → ongoing | Real Telegram bot, 3–8 users — see [PRODUCTION_EVIDENCE_REPORT.md](PRODUCTION_EVIDENCE_REPORT.md) |
 | **Public export** | **2026-06-06** (`Public release: Gemma Agent v3.4.0`) | First commit on public GitHub — **not** “built yesterday” |
-| **Private fork** | Years before export | Wide `.env` (~963 keys), large `orchestrator.py` (~4256 lines) = lab heritage |
+| **Private fork** | Years before export | Wide `.env` (~990 keys), large `orchestrator.py` (~4400 lines) = lab heritage |
 
 ---
 
@@ -71,9 +71,9 @@ Maintainer rubric only — **not** third-party certification.
 
 | Verifiable in git (no prod access) | Trust on word (privacy) |
 |------------------------------------|-------------------------|
-| 2580+ pytest, CI, `release_guard` | `turns.jsonl` / `llm_usage.jsonl` raw rows |
-| `wc -l core/orchestrator.py` (~4256) | Exact €/month on operator VPS |
-| `grep -c '=' .env.example` (~963 keys) | “Users felt pain” on a given day |
+| 2779+ pytest, CI, `release_guard` | `turns.jsonl` / `llm_usage.jsonl` raw rows |
+| `wc -l core/orchestrator.py` (~4400) | Exact €/month on operator VPS |
+| `grep -c '=' .env.example` (~990 keys) | “Users felt pain” on a given day |
 | SECURITY.md, CONTRIBUTING.md content | Independent security audit |
 
 **pytest ≠ Telegram:** 20 May 2026 parallel-DM bug shipped with green CI — documented in [PRODUCTION_EVIDENCE_REPORT.md](PRODUCTION_EVIDENCE_REPORT.md) §10.
@@ -135,7 +135,7 @@ Removing OpenRouter and using a weak local model **will** drop perceived quality
 - context budget (`context_budget.py`)
 - memory assembly (`memory_recall_facade.py`, `prompt_pack.py`)
 - guards (`prompt_injection_guard.py`, honest refusal)
-- test-locked behavior (2580+ cases)
+- test-locked behavior (2779+ cases)
 
 Review question: **“How good is orchestration?”** — not **“How smart is Gemma?”**
 
@@ -156,7 +156,7 @@ Enable power mode: `python scripts/apply_power_agent_env.py` — [AGENT_LOOP.md]
 
 ## 6. Test count ≠ test quality
 
-**2580+** cases is verifiable (`python scripts/print_repo_stats.py`). Suite is **mixed**:
+**2779+** cases is verifiable (`python scripts/print_repo_stats.py`). Suite is **mixed**:
 
 | Layer | Examples | Locks |
 |-------|----------|-------|
@@ -177,8 +177,8 @@ Details: [developer-guide/testing.md](developer-guide/testing.md) · [ACCEPTANCE
 
 | Fact | Value |
 |------|-------|
-| `core/orchestrator.py` | ~4250 lines |
-| `.env.example` keys | ~960 (lab heritage; subset used in prod) |
+| `core/orchestrator.py` | ~4400 lines |
+| `.env.example` keys | ~990 (lab heritage; subset used in prod) |
 | Mitigation | plugins, tests on routing, narrow default path |
 
 We do **not** claim a small elegant core. Claim: **long-lived tested monolith** exported to public with scope trimmed.

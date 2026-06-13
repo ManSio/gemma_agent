@@ -7,7 +7,7 @@ Gemma Agent is a **personal agent platform** (Telegram) with **two modes:**
 | **Assistant** | **yes** | route → LLM → tools → reply |
 | **Power Agent** | no | goal runner + verify + quality loop |
 
-Public build: **19 plugins**, **2580+** pytest cases (410 files). Intelligence via **OpenRouter** — this repo is the **orchestrator**.
+Public build: **19 plugins**, **2779+** pytest cases (440+ files). Intelligence via **OpenRouter** — this repo is the **orchestrator**.
 
 **Scope:** 3–8 trusted users. Not multi-tenant SaaS. Not MetaGPT / OpenHands.
 
@@ -127,8 +127,8 @@ Runbook: `docs/CONTEXT_BUDGET_GUIDE_RU.md`
 
 | Fact | Note |
 |------|------|
-| `core/orchestrator.py` | ~4250 lines — long-lived monolith |
-| `.env.example` | ~960 keys — family-lab heritage; prod uses subset |
+| `core/orchestrator.py` | ~4400 lines — long-lived monolith |
+| `.env.example` | ~990 keys — family-lab heritage; prod uses subset |
 | Mitigation | Plugins decouple features; default path stays narrow; routing tests |
 
 We do not claim microservice elegance. Claim: **tested plugin-bound monolith**.

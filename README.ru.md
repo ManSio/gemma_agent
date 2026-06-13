@@ -14,7 +14,7 @@
 |--------------|-----------|
 | Только локальная LLM | Модели через **OpenRouter** |
 | Framework как LangChain | **Telegram-продукт** с плагинами |
-| Демо без тестов | **2580+** pytest, CI — [CI.md](docs/CI.md) |
+| Демо без тестов | **2779+** pytest, CI — [CI.md](docs/CI.md) |
 
 **Коротко:** ассистент в Telegram (по умолчанию), power-agent — opt-in.
 
@@ -22,9 +22,9 @@
 
 <p align="center">
   <a href="https://github.com/ManSio/gemma_agent/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ManSio/gemma_agent/ci.yml?branch=master&label=CI&style=for-the-badge" alt="CI"></a>
-  <a href="docs/CI.md"><img src="https://img.shields.io/badge/тесты-2580%2B-brightgreen?style=for-the-badge" alt="Tests"></a>
+  <a href="docs/CI.md"><img src="https://img.shields.io/badge/тесты-2779%2B-brightgreen?style=for-the-badge" alt="Tests"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/лицензия-MIT-blue?style=for-the-badge" alt="License"></a>
-  <a href="VERSION"><img src="https://img.shields.io/badge/версия-3.4.0-orange?style=for-the-badge" alt="Version"></a>
+  <a href="VERSION"><img src="https://img.shields.io/badge/версия-3.5.16-orange?style=for-the-badge" alt="Version"></a>
 </p>
 
 <p align="center">
@@ -56,7 +56,7 @@ python -m pytest tests/ --collect-only -q
 | | |
 |---|---|
 | **Аудитория** | 3–8 доверенных пользователей с одобрением админа |
-| **Тесты** | **410** файлов · **2580+** кейсов — [`tests/`](tests/) · [`pytest.ini`](pytest.ini) |
+| **Тесты** | **440+** файлов · **2779+** кейсов — [`tests/`](tests/) · [`pytest.ini`](pytest.ini) |
 | **CI** | [ci.yml](.github/workflows/ci.yml) — каждый PR: ruff + smoke + pytest + privacy |
 | **Модули** | 19 плагинов (публичная сборка) |
 | **Деплой** | systemd, Docker Compose, `gemma_panel.sh` |

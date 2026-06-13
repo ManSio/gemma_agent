@@ -34,9 +34,18 @@
 
 ---
 
-## 2026-06-13 — outbound guard v3.5.16 + intent/audit glue
+## 2026-06-13 — docs sync: актуальные публичные счётчики
 
-**Контекст:** review P3 — meta на followup, пустой turn_meaning_audit, intent параллельно meaning.
+**Контекст:** AI-превью проекта показало, что README/docs местами сохранили старые счётчики тестов и размер monolith.
+
+**Сделано:**
+- `README.md`, `README.ru.md` — тесты `2779+`, файлы `440+`, версия `3.5.16`.
+- `docs/REPO_MAP.md`, `docs/ARCHITECTURE.md`, `docs/HONEST_POSITIONING.md`, `docs/CI.md`, `docs/PRODUCTION_EVIDENCE_REPORT.md` — синхронизированы с локальной проверкой.
+- `core/orchestrator.py` уточнён до `~4400` строк, `.env.example` до `~990` keys.
+
+**Verify:** `python scripts/print_repo_stats.py`, `python -m pytest tests/ --collect-only -q`, grep по старым счётчикам в основных README/docs.
+
+## 2026-06-13 — outbound guard v3.5.16 + intent/audit glue
 
 **Сделано:**
 - `outbound_thread_guard` — pre_send detect/recover на immediate followup.

@@ -13,7 +13,7 @@ Context: [CHATGPT_PASTE.md](../CHATGPT_PASTE.md) · [HONEST_POSITIONING.md](HONE
 
 | Fact | Evidence in repo |
 |------|------------------|
-| Tests | `tests/` — **430** files, **2718+** cases — [`pytest.ini`](../pytest.ini) |
+| Tests | `tests/` — **440+** files, **2779+** cases — [`pytest.ini`](../pytest.ini) |
 | Honest positioning | [HONEST_POSITIONING.md](HONEST_POSITIONING.md) |
 | Prod metrics (May–Jun) | [PRODUCTION_EVIDENCE_REPORT.md](PRODUCTION_EVIDENCE_REPORT.md) |
 | Cache & latency (ops) | [CACHE_LATENCY_METRICS.md](CACHE_LATENCY_METRICS.md) |
@@ -39,7 +39,7 @@ gemma_agent/
 ├── core/                    # Brain, orchestrator, guards, resilience
 ├── modules/                 # 19 plugins (public build), each has module.json
 ├── config/                  # modules_catalog.json, env fragments
-├── tests/                   # 430 test_*.py files, 2718+ cases
+├── tests/                   # 440+ test_*.py files, 2779+ cases
 ├── scripts/                 # bootstrap, panel, release_guard, snapshot_cache_latency
 ├── docs/                    # Full documentation hub
 ├── .github/workflows/       # CI (ci.yml, release-guard.yml)
@@ -87,7 +87,7 @@ Details: [CI.md](CI.md)
 
 | People say | Reality |
 |------------|---------|
-| "No tests" | 2718+ pytest cases in `tests/` |
+| "No tests" | 2779+ pytest cases in `tests/` |
 | "No CI" | `.github/workflows/ci.yml` |
 | "Just a script bot" | 19 plugins, brain pipeline, healers |
 | "Needs local Gemma GPU" | OpenRouter API — any model you choose |
