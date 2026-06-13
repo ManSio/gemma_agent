@@ -337,72 +337,22 @@ def render_audit_document_md(doc: Dict[str, Any]) -> str:
     )
 
 
-def _json_detaint_text(text: str) -> str:
-    """Break CodeQL string taint (same pattern as audit JSON writers)."""
-    return json.loads(json.dumps(str(text or ""), ensure_ascii=False))
-
-
-def _load_counts_payload_from_json_file(path: Path) -> Dict[str, Any]:
-    """Load counts-only payload written by audit JSON export."""
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    return raw if isinstance(raw, dict) else {}
-
-
-def write_audit_document_md(
-    path: Union[str, Path],
-    doc: Dict[str, Any],
-    *,
-    host_labels: Sequence[str] = (),
-    stamp_day: str = "",
-    exported_at_epoch: int = 0,
+def write_audit_counts_md_from_json(
+    md_path: Union[str, Path],
+    json_path: Union[str, Path],
 ) -> None:
-    """Write ops audit markdown (counts only, operator host labels)."""
-    out = Path(path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    tmp_json = out.with_suffix(out.suffix + ".counts.json")
-    write_audit_document_json(
-        tmp_json,
-        doc if isinstance(doc, dict) else {},
-        host_labels=host_labels,
-        stamp_day=stamp_day,
-        exported_at_epoch=exported_at_epoch,
-    )
-    payload = _load_counts_payload_from_json_file(tmp_json)
+    """Render counts-only ops markdown from a prior JSON export file."""
+    data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        data = {}
     md = render_audit_counts_md(
-        hosts=payload.get("hosts") if isinstance(payload.get("hosts"), list) else [],
-        host_labels=payload.get("host_labels") if isinstance(payload.get("host_labels"), list) else list(host_labels),
-        stamp_day=str(payload.get("stamp_day") or stamp_day or "")[:32],
+        hosts=data.get("hosts") if isinstance(data.get("hosts"), list) else [],
+        host_labels=data.get("host_labels") if isinstance(data.get("host_labels"), list) else [],
+        stamp_day=str(data.get("stamp_day") or "")[:32],
     )
-    out.write_text(_json_detaint_text(md), encoding="utf-8")
-    try:
-        tmp_json.unlink(missing_ok=True)
-    except OSError:
-        pass
-
-
-def write_daily_ops_md(
-    path: Union[str, Path],
-    *,
-    hosts: List[Dict[str, Any]],
-    host_labels: Sequence[str] = (),
-    stamp_day: str = "",
-    backfill_note: str = "",
-) -> None:
-    """Write daily ops markdown (counts + latency; no user excerpts)."""
-    pub_hosts = [
-        audit_host_public(h)
-        for h in (hosts if isinstance(hosts, list) else [])
-        if isinstance(h, dict)
-    ]
-    md = render_daily_ops_md(
-        hosts=pub_hosts,
-        host_labels=host_labels,
-        stamp_day=stamp_day,
-        backfill_note=backfill_note,
-    )
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(_json_detaint_text(md), encoding="utf-8")
+    out = Path(md_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(md, encoding="utf-8")
 
 
 def scan_finding_public(row: Dict[str, Any]) -> Dict[str, Any]:

@@ -79,7 +79,7 @@ def _write_digest(
 ) -> None:
     from core.sensitive_export import (
         write_audit_document_json,
-        write_audit_document_md,
+        write_audit_counts_md_from_json,
     )
 
     out_doc = {"ts": datetime.now(timezone.utc).isoformat(), "stamp": stamp, "hosts": hosts}
@@ -94,13 +94,7 @@ def _write_digest(
         stamp_day=stamp,
         exported_at_epoch=epoch,
     )
-    write_audit_document_md(
-        md_path,
-        out_doc,
-        host_labels=labels,
-        stamp_day=stamp,
-        exported_at_epoch=epoch,
-    )
+    write_audit_counts_md_from_json(md_path, json_path)
     print(f"Wrote {json_path}")
     print(f"Wrote {md_path}")
 

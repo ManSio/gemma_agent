@@ -19,7 +19,7 @@ from core.sensitive_export import (
     security_audit_public_report,
     security_audit_stdout_json,
     write_audit_document_json,
-    write_audit_document_md,
+    write_audit_counts_md_from_json,
 )
 
 
@@ -175,13 +175,15 @@ def test_write_audit_document_json_counts_only(tmp_path):
     assert "root" not in json.dumps(loaded)
 
 
-def test_write_audit_document_md(tmp_path):
+def test_write_audit_counts_md_from_json(tmp_path):
     doc = {
         "hosts": [{"turns": {"count": 1}, "archives": {}, "errors": {"count": 0}}],
     }
-    out = tmp_path / "digest.md"
-    write_audit_document_md(out, doc, host_labels=("local",), stamp_day="2026-06-13")
-    text = out.read_text(encoding="utf-8")
+    json_out = tmp_path / "audit.json"
+    md_out = tmp_path / "digest.md"
+    write_audit_document_json(json_out, doc, host_labels=("local",), stamp_day="2026-06-13")
+    write_audit_counts_md_from_json(md_out, json_out)
+    text = md_out.read_text(encoding="utf-8")
     assert "Ops digest" in text
     assert "## local" in text
 

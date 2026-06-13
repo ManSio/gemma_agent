@@ -347,12 +347,13 @@ def main() -> int:
         audit_document_public,
         audit_summary_log_line,
         write_audit_document_json,
-        write_audit_document_md,
+        write_audit_counts_md_from_json,
     )
 
     safe_doc = audit_document_public(out_doc)
     stamp_day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     epoch = int(time.time())
+    json_written: Path | None = None
     if args.json_out:
         p = Path(args.json_out)
         if not p.is_absolute():
@@ -364,6 +365,7 @@ def main() -> int:
             stamp_day=stamp_day,
             exported_at_epoch=epoch,
         )
+        json_written = p
         print(f"Wrote {p}")
     else:
         print(audit_summary_log_line(len(safe_doc.get("hosts") or [])))
@@ -371,13 +373,16 @@ def main() -> int:
         mp = Path(args.md_out)
         if not mp.is_absolute():
             mp = root / mp
-        write_audit_document_md(
-            mp,
-            out_doc,
-            host_labels=(args.host_label,),
-            stamp_day=stamp_day,
-            exported_at_epoch=epoch,
-        )
+        if json_written is None:
+            json_written = mp.with_suffix(mp.suffix + ".counts.json")
+            write_audit_document_json(
+                json_written,
+                out_doc,
+                host_labels=(args.host_label,),
+                stamp_day=stamp_day,
+                exported_at_epoch=epoch,
+            )
+        write_audit_counts_md_from_json(mp, json_written)
         print(f"Wrote {mp}")
     return 0
 
