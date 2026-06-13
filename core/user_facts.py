@@ -221,6 +221,95 @@ FACT_FIELD_LABELS_PROFILE_RU = {
     "pet_dog": "Собака",
 }
 
+_USER_FACTS_IDENTITY_MARKERS = (
+    "как меня зовут",
+    "моё имя",
+    "мое имя",
+    "моё имя?",
+    "мое имя?",
+    "кто я",
+    "что ты обо мне",
+    "что ты знаешь обо мне",
+    "что ты помнишь обо мне",
+    "что запомнил обо мне",
+    "что вы обо мне",
+    "what is my name",
+    "who am i",
+    "what do you know about me",
+)
+
+_BOT_NAME_QUESTION_RE = re.compile(
+    r"(?i)(?:как\s+(?:тебя|вас)\s+зовут|what(?:'s| is)\s+your\s+name)",
+)
+
+
+def user_facts_identity_recall_enabled() -> bool:
+    """Детерминированный ответ на «как меня зовут» / «кто я» из user_facts."""
+    raw = os.getenv("USER_FACTS_IDENTITY_RECALL_ENABLED")
+    if raw is None:
+        return True
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def plain_text_requests_user_facts_identity(text: str) -> bool:
+    """Вопрос о личности пользователя (не о боте) — ответ из user_facts."""
+    if not user_facts_identity_recall_enabled():
+        return False
+    t = (text or "").strip()
+    if not t or t.lstrip().startswith("/"):
+        return False
+    if _BOT_NAME_QUESTION_RE.search(t):
+        return False
+    low = t.lower()
+    return any(m in low for m in _USER_FACTS_IDENTITY_MARKERS)
+
+
+def format_user_facts_plain_lines_ru(facts: Dict[str, Any]) -> List[str]:
+    """Строки «• Имя: …» для plain-text ответа."""
+    lines: List[str] = []
+    if not isinstance(facts, dict):
+        return lines
+    for key in sorted(facts.keys(), key=str):
+        if key not in FACT_FIELDS:
+            continue
+        val = facts.get(key)
+        disp = _display_fact_value(val)
+        if disp == "—":
+            continue
+        label = FACT_FIELD_LABELS_PROFILE_RU.get(str(key), str(key))
+        lines.append(f"• {label}: {disp}")
+    return lines
+
+
+def build_user_facts_identity_reply(facts: Dict[str, Any]) -> str:
+    """Собрать ответ на «как меня зовут» / «кто я» из сохранённых фактов."""
+    lines = format_user_facts_plain_lines_ru(facts if isinstance(facts, dict) else {})
+    if not lines:
+        return (
+            "В сохранённых фактах о вас пока пусто — могу запомнить имя, город или другие детали, "
+            "если скажете явно (или через /facts)."
+        )
+    name = str((facts or {}).get("name") or "").strip()
+    head = f"Вас зовут {name}." if name else "Вот что я сохранил о вас:"
+    return f"{head}\n" + "\n".join(lines)
+
+
+def brain_user_facts_from_store(
+    behavior_store: Any,
+    user_id: str,
+    group_id: Optional[str],
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    """Факты для brain/pre_llm: в личке — агрегат всех сессий, в группе — файл сессии."""
+    if group_id is None:
+        agg = behavior_store.load_user_profile_aggregate(user_id)
+        facts = agg.get("user_facts") if isinstance(agg.get("user_facts"), dict) else {}
+        meta = agg.get("user_facts_meta") if isinstance(agg.get("user_facts_meta"), dict) else {}
+        return dict(facts), dict(meta)
+    rec = behavior_store.load(user_id, group_id)
+    facts = rec.get("user_facts") if isinstance(rec.get("user_facts"), dict) else {}
+    meta = rec.get("user_facts_meta") if isinstance(rec.get("user_facts_meta"), dict) else {}
+    return dict(facts), dict(meta)
+
 
 def format_fact_fields_nice_ru(keys: Any) -> str:
     """Человекочитаемый перечень полей для подтверждения (не сырые ключи вроде country)."""

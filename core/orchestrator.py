@@ -631,6 +631,17 @@ class Orchestrator:
         user_facts_meta = persisted.get("user_facts_meta") or {}
         if not isinstance(user_facts_meta, dict):
             user_facts_meta = {}
+        if user_id:
+            try:
+                from core.user_facts import brain_user_facts_from_store
+
+                _bf, _bm = brain_user_facts_from_store(self.behavior_store, str(user_id), group_id)
+                if _bf:
+                    user_facts = _bf
+                if _bm:
+                    user_facts_meta = _bm
+            except Exception as e:
+                logger.debug("assemble_brain_user_facts: %s", e)
 
         group_memory_max = 10
         if group_id:

@@ -390,6 +390,23 @@ def build_pipeline_memory_addon(
     chunks: List[str] = []
     ctx = context if isinstance(context, dict) else {}
 
+    try:
+        from core.user_facts import (
+            build_user_facts_identity_reply,
+            plain_text_requests_user_facts_identity,
+        )
+
+        if plain_text_requests_user_facts_identity(user_text) and isinstance(user_facts, dict) and user_facts:
+            hint = build_user_facts_identity_reply(user_facts)
+            if hint.strip():
+                chunks.append(
+                    "(MemoryRecallFacade) Вопрос о личности пользователя — отвечай по user_facts "
+                    "в Context, не отрицай сохранённые факты.\n"
+                    + hint.strip()
+                )
+    except Exception:
+        pass
+
     rel = build_relative_time_archive_hint_for_llm(
         user_text,
         user_id=user_id,

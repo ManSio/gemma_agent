@@ -15,6 +15,7 @@ PRE_LLM_DIRECT_VARIANTS: frozenset[str] = frozenset(
         "wall_clock_direct",
         "dialog_recall_nl",
         "session_meta_recall_nl",
+        "user_facts_identity_nl",
         "article_thread_followup_nl",
     }
 )
@@ -98,6 +99,18 @@ def try_pre_llm_direct_plan(
                     return ("session_meta_recall_nl", reply.strip())
         except Exception as e:
             logger.debug("pre_llm_plan session_meta_recall: %s", e)
+
+    if lane == "user_facts_identity":
+        try:
+            from core.behavior_store import BehaviorStore
+            from core.user_facts import build_user_facts_identity_reply, brain_user_facts_from_store
+
+            facts, _meta = brain_user_facts_from_store(BehaviorStore(), uid, group_id)
+            reply = build_user_facts_identity_reply(facts)
+            if reply.strip():
+                return ("user_facts_identity_nl", reply.strip())
+        except Exception as e:
+            logger.debug("pre_llm_plan user_facts_identity: %s", e)
 
     if lane == "dialog_recall":
         try:

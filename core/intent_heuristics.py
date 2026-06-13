@@ -714,6 +714,13 @@ def detect_pre_llm_shortcut(
     if not t:
         return ""
     try:
+        from core.user_facts import plain_text_requests_user_facts_identity
+
+        if plain_text_requests_user_facts_identity(t):
+            return "user_facts_identity"
+    except Exception as e:
+        logger.debug("detect_pre_llm_shortcut user_facts: %s", e)
+    try:
         from core.dialogue_slots import resolve_slot_for_turn
 
         slot_ctx = resolve_slot_for_turn(t, recent_dialogue, persisted)

@@ -172,7 +172,7 @@ def normalize_user_facts(facts: Any) -> Dict[str, Any]:
     if not isinstance(facts, dict):
         return {}
     out: Dict[str, Any] = {}
-    for k in ("name", "age", "city", "country", "timezone", "language", "currency", "interests"):
+    for k in ("name", "age", "city", "country", "timezone", "language", "currency", "interests", "occupation", "pet_cat", "pet_dog"):
         v = facts.get(k)
         if v is None:
             continue

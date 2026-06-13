@@ -225,6 +225,13 @@ async def try_weather_reply(
     text = (user_text or "").strip()
     if not text:
         return None
+    try:
+        from core.user_facts import plain_text_requests_user_facts_identity
+
+        if plain_text_requests_user_facts_identity(text):
+            return None
+    except Exception as e:
+        logger.debug("weather skip user_facts_identity: %s", e)
     from core.turn_context import build_turn_context, prepare_persisted_for_weather
 
     facts = _user_facts_from_persisted(persisted)
