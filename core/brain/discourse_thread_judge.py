@@ -58,6 +58,13 @@ def _judge_system_prompt() -> str:
         "- stay: elliptical follow-up on the SAME topic as last Q/A\n"
         "- branch: new topic or standalone question\n"
         "- correct: user rejects previous answer or redirects topic\n"
+        "speech_act: question | correction | continuation | statement\n"
+        "referent: agent | user | world | thread\n"
+        "- agent: about the assistant/bot in this chat (its problems, behavior, limits)\n"
+        "- user: about the human user\n"
+        "- world: general knowledge topic\n"
+        "- thread: continuing the prior thread without new referent\n"
+        "inherit_thread: true | false\n"
         "confidence: 0.0-1.0\n"
         "resolved_user_text: optional standalone rewrite if stay/correct (same language)\n"
         "topic_summary: optional 3-8 words for active topic"
@@ -102,6 +109,14 @@ def _parse_judge_response(raw: str) -> Optional[Dict[str, Any]]:
     topic = str(data.get("topic_summary") or data.get("topic") or "").strip()
     if topic:
         out["topic_summary"] = topic[:120]
+    speech = str(data.get("speech_act") or "").strip().lower()
+    if speech in {"question", "correction", "continuation", "statement"}:
+        out["speech_act"] = speech
+    referent = str(data.get("referent") or "").strip().lower()
+    if referent in {"agent", "user", "world", "thread"}:
+        out["referent"] = referent
+    if "inherit_thread" in data:
+        out["inherit_thread"] = bool(data.get("inherit_thread"))
     return out
 
 

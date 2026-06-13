@@ -20,6 +20,21 @@
 
 ---
 
+## 2026-06-13 — TurnMeaning v3.5.12 (смысл хода + judge bypass)
+
+**Контекст:** аудит — thread judge обходился из-за `_turn_state_collapsed` в plan(); «слова вместо смысла» на referent (agent vs world).
+
+**Сделано:**
+- `core/turn_meaning.py` — structural verdict из метаданных + LLM judge (referent, speech_act).
+- `turn_reconcile` — meaning → discourse → collapse; async upgrade после sync plan.
+- `discourse_resolver` — приоритет `turn_meaning`; skip double judge при `source=llm`.
+- `/new` чистит `pending_correction`; `SelfHealingEngine.get_instance()`.
+- VERSION → 3.5.12.
+
+**Verify:** `pytest tests/test_turn_meaning.py tests/test_prod_thread_wratmak.py … -q`; `release_guard --smoke`.
+
+---
+
 ## 2026-06-13 — TurnStateVector + slot_registry (коллапс хода)
 
 **Контекст:** уйти от разрозненных regex/слотов — один наблюдаемый вектор на ход.

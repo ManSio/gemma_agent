@@ -40,3 +40,20 @@ def test_bump_clear_dialogue_removes_dialogue_slot():
         clear_dialogue=True,
     )
     assert "dialogue_slot" not in (rec.get("routing_prefs") or {})
+
+
+def test_bump_clear_dialogue_clears_pending_correction():
+    rec = {
+        "conversation_epoch": {"id": 0, "started_at": "", "last_activity_at": ""},
+        "routing_prefs": {
+            "pending_correction": {"instruction": "fix", "turns_left": 4},
+        },
+    }
+    bump_conversation_epoch(
+        rec,
+        user_id="u1",
+        group_id=None,
+        reason="slash_new",
+        clear_dialogue=True,
+    )
+    assert "pending_correction" not in (rec.get("routing_prefs") or {})

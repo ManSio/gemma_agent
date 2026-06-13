@@ -269,6 +269,17 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
             row["prior_outcome"] = str(_tsa.get("prior_outcome"))[:32]
         if _tsa.get("short_turn_kind"):
             row["short_turn_kind"] = str(_tsa.get("short_turn_kind"))[:24]
+        if _tsa.get("speech_act"):
+            row["speech_act"] = str(_tsa.get("speech_act"))[:24]
+        if _tsa.get("referent"):
+            row["referent"] = str(_tsa.get("referent"))[:16]
+        if _tsa.get("meaning_source"):
+            row["meaning_source"] = str(_tsa.get("meaning_source"))[:16]
+    _tma = payload.get("turn_meaning_audit")
+    if isinstance(_tma, dict) and _tma:
+        for key in ("speech_act", "referent", "meaning_source", "thread_action"):
+            if _tma.get(key) and not row.get(key):
+                row[key] = str(_tma.get(key))[:24]
     tt = payload.get("topic_tracking")
     if isinstance(tt, dict):
         cur = str(tt.get("current") or "").strip()

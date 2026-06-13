@@ -45,6 +45,8 @@ _anomaly_thresholds = {
     "kv_drift": 2,
 }
 
+_engine_singleton: Optional["SelfHealingEngine"] = None
+
 
 class SelfHealingEngine:
     """
@@ -58,6 +60,18 @@ class SelfHealingEngine:
         self.self_programming = None
         self.is_running = False
         self.plugin_registry = None
+
+    @classmethod
+    def get_instance(cls) -> "SelfHealingEngine":
+        """Singleton для event healers и maintenance bridge."""
+        global _engine_singleton
+        if _engine_singleton is None:
+            _engine_singleton = cls()
+        return _engine_singleton
+
+    async def maintenance_tick(self) -> None:
+        """Публичный maintenance tick для healers."""
+        await self._maintenance_tick()
 
     async def start_monitoring(self, plugin_registry=None, interval: int = 300):
         self.is_running = True

@@ -3632,6 +3632,11 @@ class Orchestrator:
                     _tsa_emit = turn_state_audit_for_emit(pre_ctx, plan)
                     if _tsa_emit:
                         _turn_payload["turn_state_audit"] = _tsa_emit
+                    from core.turn_reconcile import turn_meaning_audit_for_emit
+
+                    _tma_emit = turn_meaning_audit_for_emit(pre_ctx)
+                    if _tma_emit:
+                        _turn_payload["turn_meaning_audit"] = _tma_emit
                     _da_emit = None
                     if isinstance(pre_ctx, dict) and isinstance(pre_ctx.get("discourse_audit"), dict):
                         _da_emit = pre_ctx.get("discourse_audit")

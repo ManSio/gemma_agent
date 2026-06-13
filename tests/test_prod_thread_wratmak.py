@@ -68,4 +68,22 @@ class ProdThreadWratmakTests(unittest.TestCase):
         )
         self.assertTrue(out.get("_turn_state_collapsed"))
         self.assertIn("turn_state", out)
+        self.assertIn("turn_meaning", out)
         self.assertTrue(mutated or get_active_slot(rec) is None)
+
+    def test_sync_meaning_prior_clarify_discourse_correct(self) -> None:
+        rec: dict = {"session_task": {"last_outcome": "clarify"}}
+        rd = [
+            {"role": "user", "text": "почему название ии не соответствует реалиям"},
+            {"role": "assistant", "text": "Из системы: вас зовут Михаил."},
+        ]
+        pre_ctx = {
+            "recent_dialogue": rd,
+            "dialogue_state": {
+                "last_intent": "explain",
+                "last_assistant_excerpt": "Из системы: вас зовут Михаил.",
+            },
+        }
+        _, out, _ = apply_discourse_and_collapse_sync("я про другое", pre_ctx, persisted=rec)
+        dr = out.get("discourse_resolution") or {}
+        self.assertEqual(dr.get("action"), ACTION_CORRECT)

@@ -471,6 +471,69 @@ def _apply_stay_resolution(
     return res
 
 
+def _discourse_from_turn_meaning(
+    user_text: str,
+    context: Optional[Dict[str, Any]],
+    tm: Dict[str, Any],
+) -> Optional[DiscourseResolution]:
+    """Применить verdict TurnMeaning к discourse (единый источник смысла)."""
+    raw = (user_text or "").strip()
+    action = str(tm.get("thread_action") or "").strip().lower()
+    if action not in {ACTION_STAY, ACTION_BRANCH, ACTION_CORRECT}:
+        return None
+    res = DiscourseResolution(
+        action=action,
+        raw_user_text=raw,
+        effective_user_text=str(tm.get("resolved_user_text") or raw).strip() or raw,
+        reason=str(tm.get("reason") or "turn_meaning")[:120],
+        judge_source=str(tm.get("source") or "turn_meaning"),
+        confidence=float(tm.get("confidence") or 0.0),
+    )
+    if action == ACTION_CORRECT:
+        res.last_user_q, res.last_assistant_a = _last_qa_from_context(context)
+        res.topic_summary = str(tm.get("topic_summary") or "")[:120] or _topic_summary_from_context(
+            context, res.last_user_q
+        )
+        res.hint = _build_hint(res)
+        try:
+            from core.turn_meaning import routing_hint_for_meaning
+
+            extra = routing_hint_for_meaning(tm)
+            if extra:
+                res.hint = f"{res.hint}\n{extra}".strip() if res.hint else extra
+        except Exception as e:
+            logger.debug("discourse meaning hint correct: %s", e)
+        MONITOR.inc("discourse_correct_total")
+        return res
+    if action == ACTION_BRANCH:
+        try:
+            from core.turn_meaning import routing_hint_for_meaning
+
+            extra = routing_hint_for_meaning(tm)
+            if extra:
+                res.hint = extra
+        except Exception as e:
+            logger.debug("discourse meaning hint branch: %s", e)
+        MONITOR.inc("discourse_branch_total")
+        return res
+    if action == ACTION_STAY and bool(tm.get("inherit_thread")):
+        return _apply_stay_resolution(
+            res,
+            context,
+            reason=res.reason or "turn_meaning",
+            judge_source=str(tm.get("source") or "turn_meaning"),
+            confidence=float(tm.get("confidence") or 0.7),
+            resolved_override=str(tm.get("resolved_user_text") or "").strip() or None,
+        )
+    if action == ACTION_STAY and not bool(tm.get("inherit_thread")):
+        res.action = ACTION_BRANCH
+        res.continuation = False
+        res.reason = f"meaning_no_inherit:{res.reason}"
+        MONITOR.inc("discourse_branch_total")
+        return res
+    return None
+
+
 def resolve_discourse(
     user_text: str,
     context: Optional[Dict[str, Any]] = None,
@@ -485,6 +548,13 @@ def resolve_discourse(
     if not raw:
         res.reason = "empty"
         return res
+
+    ctx = context if isinstance(context, dict) else {}
+    tm = ctx.get("turn_meaning")
+    if isinstance(tm, dict) and tm.get("thread_action"):
+        from_meaning = _discourse_from_turn_meaning(raw, ctx, tm)
+        if from_meaning is not None:
+            return from_meaning
 
     corr, corr_reason = _correction_signal(context, raw)
     if corr:
@@ -519,6 +589,11 @@ async def resolve_discourse_async(
     llm: Any = None,
 ) -> DiscourseResolution:
     """Разрешить дискурс с опциональным LLM thread judge на пограничных ходах."""
+    ctx = context if isinstance(context, dict) else {}
+    tm = ctx.get("turn_meaning")
+    if isinstance(tm, dict) and str(tm.get("source") or "") == "llm":
+        return resolve_discourse(user_text, context)
+
     res = resolve_discourse(user_text, context)
     if res.action in {ACTION_CORRECT, ACTION_BRANCH}:
         return res

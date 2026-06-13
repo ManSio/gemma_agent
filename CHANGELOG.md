@@ -1,3 +1,20 @@
+## [2026-06-13] — v3.5.12: TurnMeaning + judge bypass fix + ops hardening
+
+- **Added:** `core/turn_meaning.py` — единый verdict хода (speech_act, referent, thread_action) до discourse/collapse; LLM judge на пограничных structural stay и вопросах в активной нити.
+- **Fix:** `turn_reconcile` — brain path снова вызывает LLM judge после sync plan (`_needs_async_meaning_upgrade`), без двойного judge при `source=llm`.
+- **Fix:** `discourse_resolver` — discourse читает `turn_meaning` как single source; agent-referent routing hint.
+- **Fix:** `SelfHealingEngine.get_instance()` + `maintenance_tick()` для healers.
+- **Fix:** `/new` (`conversation_epoch`) очищает `pending_correction`.
+- **Obs:** `turn_meaning_audit` в `turn.outcome` и `turns.jsonl`.
+
+### Verify
+```bash
+python -m pytest tests/test_turn_meaning.py tests/test_turn_reconcile.py tests/test_prod_thread_wratmak.py tests/test_discourse_resolver.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.11: TurnStateVector + slot_registry (turn collapse)
 
 - **Added:** `core/turn_state.py` — TurnStateVector: single collapsed state per turn (discourse + slots + prior outcome).
