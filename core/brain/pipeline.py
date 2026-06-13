@@ -2628,6 +2628,7 @@ URL: {fetch_url}
         group_transcript_compact=group_transcript_compact,
         group_chat_addon_len=len(_group_chat_addon),
         task_tier=task_tier,
+        urls_chron=urls_chron,
     )
     if isinstance(context, dict) and context.get("fatigue_force_slim"):
         if not _tier_prefers_thorough(task_tier):

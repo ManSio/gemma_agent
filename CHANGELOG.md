@@ -1,3 +1,15 @@
+## [2026-06-13] — v3.5.20: hot_path slim shared guards
+
+- **Fix:** `brain_hot_path_slim_eligible` now rejects thread URLs (`urls_chron`), Telegram reply threads, and document intake (same as chat_context_slim).
+- **Refactor:** `_brain_slim_shared_rejects` — single guard path for both slim modes.
+
+### Verify
+```bash
+python -m pytest tests/test_brain_hot_path_slim.py tests/test_brain_chat_context_slim.py -q
+```
+
+---
+
 ## [2026-06-13] — v3.5.19: news dialogue consistency check (P3)
 
 - **Wired:** `NewsConsistencyChecker.check_dialogue_consistency` on news returns via `_return_news_with_telemetry` (log-only, does not block reply).

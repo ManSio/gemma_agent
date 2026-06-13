@@ -89,3 +89,48 @@ def test_chat_context_slim_disabled(monkeypatch: pytest.MonkeyPatch):
         group_transcript_compact="",
         group_chat_addon_len=0,
     )
+
+
+def test_chat_context_slim_rejects_telegram_reply_context():
+    assert not brain_chat_context_slim_eligible(
+        user_text="дальше",
+        context=_ctx(telegram_reply_context="Ответ на: обсуждение контракта поставки."),
+        task_tier="shallow",
+        urls_chron=[],
+        missing_facts=[],
+        skill_name=None,
+        skill_output={},
+        image_intent=None,
+        group_transcript_compact="",
+        group_chat_addon_len=0,
+    )
+
+
+def test_chat_context_slim_rejects_heavy_operator_rules():
+    assert not brain_chat_context_slim_eligible(
+        user_text="ок",
+        context=_ctx(operator_rules_brain_addon="rule " * 500),
+        task_tier="shallow",
+        urls_chron=[],
+        missing_facts=[],
+        skill_name=None,
+        skill_output={},
+        image_intent=None,
+        group_transcript_compact="",
+        group_chat_addon_len=0,
+    )
+
+
+def test_chat_context_slim_rejects_document_intake():
+    assert not brain_chat_context_slim_eligible(
+        user_text="резюмируй",
+        context=_ctx(document_intake={"filename": "scan.pdf", "text": "invoice totals"}),
+        task_tier="shallow",
+        urls_chron=[],
+        missing_facts=[],
+        skill_name=None,
+        skill_output={},
+        image_intent=None,
+        group_transcript_compact="",
+        group_chat_addon_len=0,
+    )

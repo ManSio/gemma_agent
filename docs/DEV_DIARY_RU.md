@@ -20,6 +20,14 @@
 
 ---
 
+## 2026-06-13 — v3.5.20: hot_path slim shared guards
+
+**Сделано:** `_brain_slim_shared_rejects` — общие предикаты для hot_path и chat_context_slim. Fix: hot_path не отключался при `urls_chron`, `telegram_reply_context`, `document_intake`. Симметрия operator/ephemeral для chat_context_slim.
+
+**Verify:** `pytest tests/test_brain_hot_path_slim.py tests/test_brain_chat_context_slim.py`.
+
+---
+
 ## 2026-06-13 — v3.5.19: news dialogue consistency check (P3)
 
 **Сделано:** `NewsConsistencyChecker` в hot path через `_return_news_with_telemetry` — только лог (`llm_usage.jsonl`), ответ не блокируется. Поля `consistency_*` в `news_generation_log`. Flag `NEWS_CONSISTENCY_CHECK_ENABLED`.

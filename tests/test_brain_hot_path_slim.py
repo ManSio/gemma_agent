@@ -99,3 +99,46 @@ def test_hot_slim_rejects_nested_tier():
         group_chat_addon_len=0,
         task_tier="nested",
     )
+
+
+def test_hot_slim_rejects_urls_chron():
+    assert not _brain_hot_path_slim_eligible(
+        user_text="продолжи",
+        context=_ctx(),
+        use_slim_image=False,
+        skill_name=None,
+        skill_output={},
+        image_intent=None,
+        missing_facts=[],
+        group_transcript_compact="",
+        group_chat_addon_len=0,
+        urls_chron=["https://example.com/article"],
+    )
+
+
+def test_hot_slim_rejects_telegram_reply_context():
+    assert not _brain_hot_path_slim_eligible(
+        user_text="продолжи",
+        context=_ctx(telegram_reply_context="Цитата: обсуждаем договор аренды до 2027 года."),
+        use_slim_image=False,
+        skill_name=None,
+        skill_output={},
+        image_intent=None,
+        missing_facts=[],
+        group_transcript_compact="",
+        group_chat_addon_len=0,
+    )
+
+
+def test_hot_slim_rejects_document_intake():
+    assert not _brain_hot_path_slim_eligible(
+        user_text="что в документе?",
+        context=_ctx(document_intake={"filename": "lease.pdf", "text": "договор аренды"}),
+        use_slim_image=False,
+        skill_name=None,
+        skill_output={},
+        image_intent=None,
+        missing_facts=[],
+        group_transcript_compact="",
+        group_chat_addon_len=0,
+    )
