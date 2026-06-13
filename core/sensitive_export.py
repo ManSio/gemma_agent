@@ -342,6 +342,12 @@ def _json_detaint_text(text: str) -> str:
     return json.loads(json.dumps(str(text or ""), ensure_ascii=False))
 
 
+def _load_counts_payload_from_json_file(path: Path) -> Dict[str, Any]:
+    """Load counts-only payload written by audit JSON export."""
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    return raw if isinstance(raw, dict) else {}
+
+
 def write_audit_document_md(
     path: Union[str, Path],
     doc: Dict[str, Any],
@@ -351,29 +357,27 @@ def write_audit_document_md(
     exported_at_epoch: int = 0,
 ) -> None:
     """Write ops audit markdown (counts only, operator host labels)."""
-    payload = audit_document_counts_payload(
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    tmp_json = out.with_suffix(out.suffix + ".counts.json")
+    write_audit_document_json(
+        tmp_json,
         doc if isinstance(doc, dict) else {},
         host_labels=host_labels,
         stamp_day=stamp_day,
         exported_at_epoch=exported_at_epoch,
     )
-    # JSON round-trip: same taint break as write_audit_document_json (CodeQL).
-    safe_payload = json.loads(json.dumps(payload, ensure_ascii=False))
-    safe_hosts = safe_payload.get("hosts") if isinstance(safe_payload.get("hosts"), list) else []
-    safe_labels = (
-        safe_payload.get("host_labels")
-        if isinstance(safe_payload.get("host_labels"), list)
-        else list(host_labels)
-    )
-    safe_stamp = str(safe_payload.get("stamp_day") or stamp_day or "")[:32]
+    payload = _load_counts_payload_from_json_file(tmp_json)
     md = render_audit_counts_md(
-        hosts=safe_hosts,
-        host_labels=safe_labels,
-        stamp_day=safe_stamp,
+        hosts=payload.get("hosts") if isinstance(payload.get("hosts"), list) else [],
+        host_labels=payload.get("host_labels") if isinstance(payload.get("host_labels"), list) else list(host_labels),
+        stamp_day=str(payload.get("stamp_day") or stamp_day or "")[:32],
     )
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(_json_detaint_text(md), encoding="utf-8")
+    out.write_text(_json_detaint_text(md), encoding="utf-8")
+    try:
+        tmp_json.unlink(missing_ok=True)
+    except OSError:
+        pass
 
 
 def write_daily_ops_md(
