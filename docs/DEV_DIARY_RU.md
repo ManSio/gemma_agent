@@ -64,6 +64,9 @@ pip install -r requirements.txt   # без ResolutionImpossible
 ### Deploy
 
 - Commit: `8d28b5a` на `master`
+- **CI follow-up (2026-06-13):** `test_dialogue_slots` — `recent_messages` в fixture; `test_news_consistency` — `asyncio.run` вместо `@pytest.mark.asyncio` (нет плагина в CI).
+
+### Deploy (бот)
 - После pull на VPS: перезапуск бота (`gemma_panel.sh`); YAML кеш `token_efficiency` ~30 с
 - Смотреть: `[brain] prompt_metrics`, `context_hard_limit_enforced_total`
 

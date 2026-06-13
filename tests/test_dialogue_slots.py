@@ -19,7 +19,9 @@ from core.dialogue_slots import (
 
 class TestDialogueSlots(unittest.TestCase):
     def test_weather_slot_after_clarify(self) -> None:
-        rec: dict = {}
+        rec: dict = {
+            "recent_messages": [{"role": "user", "text": "Какая погода"}],
+        }
         on_assistant_reply(
             rec,
             "Какой именно город вас интересует? Назовите населённый пункт.",

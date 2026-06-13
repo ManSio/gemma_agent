@@ -1,6 +1,9 @@
 """Tests for core/news_consistency_checker.py."""
 
+import asyncio
+
 import pytest
+
 from core.news_consistency_checker import NewsConsistencyChecker
 
 
@@ -9,22 +12,22 @@ def checker():
     return NewsConsistencyChecker()
 
 
-@pytest.mark.asyncio
-async def test_check_dialogue_consistency_consistent(checker):
+def test_check_dialogue_consistency_consistent(checker):
     recent = [{"user": "q", "bot": "Earthquake in Turkey.", "index": 0}]
-    r = await checker.check_dialogue_consistency("u1", recent, "State of emergency in Turkey.")
+    r = asyncio.run(
+        checker.check_dialogue_consistency("u1", recent, "State of emergency in Turkey.")
+    )
     assert r["consistent"]
     assert r["conflicts"] == []
     assert r["recommendation"] == "safe"
 
 
-@pytest.mark.asyncio
-async def test_check_dialogue_consistency_date_conflict(checker):
+def test_check_dialogue_consistency_date_conflict(checker):
     # Must use longer text (>60 chars) with common location and different dates
     prev_text = "Событие 15 марта 2023 года в Москве. Было объявлено чрезвычайное положение в центральном районе."
     new_text = "В Москве сейчас чрезвычайное положение 15 марта 2024 года. Ситуация отличается от прошлогодней."
     recent = [{"user": "q", "bot": prev_text, "index": 0}]
-    r = await checker.check_dialogue_consistency("u2", recent, new_text)
+    r = asyncio.run(checker.check_dialogue_consistency("u2", recent, new_text))
     assert not r["consistent"]
     assert len(r["conflicts"]) >= 1
     assert r["recommendation"] in ("warn_user", "needs_fix")
@@ -47,9 +50,8 @@ def test_extract_entities_empty(checker):
     assert checker.extract_entities(None) == {"dates": [], "people": [], "locations": []}
 
 
-@pytest.mark.asyncio
-async def test_check_short_reply(checker):
-    r = await checker.check_dialogue_consistency("u3", [], "\u0414\u0430.")
+def test_check_short_reply(checker):
+    r = asyncio.run(checker.check_dialogue_consistency("u3", [], "\u0414\u0430."))
     assert r["consistent"]
     assert r["recommendation"] == "safe"
 
