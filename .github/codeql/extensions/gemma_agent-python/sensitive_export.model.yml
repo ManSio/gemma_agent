@@ -36,7 +36,6 @@ extensions:
       - ["core.sensitive_export", "Member[ops_trace_jsonl_line].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[llm_usage_jsonl_line].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[write_ops_trace_jsonl].ReturnValue", "clear-text-storage"]
-      - ["core.sensitive_export", "Member[write_llm_usage_jsonl].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[autolearn_log_facets].ReturnValue", "clear-text-logging"]
       - ["core.sensitive_export", "Member[ephemeral_pending_auto_promoted_log_line].ReturnValue", "clear-text-logging"]
       - ["core.sensitive_export", "Member[log_ephemeral_pending_auto_promoted].ReturnValue", "clear-text-logging"]

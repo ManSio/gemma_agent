@@ -10,6 +10,11 @@ from typing import Any, Dict, List, Optional
 
 
 def _parse_ts(raw: Any) -> Optional[datetime]:
+    if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+        try:
+            return datetime.fromtimestamp(int(raw), tz=timezone.utc)
+        except (OSError, ValueError, OverflowError):
+            return None
     s = str(raw or "").strip()
     if not s:
         return None
@@ -134,7 +139,7 @@ def summarize_llm_usage_window(
             continue
         if not isinstance(row, dict):
             continue
-        ts = _parse_ts(row.get("ts") or row.get("timestamp"))
+        ts = _parse_ts(row.get("ts") or row.get("timestamp") or row.get("ts_epoch"))
         if ts is not None:
             ts = _ensure_utc(ts)
             if ts < cutoff:

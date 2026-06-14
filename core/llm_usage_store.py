@@ -143,10 +143,14 @@ def append_record(row: Dict[str, Any]) -> None:
     path = log_path()
     try:
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        from core.sensitive_export import write_llm_usage_jsonl
+        from core.sensitive_export import llm_usage_jsonl_line
 
+        line = llm_usage_jsonl_line(row)
         with _USAGE_LOCK:
-            write_llm_usage_jsonl(path, row)
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(line)
+                f.flush()
+                os.fsync(f.fileno())
     except OSError as e:
         logger.warning("llm_usage_store append failed: %s", e)
 

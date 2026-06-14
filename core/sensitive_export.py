@@ -596,6 +596,30 @@ _LLM_USAGE_PERSIST_KEYS = frozenset(
 )
 
 
+def _safe_epoch(raw: Any) -> Optional[int]:
+    """Parse timestamp to UTC epoch seconds for disk (no raw ts string)."""
+    if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+        v = int(raw)
+        if 1_000_000_000 <= v <= 4_102_444_800:
+            return v
+    s = str(raw or "").strip()
+    if not s:
+        return None
+    if s.isdigit():
+        v = int(s)
+        if 1_000_000_000 <= v <= 4_102_444_800:
+            return v
+    try:
+        from datetime import datetime
+
+        if s.endswith("Z"):
+            s = s[:-1] + "+00:00"
+        dt = datetime.fromisoformat(s)
+        return int(dt.timestamp())
+    except (TypeError, ValueError, OSError):
+        return None
+
+
 def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
     """Whitelist LLM usage JSONL row — no user query/reply taint to disk."""
     if not isinstance(row, dict):
@@ -603,7 +627,7 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
     if str(row.get("type") or "") == "news_generation":
         return {
             "type_code": 3,
-            "timestamp_hash": hash_sensitive_text(row.get("timestamp") or row.get("ts")),
+            "ts_epoch": _safe_epoch(row.get("timestamp") or row.get("ts")) or 0,
             "llm_model_hash": hash_sensitive_text(row.get("llm_model")),
             "self_verify_run": bool(row.get("self_verify_run", False)),
             "self_verify_result_hash": hash_sensitive_text(row.get("self_verify_result")),
@@ -623,6 +647,11 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
         if key not in row:
             continue
         val = row[key]
+        if key == "ts":
+            epoch = _safe_epoch(val)
+            if epoch is not None:
+                out["ts_epoch"] = epoch
+            continue
         if key == "error":
             out[key] = hash_sensitive_text(val) or ""
         elif key in {"fetch_methods_used"}:
@@ -668,17 +697,6 @@ def write_ops_trace_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
     with open(p, "a", encoding="utf-8") as f:
         f.write(line)
         f.flush()
-
-
-def write_llm_usage_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
-    """Append one whitelist LLM usage JSONL row (CodeQL clear-text-storage barrier)."""
-    line = llm_usage_jsonl_line(row)
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with open(p, "a", encoding="utf-8") as f:
-        f.write(line)
-        f.flush()
-        os.fsync(f.fileno())
 
 
 def ephemeral_pending_auto_promoted_log_line(*, distinct_users: int = 0) -> str:

@@ -9,6 +9,7 @@ from core.sensitive_export import (
     audit_summary_log_line,
     autolearn_log_facets,
     build_heuristic_miss_row,
+    llm_usage_jsonl_line,
     llm_usage_row_for_disk,
     mem0_check_public_view,
     mem0_log_facets,
@@ -23,7 +24,7 @@ from core.sensitive_export import (
     security_audit_stdout_json,
     write_audit_document_json,
     write_audit_counts_md_from_json,
-    write_llm_usage_jsonl,
+    llm_usage_jsonl_line,
     write_ops_trace_jsonl,
 )
 
@@ -297,10 +298,10 @@ def test_write_ops_trace_jsonl_redacts(tmp_path):
 
 def test_write_llm_usage_jsonl_whitelist(tmp_path):
     path = tmp_path / "usage.jsonl"
-    write_llm_usage_jsonl(
-        path,
-        {"ts": "t", "ok": True, "query": "secret", "total_tokens": 3},
+    line = llm_usage_jsonl_line(
+        {"ts": "2026-06-13", "ok": True, "query": "secret", "total_tokens": 3},
     )
+    path.write_text(line, encoding="utf-8")
     row = json.loads(path.read_text(encoding="utf-8").strip())
     assert "query" not in row
     assert row["total_tokens"] == 3
