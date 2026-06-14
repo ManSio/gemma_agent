@@ -485,7 +485,7 @@ def _dialogue_rows_redacted(rows: Any, *, tail: int = 8) -> List[Dict[str, Any]]
         text = str(r.get("text") or r.get("content") or "")
         out.append(
             {
-                "role": str(r.get("role") or "")[:16],
+                "role_code": 1 if str(r.get("role") or "").strip().lower() == "user" else 0,
                 "text_len": len(text.strip()),
                 "text_hash": hash_sensitive_text(text),
             }
@@ -505,9 +505,16 @@ def sanitize_ops_trace_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
     reasoning = row.get("reasoning") if isinstance(row.get("reasoning"), dict) else {}
     extra = row.get("extra") if isinstance(row.get("extra"), dict) else {}
     safe_extra: Dict[str, Any] = {}
-    for k, v in extra.items():
-        if k in {"profile", "outcome", "brain_profile", "router_profile", "lane"}:
-            safe_extra[str(k)[:48]] = hash_sensitive_text(v) or ""
+    if "profile" in extra:
+        safe_extra["profile_hash"] = hash_sensitive_text(extra.get("profile")) or ""
+    if "outcome" in extra:
+        safe_extra["outcome_hash"] = hash_sensitive_text(extra.get("outcome")) or ""
+    if "brain_profile" in extra:
+        safe_extra["brain_profile_hash"] = hash_sensitive_text(extra.get("brain_profile")) or ""
+    if "router_profile" in extra:
+        safe_extra["router_profile_hash"] = hash_sensitive_text(extra.get("router_profile")) or ""
+    if "lane" in extra:
+        safe_extra["lane_hash"] = hash_sensitive_text(extra.get("lane")) or ""
     _raw_type = str(row.get("type") or "").strip().lower()
     type_code = 2 if _raw_type == "error" else (1 if _raw_type == "tool" else 0)
     return {
@@ -674,19 +681,6 @@ def write_llm_usage_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
         os.fsync(f.fileno())
 
 
-def autolearn_promoted_log_line(
-    *,
-    user_id: str = "",
-    lesson_id: str = "",
-    fingerprint: str = "",
-) -> str:
-    """One promotion log line without clear-text user id (CodeQL logging barrier)."""
-    return (
-        "ephemeral_autolearn promoted lesson=%s user_hash=%s fp=%s"
-        % (str(lesson_id or "")[:24], hash_sensitive_text(user_id), str(fingerprint or "")[:16])
-    )
-
-
 def ephemeral_pending_auto_promoted_log_line(*, distinct_users: int = 0) -> str:
     """One pending auto-promote log line (counts only, CodeQL logging barrier)."""
     return "ephemeral pending auto-promoted distinct_users=%d" % max(0, int(distinct_users or 0))
@@ -706,17 +700,15 @@ def log_ephemeral_pending_auto_promoted(
 
 def log_autolearn_lesson_promoted(
     *,
-    user_id: str = "",
-    lesson_id: str = "",
-    fingerprint: str = "",
+    user_id_hash: str = "",
+    lesson_id_hash: str = "",
+    fingerprint_hash: str = "",
     logger_name: str = "core.ephemeral_autolearn",
 ) -> None:
-    """Log lesson promotion with hashed user id only (CodeQL clear-text-logging barrier)."""
+    """Log lesson promotion from pre-hashed facets (CodeQL clear-text-logging barrier)."""
     logging.getLogger(logger_name).info(
-        "%s",
-        autolearn_promoted_log_line(
-            user_id=user_id,
-            lesson_id=lesson_id,
-            fingerprint=fingerprint,
-        ),
+        "ephemeral_autolearn promoted lesson_hash=%s user_hash=%s fp_hash=%s",
+        (lesson_id_hash or "")[:24],
+        user_id_hash or "",
+        (fingerprint_hash or "")[:16],
     )

@@ -583,12 +583,12 @@ def process_turn_for_autolearn(
     b["weight_sum"] = 0
     buckets[fp] = b
     record["ephemeral_autolearn"] = al
-    from core.sensitive_export import log_autolearn_lesson_promoted
+    from core.sensitive_export import hash_sensitive_text, log_autolearn_lesson_promoted
 
     log_autolearn_lesson_promoted(
-        user_id=str(user_id),
-        lesson_id=str(le.get("id") or ""),
-        fingerprint=str(fp or ""),
+        user_id_hash=hash_sensitive_text(str(user_id)) or "",
+        lesson_id_hash=hash_sensitive_text(str(le.get("id") or "")) or "",
+        fingerprint_hash=hash_sensitive_text(str(fp or "")) or "",
     )
     return {"promoted": True, "lesson_id": le.get("id")}
 
