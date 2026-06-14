@@ -4,7 +4,6 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -596,6 +595,21 @@ _LLM_USAGE_PERSIST_KEYS = frozenset(
 )
 
 
+_LLM_KIND_CODES: Dict[str, int] = {
+    "chat": 0,
+    "vision": 1,
+    "brain": 2,
+    "news": 3,
+    "router": 4,
+    "tool": 5,
+}
+
+
+def _kind_code(val: Any) -> int:
+    """Map LLM usage kind to stable int for disk (operator aggregates)."""
+    return _LLM_KIND_CODES.get(str(val or "chat").strip().lower(), 99)
+
+
 def _safe_epoch(raw: Any) -> Optional[int]:
     """Parse timestamp to UTC epoch seconds for disk (no raw ts string)."""
     if isinstance(raw, (int, float)) and not isinstance(raw, bool):
@@ -626,6 +640,7 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
         return {}
     if str(row.get("type") or "") == "news_generation":
         return {
+            "type": "news_generation",
             "type_code": 3,
             "ts_epoch": _safe_epoch(row.get("timestamp") or row.get("ts")) or 0,
             "llm_model_hash": hash_sensitive_text(row.get("llm_model")),
@@ -651,6 +666,9 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
             epoch = _safe_epoch(val)
             if epoch is not None:
                 out["ts_epoch"] = epoch
+            continue
+        if key == "kind":
+            out["kind_code"] = _kind_code(val)
             continue
         if key == "error":
             out[key] = hash_sensitive_text(val) or ""

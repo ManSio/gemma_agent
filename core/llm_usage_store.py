@@ -172,18 +172,38 @@ def reset_records() -> Dict[str, Any]:
 
 
 def _parse_ts(row: Dict[str, Any]) -> Optional[datetime]:
-    ts = row.get("ts")
-    if not ts:
+    raw = row.get("ts_epoch")
+    if raw is None:
+        raw = row.get("ts")
+    if raw is None:
         return None
     try:
-        if isinstance(ts, (int, float)):
-            return datetime.fromtimestamp(float(ts), tz=timezone.utc)
-        s = str(ts).strip()
+        if isinstance(raw, (int, float)):
+            return datetime.fromtimestamp(float(raw), tz=timezone.utc)
+        s = str(raw).strip()
         if s.endswith("Z"):
             s = s[:-1] + "+00:00"
         return datetime.fromisoformat(s.replace("Z", "+00:00"))
     except Exception:
         return None
+
+
+def _row_kind(row: Dict[str, Any]) -> str:
+    """Resolve kind label from persisted kind_code or legacy kind string."""
+    if "kind_code" in row:
+        code = int(row.get("kind_code") or 0)
+        for name, val in (
+            ("chat", 0),
+            ("vision", 1),
+            ("brain", 2),
+            ("news", 3),
+            ("router", 4),
+            ("tool", 5),
+        ):
+            if code == val:
+                return name
+        return "other"
+    return str(row.get("kind") or "chat")
 
 
 def _ensure_utc(dt: datetime) -> datetime:
@@ -202,6 +222,9 @@ def format_row_ts_for_report(row: Dict[str, Any]) -> str:
 
     dt = _parse_ts(row)
     if dt is None:
+        epoch = row.get("ts_epoch")
+        if isinstance(epoch, (int, float)):
+            return str(int(epoch))
         return str(row.get("ts", ""))[:22]
     loc = _ensure_utc(dt).astimezone(get_report_tz()).replace(microsecond=0)
     return loc.strftime(OPERATOR_DATETIME_FMT)
@@ -291,7 +314,7 @@ def aggregate_usage(
             paid_n += 1
         else:
             free_n += 1
-        kind = str(r.get("kind") or "chat")
+        kind = _row_kind(r)
         by_kind[kind]["n"] += 1
         by_kind[kind]["tokens"] += tt if tt else pt + ct
         by_kind[kind]["cost"] += cf
