@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -629,3 +631,67 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
             if isinstance(item, dict)
         ]
     return out
+
+
+def write_ops_trace_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
+    """Append one redacted ops_trace JSONL row (CodeQL clear-text-storage barrier)."""
+    safe_row = sanitize_ops_trace_row_for_disk(row if isinstance(row, dict) else {})
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with open(p, "a", encoding="utf-8") as f:
+        f.write(json.dumps(safe_row, ensure_ascii=False, default=str) + "\n")
+        f.flush()
+
+
+def write_llm_usage_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
+    """Append one whitelist LLM usage JSONL row (CodeQL clear-text-storage barrier)."""
+    safe_row = llm_usage_row_for_disk(row if isinstance(row, dict) else {})
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    line = json.dumps(safe_row, ensure_ascii=False, default=str) + "\n"
+    with open(p, "a", encoding="utf-8") as f:
+        f.write(line)
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def log_ephemeral_pending_auto_promoted(
+    *,
+    pending_id: str = "",
+    lesson_id: str = "",
+    distinct_users: int = 0,
+    logger_name: str = "core.ephemeral_autolearn",
+) -> None:
+    """Log pending auto-promote without raw user ids (CodeQL clear-text-logging barrier)."""
+    facets = autolearn_log_facets(
+        lesson_id=lesson_id,
+        pending_id=pending_id,
+        distinct_users=distinct_users,
+    )
+    logging.getLogger(logger_name).info(
+        "ephemeral pending auto-promoted (new) pending=%s lesson=%s distinct_users=%d",
+        facets["pending_id_head"],
+        facets["lesson_id_head"],
+        facets["distinct_users"],
+    )
+
+
+def log_autolearn_lesson_promoted(
+    *,
+    user_id: str = "",
+    lesson_id: str = "",
+    fingerprint: str = "",
+    logger_name: str = "core.ephemeral_autolearn",
+) -> None:
+    """Log lesson promotion with hashed user id only (CodeQL clear-text-logging barrier)."""
+    facets = autolearn_log_facets(
+        user_id=user_id,
+        lesson_id=lesson_id,
+        fingerprint=fingerprint,
+    )
+    logging.getLogger(logger_name).info(
+        "ephemeral_autolearn promoted lesson=%s user_hash=%s fp=%s",
+        facets["lesson_id_head"],
+        facets["user_id_hash"],
+        facets["fingerprint_head"],
+    )

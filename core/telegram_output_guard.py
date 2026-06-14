@@ -8,6 +8,7 @@ from threading import Lock
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from core.models import Output
+from core.regex_safe import safe_re_match, safe_re_search, safe_re_sub
 from core.site_recipe_engine import host_matches
 
 _PHOTO_DEDUP_LOCK = Lock()
@@ -287,21 +288,22 @@ def _news_topic_from_query(user_query: str) -> str:
     }
     if low in generic:
         return ""
-    m = re.search(
+    m = safe_re_search(
         r"(?i)(?:какие|последние|главные|свежие|актуальные)\s+новости(?:\s+(?:про|о|об|в|из|на|по))?\s*(.+)$",
         q,
+        max_len=512,
     )
     if m:
         topic = (m.group(1) or "").strip()
         if topic and topic.lower() not in {"какие", "сегодня", "сейчас"}:
             return _norm_topic(topic)
-    m = re.search(r"(?i)новости(?:\s+(?:про|о|об|в|из|на|по))?\s+(.+)$", q)
+    m = safe_re_search(r"(?i)новости(?:\s+(?:про|о|об|в|из|на|по))?\s+(.+)$", q, max_len=512)
     if m:
         topic = (m.group(1) or "").strip()
         if topic and topic.lower() not in {"какие", "сегодня", "сейчас"}:
             return _norm_topic(topic)
     if "новост" in low:
-        m2 = re.search(r"(?i)(?:в|из|по)\s+(.+)$", q)
+        m2 = safe_re_search(r"(?i)(?:в|из|по)\s+(.+)$", q, max_len=512)
         if m2:
             return _norm_topic(m2.group(1).strip())
         return ""
@@ -552,7 +554,7 @@ def is_search_portal_junk(title: str, snippet: str = "", url: str = "") -> bool:
         return True
     if _is_rubric_junk(t, url):
         return True
-    if _SEARCH_PORTAL_TITLE_RE.search(t):
+    if safe_re_search(_SEARCH_PORTAL_TITLE_RE, t, max_len=512):
         return True
     if _url_is_portal_homepage(url):
         return True
@@ -803,7 +805,7 @@ def _looks_like_offtopic_digest_row(
     sn = (snippet or "").strip()
     blob = f"{t} {sn}".lower()
     if _SPORTS_DIGEST_RE.search(t) or _SPORTS_DIGEST_RE.search(sn):
-        if not re.search(r"(?i)(беларус|belarus|лукашенко|minsk|минск)", blob):
+        if not safe_re_search(r"(?i)(беларус|belarus|лукашенко|minsk|минск)", blob, max_len=2048):
             return True
     if _OFFTOPIC_DIGEST_RE.search(t):
         return True
@@ -812,10 +814,10 @@ def _looks_like_offtopic_digest_row(
     co = (country or "").strip().upper()
     if co == "BY" and not world_feed:
         if _FOREIGN_REGION_DIGEST_RE.search(blob):
-            if not re.search(r"(?i)(беларус|belarus|лукашенко|minsk|минск)", blob):
+            if not safe_re_search(r"(?i)(беларус|belarus|лукашенко|minsk|минск)", blob, max_len=2048):
                 return True
     if host_matches(url or "", "wikinews.org"):
-        if not re.search(r"(?i)(беларус|belarus|украин|ukraine|росси|russia)", blob):
+        if not safe_re_search(r"(?i)(беларус|belarus|украин|ukraine|росси|russia)", blob, max_len=2048):
             if "kazakhstan" in blob or "sony" in blob or "ps store" in blob:
                 return True
     if co == "BY" and not world_feed:
@@ -1070,7 +1072,7 @@ def parse_numbered_news_digest_items(body: str) -> List[Dict[str, Any]]:
         line = raw_line.rstrip()
         if not line.strip():
             continue
-        num_m = re.match(r"^\s*(\d{1,2})\.\s+(.+)$", line)
+        num_m = safe_re_match(r"^\s*(\d{1,2})\.\s+(.+)$", line, max_len=2048)
         if num_m:
             if current:
                 items.append(current)
@@ -1083,7 +1085,7 @@ def parse_numbered_news_digest_items(body: str) -> List[Dict[str, Any]]:
             continue
         if current is None:
             continue
-        pub_m = re.match(r"^\s*[·•]\s+(.+)$", line)
+        pub_m = safe_re_match(r"^\s*[·•]\s+(.+)$", line, max_len=2048)
         if pub_m:
             current["publisher"] = pub_m.group(1).strip()
             continue
@@ -1139,8 +1141,8 @@ def _parse_summary_to_search_rows(summary: str) -> List[Dict[str, Any]]:
             ln = ln.strip()
             if not ln:
                 continue
-            m = re.match(r"^(\d+)[.)]\s*(.+)$", ln)
-            chunk = m.group(2).strip() if m else re.sub(r"^[-•*]\s*", "", ln).strip()
+            m = safe_re_match(r"^(\d+)[.)]\s*(.+)$", ln, max_len=2048)
+            chunk = m.group(2).strip() if m else safe_re_sub(r"^[-•*]\s*", "", ln, max_len=2048).strip()
             t, s, u = _split_line_to_entry(chunk)
             if t and not _is_rubric_junk(t, u):
                 parsed.append((t, s, u))

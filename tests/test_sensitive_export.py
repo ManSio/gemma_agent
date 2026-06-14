@@ -23,6 +23,8 @@ from core.sensitive_export import (
     security_audit_stdout_json,
     write_audit_document_json,
     write_audit_counts_md_from_json,
+    write_llm_usage_jsonl,
+    write_ops_trace_jsonl,
 )
 
 
@@ -279,3 +281,25 @@ def test_autolearn_log_facets_hashes_user():
     f = autolearn_log_facets(user_id="900000002", lesson_id="lesson-abc", fingerprint="fp123")
     assert "900000002" not in json.dumps(f)
     assert f["user_id_hash"]
+
+
+def test_write_ops_trace_jsonl_redacts(tmp_path):
+    path = tmp_path / "ops.jsonl"
+    write_ops_trace_jsonl(
+        path,
+        {"user_id": "u-secret", "user_text": "секрет", "assistant_text": "ok"},
+    )
+    blob = path.read_text(encoding="utf-8")
+    assert "u-secret" not in blob
+    assert "секрет" not in blob
+
+
+def test_write_llm_usage_jsonl_whitelist(tmp_path):
+    path = tmp_path / "usage.jsonl"
+    write_llm_usage_jsonl(
+        path,
+        {"ts": "t", "ok": True, "query": "secret", "total_tokens": 3},
+    )
+    row = json.loads(path.read_text(encoding="utf-8").strip())
+    assert "query" not in row
+    assert row["total_tokens"] == 3

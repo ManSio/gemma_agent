@@ -19,7 +19,7 @@ import os
 import re
 from typing import Any, Dict, List, Optional
 
-from core.regex_safe import cap_regex_input, safe_re_match, safe_re_search
+from core.regex_safe import cap_regex_input, safe_re_findall, safe_re_match, safe_re_search, safe_re_split, safe_re_sub
 
 from core.brain.router_classifier import _detect_batch
 
@@ -118,7 +118,7 @@ def _extract_numbered_with_preamble(lines: List[str]) -> List[str]:
     preamble_parts: List[str] = []
     numbered: List[tuple[int, str]] = []
     for line in lines:
-        m = _NUMBERED_LINE_RE.match(line)
+        m = safe_re_match(_NUMBERED_LINE_RE, line, max_len=512)
         if m:
             num_m = re.match(r"^\s*(\d+)", line)
             num = int(num_m.group(1)) if num_m else len(numbered) + 1
@@ -175,7 +175,9 @@ def extract_items(text: str) -> List[str]:
             items = lines
     else:
         # 2. Одна строка: проверяем нумерованный список
-        numbered = re.findall(r'(?:^|\s)\d+[\.\)]\s*(.*?)(?=\s+\d+[\.\)]\s|$)', txt)
+        numbered = safe_re_findall(
+            r'(?:^|\s)\d+[\.\)]\s*(.*?)(?=\s+\d+[\.\)]\s|$)', txt, max_len=2048
+        )
         if len(numbered) >= 3:
             items = [s.strip() for s in numbered if s.strip()]
         else:

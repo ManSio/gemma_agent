@@ -395,11 +395,12 @@ def pending_append(
                     row["status"] = "approved"
                     row["lesson_id"] = le.get("id")
                     row["updated_ts"] = time.time()
-                    logger.info(
-                        "ephemeral pending auto-promoted (new) id=%s lesson=%s distinct_users=%s",
-                        str(row.get("id") or "")[:24],
-                        str(le.get("id") or "")[:24],
-                        len(uids_new),
+                    from core.sensitive_export import log_ephemeral_pending_auto_promoted
+
+                    log_ephemeral_pending_auto_promoted(
+                        pending_id=str(row.get("id") or ""),
+                        lesson_id=str(le.get("id") or ""),
+                        distinct_users=len(uids_new),
                     )
                     extra_new = {"auto_promoted": True, "lesson": le}
             else:
@@ -582,18 +583,12 @@ def process_turn_for_autolearn(
     b["weight_sum"] = 0
     buckets[fp] = b
     record["ephemeral_autolearn"] = al
-    from core.sensitive_export import autolearn_log_facets
+    from core.sensitive_export import log_autolearn_lesson_promoted
 
-    facets = autolearn_log_facets(
+    log_autolearn_lesson_promoted(
         user_id=str(user_id),
         lesson_id=str(le.get("id") or ""),
         fingerprint=str(fp or ""),
-    )
-    logger.info(
-        "ephemeral_autolearn promoted lesson=%s user_hash=%s fp=%s",
-        facets["lesson_id_head"],
-        facets["user_id_hash"],
-        facets["fingerprint_head"],
     )
     return {"promoted": True, "lesson_id": le.get("id")}
 

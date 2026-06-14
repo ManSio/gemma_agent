@@ -1,0 +1,12 @@
+extensions:
+  - addsTo:
+      pack: codeql/python-all
+      extensible: barrierModel
+    data:
+      - ["core.regex_safe", "Member[cap_regex_input].ReturnValue", "polynomial-redos"]
+      - ["core.regex_safe", "Member[_bounded_regex_text].ReturnValue", "polynomial-redos"]
+      - ["core.regex_safe", "Member[safe_re_search].ReturnValue", "polynomial-redos"]
+      - ["core.regex_safe", "Member[safe_re_match].ReturnValue", "polynomial-redos"]
+      - ["core.regex_safe", "Member[safe_re_sub].ReturnValue", "polynomial-redos"]
+      - ["core.regex_safe", "Member[safe_re_findall].ReturnValue", "polynomial-redos"]
+      - ["core.regex_safe", "Member[safe_re_split].ReturnValue", "polynomial-redos"]

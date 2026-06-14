@@ -6,3 +6,4 @@ extensionTargets:
   codeql/python-all: "*"
 dataExtensions:
   - sensitive_export.model.yml
+  - regex_safe.model.yml

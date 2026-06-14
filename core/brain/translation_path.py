@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from typing import List, Optional, Tuple
 
+from core.regex_safe import safe_re_search
+
 _TRANSLATE_TRIGGERS = (
     "переведи",
     "translate",
@@ -80,10 +82,11 @@ def _extract_fragment(segment: str) -> str:
     m = re.search(r"['\"](.+?)['\"]", raw)
     if m:
         return m.group(1).strip()
-    m2 = re.search(
+    m2 = safe_re_search(
         r"(?:переведи|translate|перевод|скажи)\s*(?:на\s+\w+|по[-\s]?\w+)?\s*:?\s*(.+)$",
         raw,
         re.IGNORECASE,
+        max_len=2048,
     )
     if m2:
         return m2.group(1).strip().strip("'\"")

@@ -40,6 +40,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
 from core.monitoring import MONITOR
+from core.regex_safe import safe_re_findall
 
 logger = logging.getLogger(__name__)
 
@@ -879,7 +880,7 @@ def _detect_batch(user_text: str) -> bool:
         if comma_count >= 8:
             return True
         # 5. Нумерованный список в одну строку (1. купить 2. сделать ...)
-        numbered = len(re.findall(r'\d+\.\s', txt))
+        numbered = len(safe_re_findall(r'\d+\.\s', txt, max_len=2048))
         if numbered >= 4:
             return True
 

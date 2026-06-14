@@ -86,3 +86,32 @@ def safe_re_sub(
     if isinstance(pattern, re.Pattern):
         return pattern.sub(repl, t, count=count)
     return re.sub(pattern, repl, t, count=count, flags=flags)
+
+
+def safe_re_findall(
+    pattern: _Pattern,
+    text: Any,
+    flags: int = 0,
+    *,
+    max_len: Optional[int] = None,
+) -> list[str]:
+    """re.findall on capped user text."""
+    t = _bounded_regex_text(text, max_len=max_len)
+    if isinstance(pattern, re.Pattern):
+        return pattern.findall(t)
+    return re.findall(pattern, t, flags)
+
+
+def safe_re_split(
+    pattern: _Pattern,
+    text: Any,
+    maxsplit: int = 0,
+    flags: int = 0,
+    *,
+    max_len: Optional[int] = None,
+) -> list[str]:
+    """re.split on capped user text."""
+    t = _bounded_regex_text(text, max_len=max_len)
+    if isinstance(pattern, re.Pattern):
+        return pattern.split(t, maxsplit=maxsplit)
+    return re.split(pattern, t, maxsplit=maxsplit, flags=flags)
