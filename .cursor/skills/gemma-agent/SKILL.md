@@ -21,6 +21,16 @@ Apply on **every task** in this repository: audit, bugfix, feature, refactor, do
 6. **Report** — changed files, verified vs assumed.
 7. **Document** — if behavior/limits/CI/security changed: `CHANGELOG.md` + entry in `docs/DEV_DIARY_RU.md` + runbook if needed (`docs/CONTEXT_BUDGET_GUIDE_RU.md` pattern).
 
+## Before `git commit` (mandatory when user asks to commit)
+
+```bash
+python scripts/check_public_privacy.py --ci
+# Windows: $env:PYTHONPATH='.'  |  Unix: PYTHONPATH=.
+python scripts/agent_security_audit.py --ci
+```
+
+Do **not** commit if either exits non-zero. Details: `.cursor/rules/pre-commit-privacy.mdc`.
+
 ## Ground truth
 
 - Telegram assistant, **3–8 users**, OpenRouter — **not** Google Gemma.
@@ -56,7 +66,7 @@ python scripts/check_public_privacy.py --ci
 
 - Guess file contents; invent SECURITY/CONTRIBUTING after 404.
 - Over-engineer one-liner helpers.
-- Commit unless user explicitly asks.
+- Commit unless user explicitly asks — and **never without** `check_public_privacy.py --ci` + `agent_security_audit.py --ci` passing first.
 - User correction overrides — apply immediately.
 
 ## More detail

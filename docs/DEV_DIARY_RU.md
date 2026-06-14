@@ -12,11 +12,25 @@
 | **Старт задачи** | Прочитать последние 3 записи ниже; skill `.cursor/skills/gemma-agent/SKILL.md`; при смене лимитов — `docs/CONTEXT_BUDGET_GUIDE_RU.md` |
 | **Перед правкой** | Trace: `input → orchestrator → call_brain → response_adapter`; grep callers + tests |
 | **После правки** | Запись в этот файл; `CHANGELOG.md`; обновить runbook / `PRODUCTION_EVIDENCE_REPORT*` если затронуты токены, CI, security |
-| **Verify** | Минимум: targeted pytest + `release_guard --smoke`; в записи явно — что **не** гоняли |
+| **Verify** | Минимум: targeted pytest + `release_guard --smoke`; перед commit — `bash scripts/pre_commit_checks.sh` |
 | **Commit** | Только по явной просьбе Михаила |
 | **Коррекция «нет / не то»** | Приоритет #1 — менять поведение сразу, логировать в записи |
 
 **Не считать задачу закрытой**, если код смержен, а дневник/CHANGELOG/runbook не обновлены.
+
+---
+
+## 2026-06-14 — v3.5.28: privacy pre-commit + CodeQL hardening + life-sim tests
+
+**Контекст:** CI падал на `check_public_privacy` (telegram id в docs); CodeQL — clear-text в ops_trace/llm_usage/autolearn.
+
+**Сделано:**
+- `sensitive_export`: `sanitize_ops_trace_row_for_disk`, `llm_usage_row_for_disk`, `autolearn_log_facets`.
+- `scripts/pre_commit_checks.sh` + `.cursor/rules/pre-commit-privacy.mdc`.
+- `docs/security/CODE_SCANNING_RU.md`, обновлён `testing.ru.md`.
+- Life-sim: `tests/support/turn_life_sim.py`.
+
+**Verify:** `pre_commit_checks.sh`; `pytest tests/test_sensitive_export.py tests/test_ops_trace.py tests/test_turn_hot_path_integration.py -q`; `release_guard --smoke`.
 
 ---
 

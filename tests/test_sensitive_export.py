@@ -7,11 +7,14 @@ from core.sensitive_export import (
     audit_host_counts_row,
     audit_host_public,
     audit_summary_log_line,
+    autolearn_log_facets,
     build_heuristic_miss_row,
+    llm_usage_row_for_disk,
     mem0_check_public_view,
     mem0_log_facets,
     mem0_path_log_facets,
     render_audit_counts_md,
+    sanitize_ops_trace_row_for_disk,
     scan_counts_payload,
     scan_report_public,
     scan_summary_log_line,
@@ -238,3 +241,41 @@ def test_audit_document_public_roundtrip():
     )
     assert doc["hosts"][0]["host"] == "local"
     assert "root" not in doc["hosts"][0]
+
+
+def test_sanitize_ops_trace_row_no_clear_text():
+    row = sanitize_ops_trace_row_for_disk(
+        {
+            "user_id": "secret-user",
+            "user_text": "секретный вопрос",
+            "assistant_text": "ответ",
+            "recent_after": [{"role": "user", "text": "секретный вопрос"}],
+        }
+    )
+    blob = json.dumps(row, ensure_ascii=False)
+    assert "секретный" not in blob
+    assert "secret-user" not in blob
+    assert row["user_text_hash"]
+    assert row["recent_after"][0]["text_hash"]
+
+
+def test_llm_usage_row_for_disk_whitelist():
+    row = llm_usage_row_for_disk(
+        {
+            "ts": "2026-06-13",
+            "ok": True,
+            "user_id": "u1",
+            "query": "secret query",
+            "reply": "secret reply",
+            "total_tokens": 10,
+        }
+    )
+    assert "user_id" not in row
+    assert "query" not in row
+    assert row["total_tokens"] == 10
+
+
+def test_autolearn_log_facets_hashes_user():
+    f = autolearn_log_facets(user_id="900000002", lesson_id="lesson-abc", fingerprint="fp123")
+    assert "900000002" not in json.dumps(f)
+    assert f["user_id_hash"]

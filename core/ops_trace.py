@@ -155,13 +155,17 @@ def analyze_turn(
 
 
 def append_ops_record(row: Dict[str, Any]) -> None:
+    """Append one ops_trace row (redacted on disk)."""
     if not ops_trace_enabled():
         return
     path = log_path()
     try:
+        from core.sensitive_export import sanitize_ops_trace_row_for_disk
+
+        safe_row = sanitize_ops_trace_row_for_disk(row)
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(row, ensure_ascii=False, default=str) + "\n")
+            f.write(json.dumps(safe_row, ensure_ascii=False, default=str) + "\n")
             f.flush()
     except OSError as e:
         logger.debug("ops_trace append: %s", e)
@@ -237,8 +241,19 @@ def read_tail(
             continue
         if not isinstance(o, dict):
             continue
-        if user_id and str(o.get("user_id") or "") != str(user_id):
-            continue
+        if user_id:
+            uid_h = None
+            try:
+                from core.sensitive_export import hash_sensitive_text
+
+                uid_h = hash_sensitive_text(str(user_id))
+            except Exception:
+                uid_h = None
+            if uid_h:
+                if str(o.get("user_id_hash") or "") != uid_h:
+                    continue
+            elif str(o.get("user_id") or "") != str(user_id):
+                continue
         if since_ts and str(o.get("ts") or "") < since_ts:
             continue
         rows.append(o)

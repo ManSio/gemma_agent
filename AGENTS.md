@@ -25,6 +25,8 @@ Entry point for humans and tools working in this repository.
 python scripts/print_repo_stats.py
 python -m pytest tests/ --collect-only -q
 python scripts/release_guard.py --smoke
+python scripts/check_public_privacy.py --ci
+PYTHONPATH=. python scripts/agent_security_audit.py --ci   # required before commit
 ```
 
 | Claim | Where |

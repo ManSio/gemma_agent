@@ -112,52 +112,10 @@ _USAGE_LOCK = threading.Lock()
 
 
 def _sanitize_row_for_persistence(row: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Удаляем/маскируем потенциально чувствительные поля перед записью на диск.
-    """
-    safe = dict(row or {})
+    """Whitelist fields before llm_usage.jsonl append (CodeQL clear-text guard)."""
+    from core.sensitive_export import llm_usage_row_for_disk
 
-    if str(safe.get("type") or "") == "news_generation":
-        # Строгая минимизация: сохраняем только агрегаты и технические флаги.
-        # Не пишем user/query/reply/sources и любые прочие произвольные поля.
-        out: Dict[str, Any] = {
-            "type": "news_generation",
-            "timestamp": str(safe.get("timestamp", "")),
-            "llm_model": str(safe.get("llm_model", "")),
-            "self_verify_run": bool(safe.get("self_verify_run", False)),
-            "self_verify_result": str(safe.get("self_verify_result", "N/A"))[:80],
-            "consistency_checked": bool(safe.get("consistency_checked", False)),
-            "consistency_ok": bool(safe.get("consistency_ok", True)),
-            "consistency_conflicts_count": int(safe.get("consistency_conflicts_count", 0)),
-            "consistency_recommendation": str(safe.get("consistency_recommendation", "safe"))[:80],
-            "fetch_methods_used": [str(x) for x in list(safe.get("fetch_methods_used", []))[:20]],
-            "total_sources": int(safe.get("total_sources", 0)),
-            "avg_confidence": float(safe.get("avg_confidence", 0.0)),
-            "trusted_domain_count": int(safe.get("trusted_domain_count", 0)),
-        }
-        return out
-
-    for k in ("user_id", "query", "reply"):
-        if k in safe:
-            safe[k] = "[redacted]"
-
-    src = safe.get("sources")
-    if isinstance(src, list):
-        sanitized_sources: List[Dict[str, Any]] = []
-        for item in src:
-            if not isinstance(item, dict):
-                continue
-            sanitized_sources.append(
-                {
-                    "fetch_method": str(item.get("fetch_method", "unknown")),
-                    "fetch_success": bool(item.get("fetch_success", True)),
-                    "text_length": int(item.get("text_length", 0)),
-                    "parsing_confidence": float(item.get("parsing_confidence", 0.0)),
-                }
-            )
-        safe["sources"] = sanitized_sources
-
-    return safe
+    return llm_usage_row_for_disk(row if isinstance(row, dict) else {})
 
 
 def _truthy(name: str, default: bool = True) -> bool:

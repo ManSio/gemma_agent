@@ -1,3 +1,17 @@
+## [2026-06-14] — v3.5.28: privacy hygiene, pre-commit gate, CodeQL hardening
+
+- **Security:** `ops_trace` / `llm_usage_store` / `ephemeral_autolearn` — disk/logs via `sensitive_export` (hashes, whitelist).
+- **DX:** `scripts/pre_commit_checks.sh`, `.cursor/rules/pre-commit-privacy.mdc`, `docs/security/CODE_SCANNING_RU.md`.
+- **Tests:** life-sim hot path (`tests/support/turn_life_sim.py`); privacy redaction tests.
+
+### Verify
+```bash
+bash scripts/pre_commit_checks.sh
+python -m pytest tests/test_sensitive_export.py tests/test_ops_trace.py -q
+```
+
+---
+
 ## [2026-06-13] — v3.5.27: TurnContract close-out (0.3, 0.4, direct paths)
 
 - **0.3:** `turn_plan_finalize.py` + `_return_direct_plan` — все direct Plan paths: meaning, contract, hash.

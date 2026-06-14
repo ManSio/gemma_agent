@@ -470,3 +470,162 @@ def security_audit_public_report(report: Dict[str, Any]) -> Dict[str, Any]:
         "failed_checks": [str(x) for x in (report.get("failed_checks") or [])],
         "checks": checks_out,
     }
+
+
+def _dialogue_rows_redacted(rows: Any, *, tail: int = 8) -> List[Dict[str, Any]]:
+    """Dialogue slice for disk: role + length + hash only."""
+    if not isinstance(rows, list):
+        return []
+    out: List[Dict[str, Any]] = []
+    for r in rows[-max(1, tail) :]:
+        if not isinstance(r, dict):
+            continue
+        text = str(r.get("text") or r.get("content") or "")
+        out.append(
+            {
+                "role": str(r.get("role") or "")[:16],
+                "text_len": len(text.strip()),
+                "text_hash": hash_sensitive_text(text),
+            }
+        )
+    return out
+
+
+def sanitize_ops_trace_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Ops trace JSONL row without clear-text user content (CodeQL + private VPS)."""
+    if not isinstance(row, dict):
+        return {}
+    ut = str(row.get("user_text") or "")
+    at = str(row.get("assistant_text") or "")
+    uid = str(row.get("user_id") or "")
+    issues = row.get("issues") if isinstance(row.get("issues"), list) else []
+    plan = row.get("plan_steps") if isinstance(row.get("plan_steps"), list) else []
+    reasoning = row.get("reasoning") if isinstance(row.get("reasoning"), dict) else {}
+    extra = row.get("extra") if isinstance(row.get("extra"), dict) else {}
+    safe_extra: Dict[str, Any] = {}
+    for k, v in extra.items():
+        if k in {"profile", "outcome", "brain_profile", "router_profile", "lane"}:
+            safe_extra[str(k)[:48]] = str(v)[:120]
+    return {
+        "ts": str(row.get("ts") or "")[:64],
+        "type": str(row.get("type") or "turn")[:32],
+        "user_id_hash": hash_sensitive_text(uid),
+        "group_id_present": bool(row.get("group_id")),
+        "channel": str(row.get("channel") or "")[:64],
+        "trace_id": str(row.get("trace_id") or "")[:64],
+        "user_text_len": len(ut.strip()),
+        "assistant_text_len": len(at.strip()),
+        "user_text_hash": hash_sensitive_text(ut),
+        "assistant_text_hash": hash_sensitive_text(at),
+        "recent_before": _dialogue_rows_redacted(row.get("recent_before")),
+        "recent_after": _dialogue_rows_redacted(row.get("recent_after")),
+        "archive_tail_in_prompt": _dialogue_rows_redacted(row.get("archive_tail_in_prompt"), tail=10),
+        "plan_steps": [str(x)[:64] for x in plan[:24]],
+        "reasoning_keys": [str(k)[:48] for k in reasoning.keys()][:16],
+        "latency_ms": _safe_int(row.get("latency_ms"), lo=0, hi=600_000),
+        "issues": [str(x)[:64] for x in issues[:16]],
+        "ok": bool(row.get("ok")),
+        "extra": safe_extra,
+    }
+
+
+def autolearn_log_facets(
+    *,
+    user_id: str = "",
+    lesson_id: str = "",
+    pending_id: str = "",
+    fingerprint: str = "",
+    distinct_users: int = 0,
+) -> Dict[str, Any]:
+    """Scalars safe for ephemeral_autolearn logs (no raw user id)."""
+    return {
+        "user_id_hash": hash_sensitive_text(user_id),
+        "lesson_id_head": str(lesson_id or "")[:24],
+        "pending_id_head": str(pending_id or "")[:24],
+        "fingerprint_head": str(fingerprint or "")[:16],
+        "distinct_users": max(0, int(distinct_users or 0)),
+    }
+
+
+_LLM_USAGE_PERSIST_KEYS = frozenset(
+    {
+        "ts",
+        "ok",
+        "requested_model",
+        "upstream_model",
+        "latency_ms",
+        "http_status",
+        "content_chars",
+        "error",
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "cost",
+        "cached_prompt_tokens",
+        "cache_write_tokens",
+        "kind",
+        "tag",
+        "telemetry_tag",
+        "telemetry_kind",
+        "type",
+        "llm_model",
+        "self_verify_run",
+        "self_verify_result",
+        "consistency_checked",
+        "consistency_ok",
+        "consistency_conflicts_count",
+        "consistency_recommendation",
+        "fetch_methods_used",
+        "total_sources",
+        "avg_confidence",
+        "trusted_domain_count",
+        "brain_profile",
+        "finish_reason",
+    }
+)
+
+
+def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
+    """Whitelist LLM usage JSONL row — no user query/reply taint to disk."""
+    if not isinstance(row, dict):
+        return {}
+    if str(row.get("type") or "") == "news_generation":
+        return {
+            "type": "news_generation",
+            "timestamp": str(row.get("timestamp") or row.get("ts") or "")[:64],
+            "llm_model": str(row.get("llm_model") or "")[:120],
+            "self_verify_run": bool(row.get("self_verify_run", False)),
+            "self_verify_result": str(row.get("self_verify_result") or "N/A")[:80],
+            "consistency_checked": bool(row.get("consistency_checked", False)),
+            "consistency_ok": bool(row.get("consistency_ok", True)),
+            "consistency_conflicts_count": _count_nonneg(row.get("consistency_conflicts_count")),
+            "consistency_recommendation": str(row.get("consistency_recommendation") or "safe")[:80],
+            "fetch_methods_used": [str(x)[:48] for x in list(row.get("fetch_methods_used") or [])[:20]],
+            "total_sources": _count_nonneg(row.get("total_sources")),
+            "avg_confidence": float(row.get("avg_confidence") or 0.0),
+            "trusted_domain_count": _count_nonneg(row.get("trusted_domain_count")),
+        }
+    out: Dict[str, Any] = {}
+    for key in _LLM_USAGE_PERSIST_KEYS:
+        if key not in row:
+            continue
+        val = row[key]
+        if key == "error":
+            out[key] = str(val or "")[:400]
+        elif key in {"fetch_methods_used"}:
+            out[key] = [str(x)[:48] for x in list(val or [])[:20]]
+        else:
+            out[key] = val
+    src = row.get("sources")
+    if isinstance(src, list):
+        out["sources"] = [
+            {
+                "fetch_method": str(item.get("fetch_method") or "unknown")[:48],
+                "fetch_success": bool(item.get("fetch_success", True)),
+                "text_length": _count_nonneg(item.get("text_length")),
+                "parsing_confidence": float(item.get("parsing_confidence") or 0.0),
+            }
+            for item in src[:32]
+            if isinstance(item, dict)
+        ]
+    return out

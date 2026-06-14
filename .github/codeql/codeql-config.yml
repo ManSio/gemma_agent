@@ -3,5 +3,8 @@ name: gemma_agent
 paths-ignore:
   - core/regex_safe.py
 
+# ReDoS warnings: tracked; hot paths migrate to regex_safe + REGEX_INPUT_MAX_LEN.
+# Clear-text: ops_trace / llm_usage / autolearn write via core/sensitive_export.py
+
 dependencies:
   gemma_agent/python-extensions: "*"

@@ -60,7 +60,9 @@ class OpsTraceTests(unittest.TestCase):
         self.assertTrue(row.get("ok"))
         tail = read_tail(limit=5, user_id="u1")
         self.assertEqual(len(tail), 1)
-        self.assertEqual(tail[0]["user_text"], "привет")
+        self.assertEqual(tail[0].get("user_text_len"), len("привет"))
+        self.assertTrue(tail[0].get("user_text_hash"))
+        self.assertNotIn("user_text", tail[0])
 
 
 if __name__ == "__main__":

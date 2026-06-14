@@ -14,6 +14,7 @@ Every task: **orient → trace flow → investigate → act → verify → docum
 
 - Minimal diff; read before write; user correction wins.
 - Never declare done without verify (pytest / smoke / grep).
+- **Before `git commit`:** run `check_public_privacy.py --ci` + `agent_security_audit.py --ci` — see `.cursor/rules/pre-commit-privacy.mdc`.
 - Never commit unless user explicitly asks.
 - Audits: skill `gemma-deep-audit` + `.cursor/prompts/audit.md`.
 

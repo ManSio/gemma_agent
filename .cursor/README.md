@@ -10,6 +10,7 @@
 ├── rules/                    ← always-on (short)
 │   ├── agent-workflow.mdc
 │   ├── gemma-ground-truth.mdc
+│   ├── pre-commit-privacy.mdc   ← privacy leak scan before git commit
 │   └── python-changes.mdc
 ├── skills/                   ← full workflows (agent reads when relevant)
 │   ├── gemma-agent/

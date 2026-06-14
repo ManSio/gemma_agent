@@ -10,6 +10,7 @@
 | `scripts/gemma_status.py` | Read-only health (`--online`, `--smoke`) |
 | `scripts/agent_security_audit.py` | Honest security check |
 | `scripts/release_guard.py` | Pre-release pytest gates |
+| `scripts/pre_commit_checks.sh` | Privacy + security audit before git commit |
 | `scripts/check_public_privacy.py` | Secret leak scan in git files |
 | `scripts/searxng_install_native.sh` | Install SearXNG (sudo) |
 | `scripts/apply_mem0_local_server.sh` | Deploy mem0_server.py |

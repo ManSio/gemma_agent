@@ -89,6 +89,7 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 |-----|--------|
 | [security-model.md](security/security-model.md) | Trust boundaries |
 | [security-model.ru.md](security/security-model.ru.md) | Модель безопасности (RU) |
+| [CODE_SCANNING_RU.md](security/CODE_SCANNING_RU.md) | Privacy vs CodeQL, pre-commit |
 | [architecture.md](developer-guide/architecture.md) | Code layout |
 | [architecture.ru.md](developer-guide/architecture.ru.md) | Архитектура (RU) |
 | [testing.md](developer-guide/testing.md) | pytest, release_guard |

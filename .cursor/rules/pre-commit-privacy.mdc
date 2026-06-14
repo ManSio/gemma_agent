@@ -1,0 +1,43 @@
+---
+description: Before git commit — mandatory privacy / data-leak scans (PII, tokens in tracked files)
+alwaysApply: true
+---
+
+# Pre-commit privacy gate
+
+**Before `git commit`** (when user asked to commit, or you are about to stage for commit):
+
+1. Run **both** (must exit 0):
+   ```bash
+   python scripts/check_public_privacy.py --ci
+   set PYTHONPATH=.   # Windows: $env:PYTHONPATH='.'
+   python scripts/agent_security_audit.py --ci
+   ```
+2. If either fails — **do not commit**. Fix leaks first, re-run, then commit.
+
+## What `check_public_privacy --ci` catches
+
+- Real **Telegram user IDs** (9–10 digits) in git-tracked `.py`, `.md`, `.sh`, `.json`, …
+- LAN / deploy-host IPs, broken placeholder IPs
+- Allowed test IDs only: `tests/fixtures/telegram_test_ids.py` (`900000001`, …)
+
+## Rules when writing docs / tests / scripts
+
+- **Never** put prod `user_id`, VPS paths with real uid, or tokens in tracked files.
+- Tests: `from tests.fixtures.telegram_test_ids import TEST_USER_UID`
+- Prod probes: `GEMMA_PROBE_USER_ID` env on VPS only — not hardcoded in repo.
+- Forensic docs: redact IDs (`900000001` + note «заменён в публичной копии»).
+
+## Not the same as CodeQL
+
+- Privacy scan = **PII/secrets in git tree** (blocks CI `privacy` job).
+- [Code scanning](https://github.com/ManSio/gemma_agent/security/code-scanning) = CodeQL data-flow (ops_trace plaintext, ReDoS) — separate; does not replace this gate.
+
+## Commit checklist (minimum)
+
+```text
+[ ] check_public_privacy.py --ci
+[ ] agent_security_audit.py --ci
+[ ] release_guard --smoke (if behavior change)
+[ ] targeted pytest (if code change)
+```
