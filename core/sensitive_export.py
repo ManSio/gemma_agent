@@ -522,10 +522,10 @@ def sanitize_ops_trace_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
         "recent_before": _dialogue_rows_redacted(row.get("recent_before")),
         "recent_after": _dialogue_rows_redacted(row.get("recent_after")),
         "archive_tail_in_prompt": _dialogue_rows_redacted(row.get("archive_tail_in_prompt"), tail=10),
-        "plan_steps": [str(x)[:64] for x in plan[:24]],
+        "plan_steps": [hash_sensitive_text(x) or "" for x in plan[:24]],
         "reasoning_keys": [str(k)[:48] for k in reasoning.keys()][:16],
         "latency_ms": _safe_int(row.get("latency_ms"), lo=0, hi=600_000),
-        "issues": [str(x)[:64] for x in issues[:16]],
+        "issues": [hash_sensitive_text(x) or "" for x in issues[:16]],
         "ok": bool(row.get("ok")),
         "extra": safe_extra,
     }
@@ -633,22 +633,33 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
+def ops_trace_jsonl_line(row: Dict[str, Any]) -> str:
+    """One JSONL line for ops trace (CodeQL clear-text-storage barrier)."""
+    safe_row = sanitize_ops_trace_row_for_disk(row if isinstance(row, dict) else {})
+    return json.dumps(safe_row, ensure_ascii=False, default=str) + "\n"
+
+
+def llm_usage_jsonl_line(row: Dict[str, Any]) -> str:
+    """One JSONL line for LLM usage (CodeQL clear-text-storage barrier)."""
+    safe_row = llm_usage_row_for_disk(row if isinstance(row, dict) else {})
+    return json.dumps(safe_row, ensure_ascii=False, default=str) + "\n"
+
+
 def write_ops_trace_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
     """Append one redacted ops_trace JSONL row (CodeQL clear-text-storage barrier)."""
-    safe_row = sanitize_ops_trace_row_for_disk(row if isinstance(row, dict) else {})
+    line = ops_trace_jsonl_line(row)
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     with open(p, "a", encoding="utf-8") as f:
-        f.write(json.dumps(safe_row, ensure_ascii=False, default=str) + "\n")
+        f.write(line)
         f.flush()
 
 
 def write_llm_usage_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
     """Append one whitelist LLM usage JSONL row (CodeQL clear-text-storage barrier)."""
-    safe_row = llm_usage_row_for_disk(row if isinstance(row, dict) else {})
+    line = llm_usage_jsonl_line(row)
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
-    line = json.dumps(safe_row, ensure_ascii=False, default=str) + "\n"
     with open(p, "a", encoding="utf-8") as f:
         f.write(line)
         f.flush()
@@ -663,16 +674,11 @@ def log_ephemeral_pending_auto_promoted(
     logger_name: str = "core.ephemeral_autolearn",
 ) -> None:
     """Log pending auto-promote without raw user ids (CodeQL clear-text-logging barrier)."""
-    facets = autolearn_log_facets(
-        lesson_id=lesson_id,
-        pending_id=pending_id,
-        distinct_users=distinct_users,
-    )
     logging.getLogger(logger_name).info(
         "ephemeral pending auto-promoted (new) pending=%s lesson=%s distinct_users=%d",
-        facets["pending_id_head"],
-        facets["lesson_id_head"],
-        facets["distinct_users"],
+        str(pending_id or "")[:24],
+        str(lesson_id or "")[:24],
+        max(0, int(distinct_users or 0)),
     )
 
 
@@ -684,14 +690,9 @@ def log_autolearn_lesson_promoted(
     logger_name: str = "core.ephemeral_autolearn",
 ) -> None:
     """Log lesson promotion with hashed user id only (CodeQL clear-text-logging barrier)."""
-    facets = autolearn_log_facets(
-        user_id=user_id,
-        lesson_id=lesson_id,
-        fingerprint=fingerprint,
-    )
     logging.getLogger(logger_name).info(
         "ephemeral_autolearn promoted lesson=%s user_hash=%s fp=%s",
-        facets["lesson_id_head"],
-        facets["user_id_hash"],
-        facets["fingerprint_head"],
+        str(lesson_id or "")[:24],
+        hash_sensitive_text(user_id),
+        str(fingerprint or "")[:16],
     )

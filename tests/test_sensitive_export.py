@@ -259,6 +259,7 @@ def test_sanitize_ops_trace_row_no_clear_text():
     assert "secret-user" not in blob
     assert row["user_text_hash"]
     assert row["recent_after"][0]["text_hash"]
+    assert all(len(x) == 64 for x in row["plan_steps"] if x)
 
 
 def test_llm_usage_row_for_disk_whitelist():

@@ -33,6 +33,8 @@ extensions:
       - ["core.sensitive_export", "Member[write_audit_counts_md_from_json].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[sanitize_ops_trace_row_for_disk].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[llm_usage_row_for_disk].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[ops_trace_jsonl_line].ReturnValue", "clear-text-storage"]
+      - ["core.sensitive_export", "Member[llm_usage_jsonl_line].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[write_ops_trace_jsonl].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[write_llm_usage_jsonl].ReturnValue", "clear-text-storage"]
       - ["core.sensitive_export", "Member[autolearn_log_facets].ReturnValue", "clear-text-logging"]

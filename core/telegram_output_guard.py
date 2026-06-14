@@ -809,11 +809,11 @@ def _looks_like_offtopic_digest_row(
             return True
     if _OFFTOPIC_DIGEST_RE.search(t):
         return True
-    if _GENERIC_DIGEST_TITLE_RE.match(t):
+    if safe_re_match(_GENERIC_DIGEST_TITLE_RE, t, max_len=512):
         return True
     co = (country or "").strip().upper()
     if co == "BY" and not world_feed:
-        if _FOREIGN_REGION_DIGEST_RE.search(blob):
+        if safe_re_search(_FOREIGN_REGION_DIGEST_RE, blob, max_len=2048):
             if not safe_re_search(r"(?i)(беларус|belarus|лукашенко|minsk|минск)", blob, max_len=2048):
                 return True
     if host_matches(url or "", "wikinews.org"):
