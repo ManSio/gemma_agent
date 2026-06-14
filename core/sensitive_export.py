@@ -507,14 +507,16 @@ def sanitize_ops_trace_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
     safe_extra: Dict[str, Any] = {}
     for k, v in extra.items():
         if k in {"profile", "outcome", "brain_profile", "router_profile", "lane"}:
-            safe_extra[str(k)[:48]] = str(v)[:120]
+            safe_extra[str(k)[:48]] = hash_sensitive_text(v) or ""
+    _raw_type = str(row.get("type") or "").strip().lower()
+    type_code = 2 if _raw_type == "error" else (1 if _raw_type == "tool" else 0)
     return {
-        "ts": str(row.get("ts") or "")[:64],
-        "type": str(row.get("type") or "turn")[:32],
+        "ts_hash": hash_sensitive_text(row.get("ts")),
+        "type_code": type_code,
         "user_id_hash": hash_sensitive_text(uid),
         "group_id_present": bool(row.get("group_id")),
-        "channel": str(row.get("channel") or "")[:64],
-        "trace_id": str(row.get("trace_id") or "")[:64],
+        "channel_hash": hash_sensitive_text(row.get("channel")),
+        "trace_id_hash": hash_sensitive_text(row.get("trace_id")),
         "user_text_len": len(ut.strip()),
         "assistant_text_len": len(at.strip()),
         "user_text_hash": hash_sensitive_text(ut),
@@ -523,7 +525,7 @@ def sanitize_ops_trace_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
         "recent_after": _dialogue_rows_redacted(row.get("recent_after")),
         "archive_tail_in_prompt": _dialogue_rows_redacted(row.get("archive_tail_in_prompt"), tail=10),
         "plan_steps": [hash_sensitive_text(x) or "" for x in plan[:24]],
-        "reasoning_keys": [str(k)[:48] for k in reasoning.keys()][:16],
+        "reasoning_keys": [hash_sensitive_text(k) or "" for k in reasoning.keys()][:16],
         "latency_ms": _safe_int(row.get("latency_ms"), lo=0, hi=600_000),
         "issues": [hash_sensitive_text(x) or "" for x in issues[:16]],
         "ok": bool(row.get("ok")),
@@ -593,16 +595,18 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
         return {}
     if str(row.get("type") or "") == "news_generation":
         return {
-            "type": "news_generation",
-            "timestamp": str(row.get("timestamp") or row.get("ts") or "")[:64],
-            "llm_model": str(row.get("llm_model") or "")[:120],
+            "type_code": 3,
+            "timestamp_hash": hash_sensitive_text(row.get("timestamp") or row.get("ts")),
+            "llm_model_hash": hash_sensitive_text(row.get("llm_model")),
             "self_verify_run": bool(row.get("self_verify_run", False)),
-            "self_verify_result": str(row.get("self_verify_result") or "N/A")[:80],
+            "self_verify_result_hash": hash_sensitive_text(row.get("self_verify_result")),
             "consistency_checked": bool(row.get("consistency_checked", False)),
             "consistency_ok": bool(row.get("consistency_ok", True)),
             "consistency_conflicts_count": _count_nonneg(row.get("consistency_conflicts_count")),
-            "consistency_recommendation": str(row.get("consistency_recommendation") or "safe")[:80],
-            "fetch_methods_used": [str(x)[:48] for x in list(row.get("fetch_methods_used") or [])[:20]],
+            "consistency_recommendation_hash": hash_sensitive_text(row.get("consistency_recommendation")),
+            "fetch_methods_used": [
+                hash_sensitive_text(x) or "" for x in list(row.get("fetch_methods_used") or [])[:20]
+            ],
             "total_sources": _count_nonneg(row.get("total_sources")),
             "avg_confidence": float(row.get("avg_confidence") or 0.0),
             "trusted_domain_count": _count_nonneg(row.get("trusted_domain_count")),
@@ -613,16 +617,20 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
             continue
         val = row[key]
         if key == "error":
-            out[key] = str(val or "")[:400]
+            out[key] = hash_sensitive_text(val) or ""
         elif key in {"fetch_methods_used"}:
-            out[key] = [str(x)[:48] for x in list(val or [])[:20]]
-        else:
+            out[key] = [hash_sensitive_text(x) or "" for x in list(val or [])[:20]]
+        elif isinstance(val, str):
+            out[key] = hash_sensitive_text(val) or ""
+        elif isinstance(val, (int, float)) and not isinstance(val, bool):
+            out[key] = val
+        elif isinstance(val, bool):
             out[key] = val
     src = row.get("sources")
     if isinstance(src, list):
         out["sources"] = [
             {
-                "fetch_method": str(item.get("fetch_method") or "unknown")[:48],
+                "fetch_method_hash": hash_sensitive_text(item.get("fetch_method")),
                 "fetch_success": bool(item.get("fetch_success", True)),
                 "text_length": _count_nonneg(item.get("text_length")),
                 "parsing_confidence": float(item.get("parsing_confidence") or 0.0),
@@ -666,6 +674,24 @@ def write_llm_usage_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
         os.fsync(f.fileno())
 
 
+def autolearn_promoted_log_line(
+    *,
+    user_id: str = "",
+    lesson_id: str = "",
+    fingerprint: str = "",
+) -> str:
+    """One promotion log line without clear-text user id (CodeQL logging barrier)."""
+    return (
+        "ephemeral_autolearn promoted lesson=%s user_hash=%s fp=%s"
+        % (str(lesson_id or "")[:24], hash_sensitive_text(user_id), str(fingerprint or "")[:16])
+    )
+
+
+def ephemeral_pending_auto_promoted_log_line(*, distinct_users: int = 0) -> str:
+    """One pending auto-promote log line (counts only, CodeQL logging barrier)."""
+    return "ephemeral pending auto-promoted distinct_users=%d" % max(0, int(distinct_users or 0))
+
+
 def log_ephemeral_pending_auto_promoted(
     *,
     pending_id: str = "",
@@ -674,12 +700,8 @@ def log_ephemeral_pending_auto_promoted(
     logger_name: str = "core.ephemeral_autolearn",
 ) -> None:
     """Log pending auto-promote without raw user ids (CodeQL clear-text-logging barrier)."""
-    logging.getLogger(logger_name).info(
-        "ephemeral pending auto-promoted (new) pending=%s lesson=%s distinct_users=%d",
-        str(pending_id or "")[:24],
-        str(lesson_id or "")[:24],
-        max(0, int(distinct_users or 0)),
-    )
+    _ = pending_id, lesson_id
+    logging.getLogger(logger_name).info("%s", ephemeral_pending_auto_promoted_log_line(distinct_users=distinct_users))
 
 
 def log_autolearn_lesson_promoted(
@@ -691,8 +713,10 @@ def log_autolearn_lesson_promoted(
 ) -> None:
     """Log lesson promotion with hashed user id only (CodeQL clear-text-logging barrier)."""
     logging.getLogger(logger_name).info(
-        "ephemeral_autolearn promoted lesson=%s user_hash=%s fp=%s",
-        str(lesson_id or "")[:24],
-        hash_sensitive_text(user_id),
-        str(fingerprint or "")[:16],
+        "%s",
+        autolearn_promoted_log_line(
+            user_id=user_id,
+            lesson_id=lesson_id,
+            fingerprint=fingerprint,
+        ),
     )

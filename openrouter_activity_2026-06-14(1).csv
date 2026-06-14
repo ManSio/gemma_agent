@@ -1,0 +1,399 @@
+generation_id,created_at,cost_total,cost_web_search,cost_cache,cost_file_processing,byok_usage_inference,tokens_prompt,tokens_completion,tokens_reasoning,tokens_cached,model_permaslug,provider_name,variant,cancelled,streamed,user,finish_reason_raw,finish_reason_normalized,generation_time_ms,time_to_first_token_ms,app_name,api_key_name
+gen-1781441404-WOCpRXUmuTTdUTOEuEMS,2026-06-14 12:50:04.401,0.000125,,-0.000011,,0,319,535,364,140,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8928,671,Gemma Agent,TEst
+gen-1781441391-3bkYGgWjUS1nl8PCCg8y,2026-06-14 12:49:51.390,0.000033,,-0.000004,,0,137,124,121,54,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3201,777,Gemma Agent,TEst
+gen-1781441385-qDD2cOXf18HAGDdoZ5gT,2026-06-14 12:49:45.741,0.000231,,-0.000005,,0,144,1133,1128,69,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,18079,773,Gemma Agent,TEst
+gen-1781441383-2ZG43efAVV9FWfUbraQT,2026-06-14 12:49:43.065,0.000148,,-0.000005,,0,151,707,666,66,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7828,737,Gemma Agent,TEst
+gen-1781441380-GLyc8VcjsEDui4dFL6EA,2026-06-14 12:49:39.889,0.000068,,-0.000004,,0,151,295,284,61,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5508,682,Gemma Agent,TEst
+gen-1781441379-A9droIR4ejrrvygNdd9y,2026-06-14 12:49:39.655,0.000037,,-0.000005,,0,158,143,97,72,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,2930,896,Gemma Agent,TEst
+gen-1781441368-DBLAdxQjnR0c4ZKHtuiY,2026-06-14 12:49:28.306,0.001377,,,,0,599,606,566,0,deepseek/deepseek-v4-pro-20260423,Baidu,standard,false,true,,stop,stop,10787,755,Gemma Agent,TEst
+gen-emb-1781441366-M8K0ltdC86UVOyelLpWv,2026-06-14 12:49:26.784,0.000003,,,,0,87,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,879,,TEst
+gen-1781441331-x5Bzihr3CpYv2Pv2Q07M,2026-06-14 12:48:51.627,0.000303,,-0.000007,,0,212,1474,1212,91,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,16071,667,Gemma Agent,TEst
+gen-1781441313-TlTT3Vo4pONr3aAZcZ30,2026-06-14 12:48:33.208,0.000264,,-0.000032,,0,827,1095,549,413,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,17638,588,Gemma Agent,TEst
+gen-emb-1781441310-Vdg58KsAREMf33vwE3Vy,2026-06-14 12:48:29.927,0.000001,,,,0,29,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,865,,TEst
+gen-1781441308-n8WayBPIeLVz3fOtfTCP,2026-06-14 12:48:28.295,0,,,,0,680,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,1034,155,Gemma Agent,TEst
+gen-1781441307-xZD2Q5LA7v5BPoQNGgFO,2026-06-14 12:48:27.640,0,,,,0,372,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,169,156,Gemma Agent,TEst
+gen-1781441280-y3Ms2vbjDruIdzhbbY8Q,2026-06-14 12:48:00.397,0.00033,,-0.000014,,0,436,1536,1438,183,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,25361,608,Gemma Agent,TEst
+gen-1781441249-etp78kU0zeuyS1xujrbg,2026-06-14 12:47:29.688,0.000083,,-0.000005,,0,165,369,235,67,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6517,1695,Gemma Agent,TEst
+gen-1781441246-cTCsTc2aPVeAG6KO5QoQ,2026-06-14 12:47:26.227,0.000128,,,,0,1120,41,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,2952,2509,Gemma Agent,TEst
+gen-1781441224-D803kYdAriAgitB04Ls9,2026-06-14 12:47:04.746,0.000312,,-0.000032,,0,836,1340,675,418,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,20905,728,Gemma Agent,TEst
+gen-emb-1781441220-MUNYN0jS3all9T1qoTfg,2026-06-14 12:47:00.398,0.000001,,,,0,32,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1765,,TEst
+gen-1781441219-ptMqWHrHqUxrcZjiQmob,2026-06-14 12:46:58.934,0,,,,0,682,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,217,142,Gemma Agent,TEst
+gen-1781441218-ooUKXUnWx8Ex6bYThzQe,2026-06-14 12:46:57.904,0,,,,0,374,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,367,367,Gemma Agent,TEst
+gen-1781440948-0LbNChAQGCCyokTVm0H4,2026-06-14 12:42:28.802,0.068591,,,,0,17,1581,0,0,google/gemini-3.1-flash-image-preview-20260226,Google AI Studio,standard,false,true,,STOP,stop,9777,9747,Gemma Agent,TEst
+gen-1781440916-Xinjbzw0VQBns6NSBLom,2026-06-14 12:41:56.243,0.001003,,-0.000474,,0,13732,656,426,6042,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8173,5699,Gemma Agent,TEst
+gen-1781440899-9TJohODSKdiMtIq6lwQO,2026-06-14 12:41:39.430,0.00089,,-0.000518,,0,13732,301,300,6591,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6302,1255,Gemma Agent,TEst
+gen-emb-1781440896-kTHeXKB3kTuHfTt7bl1D,2026-06-14 12:41:36.397,0,,,,0,4,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1670,,TEst
+gen-emb-1781440895-59s2rxICqoFf0dPrPaDz,2026-06-14 12:41:35.405,0,,,,0,4,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,451,,TEst
+gen-1781440894-3u3k0jQrrU5gQ5VJMlFk,2026-06-14 12:41:34.007,0,,,,0,659,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,687,430,Gemma Agent,TEst
+gen-1781440863-lKi8I2obvhS1tXEb5hKv,2026-06-14 12:41:03.542,0.000207,,-0.000064,,0,1963,404,322,824,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5066,602,Gemma Agent,TEst
+gen-emb-1781440862-EyEWGRUSKWgDXho2mzzm,2026-06-14 12:41:02.413,0,,,,0,20,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,547,,TEst
+gen-1781440861-QrCMtkJABvQrIMz6QslQ,2026-06-14 12:41:01.403,0,,,,0,674,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,337,142,Gemma Agent,TEst
+gen-1781440853-saOmGOxmv1hPZfTw1sub,2026-06-14 12:40:52.530,0.000197,,-0.000086,,0,2203,345,207,1101,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4150,619,Gemma Agent,TEst
+gen-emb-1781440851-0WLN3XSnXyLkYTT5zehy,2026-06-14 12:40:51.134,0,,,,0,13,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,423,,TEst
+gen-1781440850-XarAGGndSdKdU3wHJRms,2026-06-14 12:40:49.703,0,,,,0,380,37,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,550,342,Gemma Agent,TEst
+gen-1781440775-qd9PcKgK1WwZRFzPT0a2,2026-06-14 12:39:34.861,0.00011,,,,0,1098,2,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,1032,667,Gemma Agent,TEst
+gen-1781440763-NlZ5dlx41UmN8kLuytEr,2026-06-14 12:39:23.015,0.00024,,-0.000024,,0,699,999,487,314,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,11359,617,Gemma Agent,TEst
+gen-emb-1781440757-ikvlwETU981Dd89jlkt1,2026-06-14 12:39:17.279,0.000001,,,,0,35,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2818,,TEst
+gen-1781440756-973YTm0bYH4E9MGmLeQ0,2026-06-14 12:39:16.239,0,,,,0,692,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,363,142,Gemma Agent,TEst
+gen-1781440755-bDdZZO0flEKjQVSwsEY8,2026-06-14 12:39:15.258,0,,,,0,383,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,342,342,Gemma Agent,TEst
+gen-1781440718-WF8NWzs69V4onSMfIPOI,2026-06-14 12:38:38.172,0.000164,,-0.000005,,0,164,783,578,73,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8491,540,Gemma Agent,TEst
+gen-1781440716-AxlWMERTAPXfHwr7hOZa,2026-06-14 12:38:35.975,0.000147,,,,0,1286,48,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,1584,863,Gemma Agent,TEst
+gen-1781440701-oSoOeHY1OzDdR8wbfWyL,2026-06-14 12:38:21.335,0.000308,,-0.000029,,0,813,1314,629,373,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,14134,662,Gemma Agent,TEst
+gen-emb-1781440681-BVpi7mAbCVeYH4VCxTh3,2026-06-14 12:38:01.181,0.000001,,,,0,29,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,17404,,TEst
+gen-1781440680-WgDR5JtivkAo2qsDCqwK,2026-06-14 12:38:00.003,0,,,,0,680,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,369,181,Gemma Agent,TEst
+gen-1781440679-P1aSKbZcYvRsahTdD7tw,2026-06-14 12:37:58.943,0,,,,0,372,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,453,453,Gemma Agent,TEst
+gen-emb-1781440593-hq8gQq0lVc76zyqIx0yX,2026-06-14 12:36:32.798,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,3989,,TEst
+gen-1781440573-kfpSw6YsvSLhbhe5Gq0V,2026-06-14 12:36:13.326,0.000826,,-0.00038,,0,9892,1194,800,4847,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,18883,12746,Gemma Agent,TEst
+gen-1781440559-bU5iQu9MTrRWMblPINSy,2026-06-14 12:35:59.296,0.000613,,-0.000193,,0,6148,1031,977,2459,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,12305,11802,Gemma Agent,TEst
+gen-emb-1781440556-EFtJvUmj8LmB3B9XHiO6,2026-06-14 12:35:55.828,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2351,,TEst
+gen-1781440540-QH4t4OZnqHpP8RvaOgQA,2026-06-14 12:35:40.034,0.001619,,,,0,515,807,761,0,deepseek/deepseek-v4-pro-20260423,Baidu,standard,false,true,,stop,stop,14117,562,Gemma Agent,TEst
+gen-emb-1781440538-tO8FkL8ilgoBjCNCYvJB,2026-06-14 12:35:38.790,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,573,,TEst
+gen-1781440537-fDRlb78aWoaty1t8n7UH,2026-06-14 12:35:37.672,0,,,,0,664,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,335,174,Gemma Agent,TEst
+gen-1781440506-ywgRcCbVbCFLMDyj8Ubd,2026-06-14 12:35:06.480,0.000189,,-0.000069,,0,2208,212,91,883,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3086,615,Gemma Agent,TEst
+gen-emb-1781440505-MiPUlA4W6lbXnMTCHUCT,2026-06-14 12:35:05.223,0,,,,0,15,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,546,,TEst
+gen-1781440504-7CTbrx4BQZhxHJ15B2jd,2026-06-14 12:35:04.117,0,,,,0,666,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,351,160,Gemma Agent,TEst
+gen-1781440471-OKIe6vkDXOWiipeq9BFC,2026-06-14 12:34:31.274,0.000158,,-0.000072,,0,1960,192,109,921,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4640,2619,Gemma Agent,TEst
+gen-emb-1781440468-T8rnz77Q36On4APgnhHT,2026-06-14 12:34:28.322,0,,,,0,15,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2300,,TEst
+gen-1781440467-4xr86PPcEazWHuZBcqXF,2026-06-14 12:34:27.337,0,,,,0,668,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,293,142,Gemma Agent,TEst
+gen-1781440466-c25dk9F3GlAqDZIWSo0f,2026-06-14 12:34:26.515,0,,,,0,382,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,356,356,Gemma Agent,TEst
+gen-1781440431-frLYwqSXuMjLMpGuMUrI,2026-06-14 12:33:51.664,0.000059,,-0.000008,,0,227,234,114,113,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5767,1389,Gemma Agent,TEst
+gen-emb-1781440425-dN4Vp8xRJEHbeV7Pp5yE,2026-06-14 12:33:45.860,0,,,,0,10,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,503,,TEst
+gen-1781440425-6nLepMGuXNMYIswHkmc4,2026-06-14 12:33:44.932,0,,,,0,377,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,151,151,Gemma Agent,TEst
+gen-1781440370-uMjkqIi4zwb8sZZUykve,2026-06-14 12:32:50.381,0.000122,,-0.00001,,0,293,530,357,128,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9353,1028,Gemma Agent,TEst
+gen-1781440326-iqbj1d2tB6qTiePaGI9T,2026-06-14 12:32:06.120,0.000078,,-0.000012,,0,353,288,231,158,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5314,540,Gemma Agent,TEst
+gen-emb-1781440322-yNFGQIMTzQp0aEeM7QNO,2026-06-14 12:32:01.506,0.000007,,,,0,185,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,3484,,TEst
+gen-1781440265-guPv6DjbBVsEKzUGC8IG,2026-06-14 12:31:05.464,0.001915,,,,0,671,924,863,0,deepseek/deepseek-v4-pro-20260423,Baidu,standard,false,true,,stop,stop,14509,640,Gemma Agent,TEst
+gen-emb-1781440261-xrhntRvI4iizwwq0PDOo,2026-06-14 12:31:01.625,0.000007,,,,0,185,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,3235,,TEst
+gen-1781440260-F98w8G33Eyejmwu4R3cf,2026-06-14 12:31:00.418,0,,,,0,821,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,352,163,Gemma Agent,TEst
+gen-1781440209-ITssfb7QJ9P1bfIakHxS,2026-06-14 12:30:09.628,0.000131,,,,0,1131,45,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,1490,806,Gemma Agent,TEst
+gen-1781440188-lvTLe7zm69T6XIAszSBy,2026-06-14 12:29:47.476,0.000308,,-0.000024,,0,769,1307,864,307,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,20676,948,Gemma Agent,TEst
+gen-emb-1781440183-fBBSPGroDPPoXXLiTPmX,2026-06-14 12:29:43.680,0.000001,,,,0,39,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,522,,TEst
+gen-1781440181-dBxeghJTIhH6K8K5GkXq,2026-06-14 12:29:41.735,0,,,,0,692,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,1193,145,Gemma Agent,TEst
+gen-1781440180-HqxiFoOSn5GtluiysaOC,2026-06-14 12:29:40.353,0,,,,0,383,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,888,730,Gemma Agent,TEst
+gen-1781440127-WO2b1R4iYLicwyTdtO9m,2026-06-14 12:28:47.238,0.000196,,-0.000065,,0,1866,403,211,839,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7252,740,Gemma Agent,TEst
+gen-emb-1781440124-eZUsK4k8GQpTggUhyIf8,2026-06-14 12:28:44.664,0,,,,0,23,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1887,,TEst
+gen-1781440123-gfmcH95ihxuAQLO1zLvV,2026-06-14 12:28:43.579,0,,,,0,676,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,348,151,Gemma Agent,TEst
+gen-1781440059-12FMZ66dwoyJsMQCVs4t,2026-06-14 12:27:39.647,0.000117,,-0.000006,,0,172,545,352,79,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6227,815,Gemma Agent,TEst
+gen-1781440023-F2DZ0CiHirtGRBXEcNdV,2026-06-14 12:27:03.453,0.000424,,-0.000028,,0,787,1911,745,362,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,31765,946,Gemma Agent,TEst
+gen-emb-1781440018-dPhBtZSnaqwGJlSTZV9l,2026-06-14 12:26:58.644,0.000001,,,,0,35,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1805,,TEst
+gen-1781440017-c5GtGfmfnB17F6gJ4t9j,2026-06-14 12:26:57.223,0,,,,0,688,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,626,392,Gemma Agent,TEst
+gen-1781440016-qnvu1EtFKvKKiyGsOlI1,2026-06-14 12:26:55.931,0,,,,0,379,32,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,577,390,Gemma Agent,TEst
+gen-1781439993-WtKpCSDDhmpgk6Eiaf7l,2026-06-14 12:26:33.367,0.000182,,-0.000072,,0,1931,332,219,926,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6360,663,Gemma Agent,TEst
+gen-emb-1781439992-q2wsHEjnC26eCMxJ23EL,2026-06-14 12:26:32.178,0,,,,0,11,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,588,,TEst
+gen-1781439991-sntuiX4OmScgBwZhW69w,2026-06-14 12:26:31.188,0,,,,0,665,37,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,314,144,Gemma Agent,TEst
+gen-1781439990-qCsN0K8qxZpkxBXiHmYX,2026-06-14 12:26:28.354,0,,,,0,379,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,161,161,Gemma Agent,TEst
+gen-1781439865-qUiSKdlxZSLZCzyX02ks,2026-06-14 12:24:25.406,0.000189,,,,0,1065,208,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,1669,1031,Gemma Agent,TEst
+gen-1781439851-nttihxXkNKxhvKvg5mki,2026-06-14 12:24:11.660,0.000285,,-0.000024,,0,769,1196,841,315,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,13260,676,Gemma Agent,TEst
+gen-emb-1781439848-yPc30r2c8eI2rvJRNMJu,2026-06-14 12:24:08.037,0.000001,,,,0,33,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,389,,TEst
+gen-1781439847-g8oC27jF2Er3ZHUCJZcg,2026-06-14 12:24:06.954,0,,,,0,685,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,352,141,Gemma Agent,TEst
+gen-1781439846-zxYHF6bgNucKm4rtMvTE,2026-06-14 12:24:06.275,0,,,,0,377,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,128,128,Gemma Agent,TEst
+gen-1781439845-oDbCdEAjwpwBtDNxtpRU,2026-06-14 12:24:05.273,0,,,,0,377,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,347,347,Gemma Agent,TEst
+gen-1781438919-q8I6NCxUHzPPPskfP25p,2026-06-14 12:08:39.415,0.000113,,,,0,978,39,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,2124,1295,Gemma Agent,TEst
+gen-1781438910-C5VdRqta9m4eW31DJHxl,2026-06-14 12:08:29.877,0.000196,,-0.000024,,0,747,752,342,313,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8839,832,Gemma Agent,TEst
+gen-1781438642-qyiHM5ijx9BTMsL22l2I,2026-06-14 12:04:02.610,0.000131,,,,0,841,118,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,1977,868,Gemma Agent,TEst
+gen-1781438623-i9qlONqBHCprCvHOBspU,2026-06-14 12:03:43.045,0.000287,,-0.000031,,0,881,1186,916,405,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,18713,610,Gemma Agent,TEst
+gen-emb-1781438618-8G96ZPf13SxuxHokThim,2026-06-14 12:03:38.315,0,,,,0,7,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1433,,TEst
+gen-1781438617-LzPjF9XNZzNs4UIanR3W,2026-06-14 12:03:36.815,0,,,,0,687,30,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,305,144,Gemma Agent,TEst
+gen-1781438613-iBZSdRC0v0r1NqCTyNql,2026-06-14 12:03:33.355,0,,,,0,393,14,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,434,356,Gemma Agent,TEst
+gen-1781438610-8MI1TuhLC5AIU24Ft7Rx,2026-06-14 12:03:30.704,0.000125,,,,0,985,67,0,0,openai/gpt-4.1-nano-2025-04-14,Azure,standard,false,true,,completed,stop,1283,654,Gemma Agent,TEst
+gen-1781438587-GZFXyRz8InQZtRtMm7If,2026-06-14 12:03:06.344,0.000341,,-0.00003,,0,892,1443,1010,383,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,23256,574,Gemma Agent,TEst
+gen-emb-1781438563-jFq0mhJywNDr1jD07evE,2026-06-14 12:02:43.149,0,,,,0,5,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1480,,TEst
+gen-1781438561-BiC0pUtAG3G4Z2sW88CW,2026-06-14 12:02:41.262,0,,,,0,281,25,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,745,700,Gemma Agent,TEst
+gen-emb-1781438552-iNDyqQnP9mI6B1DjGzZH,2026-06-14 12:02:31.974,0,,,,0,4,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,3027,,TEst
+gen-1781425185-VzDK5tjr6QWxnjrmw9en,2026-06-14 08:19:44.211,0.000179,,-0.000009,,0,244,838,655,122,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9036,528,Gemma Agent,TEst
+gen-emb-1781425182-rGsn454bnLaZGP3mBd93,2026-06-14 08:19:42.076,0.000003,,,,0,180,,,,openai/text-embedding-3-small,OpenAI,standard,false,false,,,,0,364,,bot v2 chat
+gen-1781425177-TJtfdDyugY4UtGqsmZVS,2026-06-14 08:19:36.904,0.000329,,-0.000131,,0,4077,307,216,1671,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4067,639,Gemma Agent,TEst
+gen-emb-1781425151-U5Uzqko4yhiZZpinQnxh,2026-06-14 08:19:11.306,0.000001,,,,0,30,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,24849,,TEst
+gen-1781425150-JFneQxKVE5s7zt8AK0s2,2026-06-14 08:19:09.829,0,,,,0,644,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,591,398,Gemma Agent,TEst
+gen-emb-1781425148-ZBzpdalulKgpjwuWonyU,2026-06-14 08:19:08.665,0,,,,0,39,,,,openai/text-embedding-3-small,OpenAI,standard,false,false,,,,0,380,,bot v2 chat
+gen-emb-1781425145-21hieAM0GGzXx7jVX8Ng,2026-06-14 08:19:05.017,0,,,,0,14,,,,openai/text-embedding-3-small,OpenAI,standard,false,false,,,,0,370,,bot v2 chat
+gen-1781425141-qi0IL61FdJ6tGzKYiijI,2026-06-14 08:19:01.458,0.000221,,-0.000093,,0,2988,110,100,1195,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,2802,2690,Gemma Agent,TEst
+gen-emb-1781425121-wPJVpPvOVwiLZIJxbLwK,2026-06-14 08:18:41.640,0,,,,0,4,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,18600,,TEst
+gen-emb-1781425100-6KBQedKVkVlnFKwePWdH,2026-06-14 08:18:20.204,0,,,,0,4,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,20663,,TEst
+gen-1781420358-YHqT1Z9pRvHqcyUGC6ui,2026-06-14 06:59:18.218,0.000185,,-0.000006,,0,166,891,502,81,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9746,505,Gemma Agent,TEst
+gen-emb-1781420356-G15cDyLsByklapp6W5cV,2026-06-14 06:59:16.623,0.000001,,,,0,39,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,775,,TEst
+gen-1781420352-cbUHTbxeEH6qKS1D6pZX,2026-06-14 06:59:12.258,0.000746,,-0.000457,,0,11875,185,85,5818,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3776,2144,Gemma Agent,TEst
+gen-1781420339-4PeqzkpRLR9zAQAeFEW3,2026-06-14 06:58:59.261,0.000789,,-0.000401,,0,11875,119,48,5106,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,2252,1339,Gemma Agent,TEst
+gen-1781420336-ggAdPF8ZqH6z07dq6h5k,2026-06-14 06:58:55.924,0.000748,,-0.000436,,0,11819,120,80,5554,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,2912,2409,Gemma Agent,TEst
+gen-1781420329-xpotMcuAO2ocAXGLbboF,2026-06-14 06:58:49.473,0.00015,,-0.000022,,0,679,541,401,285,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5880,520,Gemma Agent,TEst
+gen-emb-1781420328-0x2uf07NFSSqS60fu9k9,2026-06-14 06:58:48.213,0.000001,,,,0,39,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,678,,TEst
+gen-emb-1781420327-BxvkNBBcrB7v7jWPIvwt,2026-06-14 06:58:47.048,0.000001,,,,0,39,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,595,,TEst
+gen-1781420326-z5eSEE9SFtvVN4buDjm8,2026-06-14 06:58:45.974,0,,,,0,710,35,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,355,159,Gemma Agent,TEst
+gen-1781414102-SFDPi70KX3a7w5yaGTj7,2026-06-14 05:15:02.031,0.000127,,-0.000005,,0,136,606,419,65,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7305,477,Gemma Agent,TEst
+gen-1781414085-H0wh3CfhmYNuHBqlE3HA,2026-06-14 05:14:45.112,0.000343,,-0.000079,,0,2245,1027,982,1010,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,16268,616,Gemma Agent,TEst
+gen-emb-1781414084-TN3dstNyRyRSAIAa4LAW,2026-06-14 05:14:43.954,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,509,,TEst
+gen-1781414082-QIvQahj98c9gkaLkSckY,2026-06-14 05:14:42.295,0,,,,0,691,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,824,734,Gemma Agent,TEst
+gen-1781412377-8sHsdtYzeq60niCTVjas,2026-06-14 04:46:17.253,0,,,,0,14,2,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,327,327,Gemma Agent,TEst
+gen-1781410283-ZmXSUamVQoNwjVHYg17X,2026-06-14 04:11:23.206,0,,,,0,21,16,17,0,nvidia/nemotron-3-nano-omni-30b-a3b-reasoning-20260428,Nvidia,free,false,true,,length,length,363,322,Gemma Agent,TEst
+gen-1781404997-GyOpLX8yAFtWs2YKe1ZH,2026-06-14 02:43:17.088,0,,,,0,72,17,6,64,openai/gpt-oss-20b,OpenInference,free,false,true,,stop,stop,759,424,Gemma Agent,TEst
+gen-1781402905-Kz6lxdPpvuWIvnzpkYLB,2026-06-14 02:08:24.807,0,,,,0,14,5,2,0,nex-agi/nex-n2-pro,SiliconFlow,free,false,true,,stop,stop,937,912,Gemma Agent,TEst
+gen-1781397617-esTG1L5kxkCU01gG9PtS,2026-06-14 00:40:16.832,0,,,,0,21,16,17,0,nvidia/nemotron-3-nano-30b-a3b,Nvidia,free,false,true,,length,length,390,304,Gemma Agent,TEst
+gen-1781395523-DoPCc4f5cYTDZauwyjbr,2026-06-14 00:05:22.971,0,,,,0,19,16,16,5,poolside/laguna-m.1-20260312,Poolside,free,false,true,,length,length,2438,1194,Gemma Agent,TEst
+gen-1781390236-fXgZOIFNuRTRn3Ft5wpV,2026-06-13 22:37:16.647,0,,,,0,21,16,18,0,nvidia/nemotron-3-ultra-550b-a55b-20260604,Nvidia,free,false,true,,length,length,550,452,Gemma Agent,TEst
+gen-1781388143-1f1B7QWO4QPWt2KGuglc,2026-06-13 22:02:23.448,0,,,,0,19,16,16,5,poolside/laguna-m.1-20260312,Poolside,free,false,true,,length,length,6323,725,Gemma Agent,TEst
+gen-1781386476-hat7CkSU97Y2buXxVBAn,2026-06-13 21:34:36.464,0.000292,,-0.00014,,0,3660,373,339,1793,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4395,873,Gemma Agent,TEst
+gen-emb-1781386473-lJz0oGemHR8Bz4QWJGkL,2026-06-13 21:34:33.142,0,,,,0,5,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2688,,TEst
+gen-1781386472-P1xWi3sE2gRiQBLTDSbz,2026-06-13 21:34:32.068,0,,,,0,684,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,358,166,Gemma Agent,TEst
+gen-1781386447-loCMSrLeeMY2G8aaGmUl,2026-06-13 21:34:07.352,0.000139,,-0.000004,,0,137,664,604,61,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7334,481,Gemma Agent,TEst
+gen-emb-1781386444-ZpTOJJizTIvn8zBy3OaA,2026-06-13 21:34:04.040,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,606,,TEst
+gen-1781386443-Q58QM8ecKXbJ7tGEQHqY,2026-06-13 21:34:03.236,0,,,,0,374,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,135,135,Gemma Agent,TEst
+gen-1781386417-hmXzSZR4eXPsirtNHSsM,2026-06-13 21:33:37.604,0.000203,,-0.000004,,0,136,990,945,58,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,12270,1329,Gemma Agent,TEst
+gen-1781386412-p7Hnto2vwjIFRWPG1tYY,2026-06-13 21:33:32.184,0.000218,,-0.000084,,0,2297,393,364,1079,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4719,582,Gemma Agent,TEst
+gen-emb-1781386409-z214Y2tGX5qfyUisB9Zm,2026-06-13 21:33:29.527,0,,,,0,10,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1890,,TEst
+gen-1781386408-YmhtIgDm3OwCotfzkaWO,2026-06-13 21:33:28.250,0,,,,0,383,19,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,424,325,Gemma Agent,TEst
+gen-1781386350-mhAWmIH4r2lqeFVeluwH,2026-06-13 21:32:29.804,0.000318,,-0.000082,,0,2556,759,386,1047,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8753,560,Gemma Agent,TEst
+gen-emb-1781386346-lvwlSMHMDxst6xArr2Q7,2026-06-13 21:32:26.182,0.000001,,,,0,26,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2870,,TEst
+gen-1781386306-Osgg99dOKPXplccuRKHt,2026-06-13 21:31:46.667,0.000066,,-0.000005,,0,138,295,219,67,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5208,616,Gemma Agent,TEst
+gen-1781386296-Q86ctbc79uQrhv5C1jjW,2026-06-13 21:31:35.975,0.000339,,-0.00009,,0,2556,911,844,1150,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9999,481,Gemma Agent,TEst
+gen-emb-1781386295-g2Sx3ePY4eD5ZvAOYTOc,2026-06-13 21:31:34.818,0,,,,0,10,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,489,,TEst
+gen-1781386293-GcCTcfQKjM4NXDAzqsZQ,2026-06-13 21:31:33.566,0,,,,0,682,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,493,227,Gemma Agent,TEst
+gen-1781386292-yAqmbj3h47VfqH9KUlFX,2026-06-13 21:31:32.443,0,,,,0,379,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,462,462,Gemma Agent,TEst
+gen-1781386242-6tkZjSIppdjbvkhHxCVD,2026-06-13 21:30:42.507,0.000321,,-0.000004,,0,137,1591,1506,63,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,17034,1009,Gemma Agent,TEst
+gen-1781386232-IwGxSAuFagSGwYOYNMxa,2026-06-13 21:30:32.032,0.000281,,-0.000088,,0,2623,573,448,1127,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9745,666,Gemma Agent,TEst
+gen-emb-1781386227-UvgpgwCE5SRQjJok0SST,2026-06-13 21:30:27.276,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,4248,,TEst
+gen-1781386226-YRvlsgBVTwS88X3iGwVm,2026-06-13 21:30:26.185,0,,,,0,680,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,404,176,Gemma Agent,TEst
+gen-1781386225-dJHWyAw67C5CXsXF2NkU,2026-06-13 21:30:25.007,0,,,,0,377,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,456,456,Gemma Agent,TEst
+gen-1781386193-R4T2lh4Podv5Pn9TASXA,2026-06-13 21:29:53.605,0.000173,,-0.000004,,0,145,833,523,63,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,14369,872,Gemma Agent,TEst
+gen-emb-1781386191-zIWSOldy6pMuMlXL63zr,2026-06-13 21:29:51.383,0,,,,0,19,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1439,,TEst
+gen-1781386185-ukwcbUbdjSqX3RteggNg,2026-06-13 21:29:45.487,0.000528,,-0.000207,,0,6599,445,64,2639,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5202,1859,Gemma Agent,TEst
+gen-1781386180-o6iOtJxS2u6wK0hxn9ry,2026-06-13 21:29:40.679,0.000271,,-0.000131,,0,3711,194,137,1669,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,2871,2355,Gemma Agent,TEst
+gen-1781386176-U0UdEGlCVlook3qsmUCA,2026-06-13 21:29:36.317,0.000106,,-0.000024,,0,679,327,214,312,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3805,560,Gemma Agent,TEst
+gen-emb-1781386172-Utj9HIIdnghBToC2GvBe,2026-06-13 21:29:32.709,0,,,,0,19,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2871,,TEst
+gen-emb-1781386169-70J5jJyvw1Ae1QfNNPwM,2026-06-13 21:29:28.902,0,,,,0,19,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2087,,TEst
+gen-1781386168-g2tPgmYXhGc0N47XFZvp,2026-06-13 21:29:27.945,0,,,,0,687,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,326,141,Gemma Agent,TEst
+gen-1781386167-9bzerFub1CPlj7i4TNU3,2026-06-13 21:29:26.991,0,,,,0,384,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,357,357,Gemma Agent,TEst
+gen-1781386110-1gaw2w5aARLc4SlWsXPN,2026-06-13 21:28:30.437,0.000222,,-0.000005,,0,144,1084,1002,66,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,18440,570,Gemma Agent,TEst
+gen-1781386106-MHAoQPTRPUxQbq76JPTW,2026-06-13 21:28:25.927,0.000179,,-0.000096,,0,2459,175,104,1229,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3349,550,Gemma Agent,TEst
+gen-emb-1781386101-SwlfRBWHnCvENVRhlJOC,2026-06-13 21:28:21.730,0,,,,0,19,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,3588,,TEst
+gen-1781386100-pgTq4qncTPCmq2dkoyJD,2026-06-13 21:28:20.718,0,,,,0,687,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,363,147,Gemma Agent,TEst
+gen-1781386098-0Sbd5Yhpvk1fm1enpbB1,2026-06-13 21:28:17.872,0,,,,0,384,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,205,159,Gemma Agent,TEst
+gen-emb-1781385247-B50WVpchCcGXKoLbRWke,2026-06-13 21:14:06.959,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2741,,TEst
+gen-1781385245-BCfPwGPGHFCZrjA5nOeZ,2026-06-13 21:14:05.758,0,,,,0,392,29,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,382,185,Gemma Agent,TEst
+gen-1781385240-A4BNSetW5yiQ0fu80cbS,2026-06-13 21:14:00.651,0.000049,,-0.000007,,0,190,194,144,91,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4237,659,Gemma Agent,TEst
+gen-1781385221-RwX0LvjzyOGA9gpNP5pc,2026-06-13 21:13:41.352,0.000239,,-0.000004,,0,137,1172,1080,58,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,18428,659,Gemma Agent,TEst
+gen-1781385199-24HDpgYwBRfwWOjOlBvc,2026-06-13 21:13:19.421,0.000215,,-0.000004,,0,137,1051,980,63,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,11492,645,Gemma Agent,TEst
+gen-emb-1781385196-zTt89obrVC3qCYPvoHf1,2026-06-13 21:13:16.584,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,427,,TEst
+gen-1781385195-p7oZzKbN3txYqxT9Vksu,2026-06-13 21:13:15.099,0,,,,0,672,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,718,172,Gemma Agent,TEst
+gen-1781385193-c2T79ITcPgPC6KJx2WKZ,2026-06-13 21:13:13.693,0,,,,0,392,62,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,817,399,Gemma Agent,TEst
+gen-1781385187-tEz9Dif6iMQAhNyX8drJ,2026-06-13 21:13:07.800,0.000059,,-0.000004,,0,136,258,176,59,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4786,627,Gemma Agent,TEst
+gen-1781385145-M74aHgLTwdjqgscvs69V,2026-06-13 21:12:25.803,0.000401,,-0.000004,,0,136,2000,2000,63,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,length,length,31626,648,Gemma Agent,TEst
+gen-1781385114-g2AyOe1u4apLtNGcevEj,2026-06-13 21:11:54.317,0.000401,,-0.000005,,0,136,2000,2000,68,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,length,length,21060,577,Gemma Agent,TEst
+gen-1781385110-wDyuVbydNjrfU2XySXlu,2026-06-13 21:11:50.549,0.000208,,-0.000088,,0,2561,231,162,1126,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,2966,618,Gemma Agent,TEst
+gen-emb-1781385109-bKCwzqyu2zwPIYOzapXE,2026-06-13 21:11:49.477,0,,,,0,10,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,427,,TEst
+gen-1781385108-lx9r6jisnWyBreaC3Vyf,2026-06-13 21:11:48.157,0,,,,0,681,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,382,156,Gemma Agent,TEst
+gen-1781385106-GJKUL3lfGsAkbHTuQ3IP,2026-06-13 21:11:46.795,0,,,,0,401,33,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,733,398,Gemma Agent,TEst
+gen-1781385079-b6D0YmbfmJvIMQVUEgfr,2026-06-13 21:11:19.537,0.000097,,-0.000004,,0,148,443,411,59,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7437,778,Gemma Agent,TEst
+gen-1781385075-Qx4QhIWtQzGiJAqdh2Le,2026-06-13 21:11:14.630,0.000201,,-0.000082,,0,2573,161,79,1054,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3923,689,Gemma Agent,TEst
+gen-emb-1781385072-Wv0q2QGfAgMDERtxRyvf,2026-06-13 21:11:11.890,0,,,,0,20,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,946,,TEst
+gen-1781385069-a1sxbNZxZWmmaBnNfcx3,2026-06-13 21:11:08.991,0,,,,0,700,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,695,466,Gemma Agent,TEst
+gen-1781385045-WZjKwfNlEC3MDnq67h0l,2026-06-13 21:10:45.307,0.00026,,-0.000097,,0,2580,529,246,1238,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6632,913,Gemma Agent,TEst
+gen-emb-1781385044-xMu8z5F7YIEFmCMZkmK5,2026-06-13 21:10:44.250,0.000001,,,,0,26,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,448,,TEst
+gen-1781385041-je8VagSQfGNsD83Q6jmP,2026-06-13 21:10:41.533,0,,,,0,705,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,312,159,Gemma Agent,TEst
+gen-1781385030-ZUqnOIlYXEQzRice4T1s,2026-06-13 21:10:30.589,0.000073,,-0.000005,,0,138,333,255,66,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4487,1067,Gemma Agent,TEst
+gen-1781385023-pErdUJ1CiIJ4DWjbxTTe,2026-06-13 21:10:23.386,0.000265,,-0.000089,,0,2639,483,241,1134,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6471,1078,Gemma Agent,TEst
+gen-emb-1781385022-b5IwhBxzRuLbK9D4DFCQ,2026-06-13 21:10:22.240,0,,,,0,10,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,448,,TEst
+gen-1781385021-wsTuYUiJudkmRSVv6zHc,2026-06-13 21:10:21.147,0,,,,0,677,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,358,142,Gemma Agent,TEst
+gen-1781385020-AZS9vxyv1POLaqOJN24h,2026-06-13 21:10:20.038,0,,,,0,397,45,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,624,350,Gemma Agent,TEst
+gen-1781384993-4Nmh90gVRPXfGROm9vk7,2026-06-13 21:09:53.064,0.000318,,-0.000099,,0,3155,549,163,1262,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5899,522,Gemma Agent,TEst
+gen-emb-1781384990-wFjSoJQaJR4ivyckdapE,2026-06-13 21:09:50.664,0.000001,,,,0,32,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1693,,TEst
+gen-1781384989-MJ7xCXzJWQCCcL4NRlWv,2026-06-13 21:09:49.669,0,,,,0,396,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,323,323,Gemma Agent,TEst
+gen-1781384970-CNVvN54vbUFsF2eCVSM0,2026-06-13 21:09:29.881,0.000132,,-0.000004,,0,144,623,554,57,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6514,477,Gemma Agent,TEst
+gen-1781384951-HImdT3AFZWWUf70MkcRL,2026-06-13 21:09:11.152,0.000155,,-0.000004,,0,144,744,626,57,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8243,777,Gemma Agent,TEst
+gen-1781384932-nVmYa9G6OXzPNOZ3aIvb,2026-06-13 21:08:52.443,0.000108,,-0.000005,,0,144,507,395,72,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8291,673,Gemma Agent,TEst
+gen-1781384903-Mm91HcMT9J8b2OkhJ33f,2026-06-13 21:08:22.816,0.000527,,-0.000093,,0,2704,1807,1698,1189,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,28849,613,Gemma Agent,TEst
+gen-emb-1781384900-VWIIITbBsKraopCwRV3n,2026-06-13 21:08:20.407,0.000001,,,,0,42,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1880,,TEst
+gen-1781384899-2zmUYZ0f9Z6cZzFIWMcD,2026-06-13 21:08:19.473,0,,,,0,703,30,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,274,147,Gemma Agent,TEst
+gen-1781384899-cD5F5zZBntM8xXRmJ6DR,2026-06-13 21:08:18.863,0,,,,0,403,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,145,145,Gemma Agent,TEst
+gen-1781384886-OyvbFdh3h38k97y5TzOA,2026-06-13 21:08:06.283,0.00012,,-0.000004,,0,137,567,253,61,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7322,1301,Gemma Agent,TEst
+gen-1781384877-3zmsOce7fhFsRuWGRzqn,2026-06-13 21:07:56.819,0.00031,,-0.000101,,0,2697,746,360,1294,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7798,652,Gemma Agent,TEst
+gen-emb-1781384875-OkZcZ8QTsKj7yScF1m01,2026-06-13 21:07:55.751,0.000001,,,,0,32,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,401,,TEst
+gen-1781384874-8IlREfGQiklz4BTPsFCh,2026-06-13 21:07:54.740,0,,,,0,696,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,299,145,Gemma Agent,TEst
+gen-1781384874-KCrEWzdvRCT82iJlCLa8,2026-06-13 21:07:53.900,0,,,,0,696,37,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,310,146,Gemma Agent,TEst
+gen-1781384873-bF4rpKgyOUjSXhysrCnh,2026-06-13 21:07:52.845,0,,,,0,396,28,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,310,175,Gemma Agent,TEst
+gen-1781384837-salnzSVpGMkR7VXf2961,2026-06-13 21:07:17.781,0.000148,,-0.000004,,0,144,706,624,60,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,12454,865,Gemma Agent,TEst
+gen-1781384827-p3U1Fsh4QgAMTmp8hmow,2026-06-13 21:07:07.753,0.000323,,-0.000093,,0,2596,826,721,1194,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8901,571,Gemma Agent,TEst
+gen-emb-1781384826-MZILm26rS3Jwz0hyEcHl,2026-06-13 21:07:06.389,0.000001,,,,0,41,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,844,,TEst
+gen-1781384825-vbbh36SpdE2cLAWvlDD1,2026-06-13 21:07:05.340,0,,,,0,702,30,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,311,156,Gemma Agent,TEst
+gen-1781384824-sisHIL9Csiq8j6QFNe3O,2026-06-13 21:07:04.010,0,,,,0,403,73,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,226,154,Gemma Agent,TEst
+gen-1781384823-YkerVGWJw0aIRSrapjfN,2026-06-13 21:07:02.977,0,,,,0,403,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,393,393,Gemma Agent,TEst
+gen-1781384710-MibGKMnE5r6VTHgAPPxk,2026-06-13 21:05:10.071,0.000202,,-0.000004,,0,138,983,705,56,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,12469,1292,Gemma Agent,TEst
+gen-1781384699-dbmkkTmsR5UKX4hXmYP4,2026-06-13 21:04:59.793,0.000232,,-0.000095,,0,2590,374,227,1217,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8983,833,Gemma Agent,TEst
+gen-emb-1781384693-OxUtDG9DA14jVZV13Ixn,2026-06-13 21:04:53.663,0.000001,,,,0,36,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,5539,,TEst
+gen-1781384692-EmImCFz6yfSSPT0x69uZ,2026-06-13 21:04:52.164,0,,,,0,696,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,370,150,Gemma Agent,TEst
+gen-1781384691-tcMzcsbssrVAwyDonPTS,2026-06-13 21:04:50.521,0,,,,0,397,39,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,478,234,Gemma Agent,TEst
+gen-1781384689-HSnMuSnYZ4q2U4BXezPs,2026-06-13 21:04:49.147,0,,,,0,397,47,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,601,344,Gemma Agent,TEst
+gen-1781384546-K45ShbVcxmyLQ8wmKF37,2026-06-13 21:02:26.694,0.000115,,-0.000004,,0,136,542,420,54,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9331,799,Gemma Agent,TEst
+gen-1781384538-9WTl03hVOg7XvBdbAh37,2026-06-13 21:02:18.666,0.000227,,-0.00008,,0,2444,347,263,1026,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6962,1065,Gemma Agent,TEst
+gen-emb-1781384537-PpYsFNsfVlHvPwFkF4co,2026-06-13 21:02:16.810,0,,,,0,11,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1319,,TEst
+gen-1781384535-mlcQ1m9YRsnaqK7fIEoE,2026-06-13 21:02:15.706,0,,,,0,674,30,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,297,148,Gemma Agent,TEst
+gen-1781384534-liWtD1MH9ARVqZAGMepT,2026-06-13 21:02:14.584,0,,,,0,394,46,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,405,155,Gemma Agent,TEst
+gen-1781381229-LVsvSuDP5fWuyQke5njI,2026-06-13 20:07:09.734,0.000314,,-0.000005,,0,135,1558,1368,66,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,24583,537,Gemma Agent,TEst
+gen-1781381221-IJ6EQ5I2IiLgRoThBXc5,2026-06-13 20:07:01.767,0.000233,,-0.000076,,0,2444,354,241,977,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6977,629,Gemma Agent,TEst
+gen-emb-1781381220-SpxdrjlBQWa1MRD5olxc,2026-06-13 20:07:00.254,0,,,,0,8,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,659,,TEst
+gen-1781381219-XhbIftoyg1migpvaZHcZ,2026-06-13 20:06:59.171,0,,,,0,674,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,335,141,Gemma Agent,TEst
+gen-1781381218-InNViZVyzBslkLzT8B6b,2026-06-13 20:06:58.529,0,,,,0,394,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,160,155,Gemma Agent,TEst
+gen-1781379797-eAIC5zqG5pQuQ29BKbv9,2026-06-13 19:43:17.221,0.000088,,-0.000004,,0,137,405,290,60,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4595,758,Gemma Agent,TEst
+gen-1781379791-WnsNe6tBmJbm0xHISoO2,2026-06-13 19:43:11.117,0.000195,,-0.00008,,0,2278,264,126,1025,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5175,650,Gemma Agent,TEst
+gen-emb-1781379789-yYHK1xzgyLMHK5bLunkm,2026-06-13 19:43:09.541,0,,,,0,10,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,870,,TEst
+gen-1781379788-vtJznf8ak1o8wnKMO4ML,2026-06-13 19:43:08.497,0,,,,0,677,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,362,144,Gemma Agent,TEst
+gen-1781379787-Bs0fDQTJgf5oTGEv2VDA,2026-06-13 19:43:07.628,0,,,,0,399,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,353,346,Gemma Agent,TEst
+gen-1781379758-jQI3wQ0xYC5yfYQVmUjv,2026-06-13 19:42:38.748,0.000132,,-0.000012,,0,362,556,266,155,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9240,833,Gemma Agent,TEst
+gen-emb-1781379756-7VzUT1B8n80QJS12uFnM,2026-06-13 19:42:36.240,0.000011,,,,0,277,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,407,,TEst
+gen-1781379754-37MTEJB5L2aGbkoK6iDC,2026-06-13 19:42:34.515,0,,,,0,825,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,945,733,Gemma Agent,TEst
+gen-1781379601-3ZjtGLDse8n1hcoIpa3i,2026-06-13 19:40:01.479,0.000117,,-0.000005,,0,135,556,232,64,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6283,727,Gemma Agent,TEst
+gen-1781379590-JNX2Hu8WHPt9rCOe9a95,2026-06-13 19:39:50.375,0.000257,,-0.00008,,0,2276,583,296,1024,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9891,983,Gemma Agent,TEst
+gen-emb-1781379589-2fxE9sytFLerqtYr53IW,2026-06-13 19:39:48.697,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,849,,TEst
+gen-1781379587-Q4ZsGZWSdqOEUsU1M3X0,2026-06-13 19:39:47.459,0,,,,0,676,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,308,161,Gemma Agent,TEst
+gen-1781379586-bnlzMpLpb62KJfGHR8mG,2026-06-13 19:39:46.222,0,,,,0,398,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,429,429,Gemma Agent,TEst
+gen-1781379377-UvRvfdFQXL3bFTdOEgZ9,2026-06-13 19:36:17.585,0.000137,,-0.000005,,0,138,654,425,64,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7176,502,Gemma Agent,TEst
+gen-1781379366-cl94LH6ZWB479TADNZ5y,2026-06-13 19:36:05.938,0.000272,,-0.00008,,0,2279,654,467,1025,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,10733,596,Gemma Agent,TEst
+gen-emb-1781379364-dxRbIJ0mzWdinDoPgbDb,2026-06-13 19:36:04.709,0,,,,0,13,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,511,,TEst
+gen-1781379363-duXuNy5upMrsjquCVdMx,2026-06-13 19:36:03.504,0,,,,0,678,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,381,156,Gemma Agent,TEst
+gen-1781379362-Mvz6Il2OE4kLzg2Cj1ki,2026-06-13 19:36:02.575,0,,,,0,400,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,384,372,Gemma Agent,TEst
+gen-1781379333-lrLpPWseP6TO0RmBJnAg,2026-06-13 19:35:33.675,0.000227,,-0.000077,,0,2293,404,305,985,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7400,627,Gemma Agent,TEst
+gen-emb-1781379331-0kbNFrFSVPT6JZyFicRm,2026-06-13 19:35:31.495,0.000001,,,,0,32,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1490,,TEst
+gen-1781379330-e3iiprtMPRgTNWbKqt4P,2026-06-13 19:35:30.518,0,,,,0,694,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,350,138,Gemma Agent,TEst
+gen-1781379330-uDC753wqL9tQMmzBtZnM,2026-06-13 19:35:29.957,0,,,,0,393,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,134,134,Gemma Agent,TEst
+gen-1781379319-Dv2A5PqJpXCc7L0zfMFH,2026-06-13 19:35:19.111,0.000347,,-0.000121,,0,3683,542,353,1546,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9334,614,Gemma Agent,TEst
+gen-emb-1781379317-JIsz4ShmECeNRi7AETe0,2026-06-13 19:35:17.510,0.000001,,,,0,31,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,874,,TEst
+gen-1781379316-ekqfwetc5YGnib9ODIsX,2026-06-13 19:35:15.945,0,,,,0,693,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,761,679,Gemma Agent,TEst
+gen-1781379315-0NSd40DNc4zUzWf5iEZ4,2026-06-13 19:35:14.885,0,,,,0,393,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,356,353,Gemma Agent,TEst
+gen-1781379190-6w4E3np3EzwZGbwmeNf0,2026-06-13 19:33:09.994,0,,,,0,223977,538,0,0,openrouter/owl-alpha,Stealth,standard,false,true,,stop,stop,29717,14748,Zed Editor,zed
+gen-1781379021-Vp35QIfHOC70lTQh8VkR,2026-06-13 19:30:21.371,0,,,,0,12409,677,139,11968,google/gemma-4-31b-it-20260402,OpenInference,free,false,true,,tool_calls,tool_calls,14083,843,Zed Editor,zed
+gen-1781379019-K2JftfDus7DDUV0LtPc4,2026-06-13 19:30:19.187,0,,,,0,12001,60,38,11904,google/gemma-4-31b-it-20260402,OpenInference,free,false,true,,tool_calls,tool_calls,1419,546,Zed Editor,zed
+gen-1781379017-W8wPKwwkpF4xknVUd9yr,2026-06-13 19:30:17.131,0,,,,0,11953,24,0,11264,google/gemma-4-31b-it-20260402,OpenInference,free,false,true,,tool_calls,tool_calls,1152,1081,Zed Editor,zed
+gen-1781379017-T4zbk3jJ9CyKtJxW43vN,2026-06-13 19:30:17.121,0,,,,0,1301,6,0,0,google/gemma-4-31b-it-20260402,OpenInference,free,false,true,,stop,stop,635,588,Zed Editor,zed
+gen-1781379011-YdzWYMO1SCyLjcL6jwSm,2026-06-13 19:30:10.972,0,,,,0,11326,148,102,0,google/gemma-4-31b-it-20260402,OpenInference,free,false,true,,tool_calls,tool_calls,5259,912,Zed Editor,zed
+gen-1781378583-nJl4f90UL364WbUuX3KK,2026-06-13 19:23:03.715,0.000227,,-0.000031,,0,824,901,462,395,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,14705,722,Gemma Agent,TEst
+gen-1781378553-ixZrl8EFqfyBkDE39mrS,2026-06-13 19:22:33.532,0,,,,0,218902,2736,0,214912,openrouter/owl-alpha,Stealth,standard,false,true,,stop,stop,134545,31439,Zed Editor,zed
+gen-1781378406-2rO0DGtYB5QTVmKe9UD7,2026-06-13 19:20:06.353,0,,,,0,214922,2775,0,0,openrouter/owl-alpha,Stealth,standard,false,true,,stop,stop,127698,30482,Zed Editor,zed
+gen-1781377757-jv9bHvLiaq8WWCBuis51,2026-06-13 19:09:16.788,0,,,,0,209746,2316,47,0,nvidia/nemotron-3-ultra-550b-a55b-20260604,Nvidia,free,false,true,,stop,stop,146675,51792,Zed Editor,zed
+gen-1781377599-zu13zzRyK4Ex8tKSTs1i,2026-06-13 19:06:38.990,0,,,,0,192590,373,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,7739,4334,Zed Editor,zed
+gen-1781377584-Zv2l1OlBaOZtZ4RnGCMV,2026-06-13 19:06:24.782,0,,,,0,183790,665,135,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,11613,3376,Zed Editor,zed
+gen-1781377564-0DsQJFo2shU9Bmr0PwtW,2026-06-13 19:06:04.582,0,,,,0,154215,543,183,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,16382,8379,Zed Editor,zed
+gen-1781377550-ZrrT2ypM9H3vMCILKyfB,2026-06-13 19:05:50.092,0,,,,0,143814,764,315,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,10958,1980,Zed Editor,zed
+gen-1781376609-WLtGcQyE2YWpLNFboPXk,2026-06-13 18:50:09.211,0,,,,0,143809,565,134,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,7572,1733,Zed Editor,zed
+gen-1781376544-YVW8YGhuveloCF9Vahe6,2026-06-13 18:49:04.193,0,,,,0,143796,358,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,6817,3068,Zed Editor,zed
+gen-1781376490-k05mjIg1zY5DEtQ7EhyS,2026-06-13 18:48:10.575,0,,,,0,126619,389,108,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,49985,45689,Zed Editor,zed
+gen-1781376281-kDtFGcDxgyX2G7bk1dRE,2026-06-13 18:44:41.439,0.000346,,-0.000094,,0,2948,773,516,1208,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,12268,739,Gemma Agent,TEst
+gen-emb-1781376280-lWLnHEByQ8BofQPLR6bi,2026-06-13 18:44:40.185,0.000001,,,,0,39,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,626,,TEst
+gen-1781376279-LMJx8LtvRqT6L6xlkFBd,2026-06-13 18:44:38.907,0,,,,0,700,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,323,144,Gemma Agent,TEst
+gen-1781376278-AhiVy4TmZgo5RT6N5Bxh,2026-06-13 18:44:38.026,0,,,,0,402,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,359,356,Gemma Agent,TEst
+gen-1781376253-QfWy7uaxkHhzlS0GU5u9,2026-06-13 18:44:13.292,0.000317,,-0.000087,,0,2775,672,326,1110,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,11296,926,Gemma Agent,TEst
+gen-emb-1781376250-IhxEct3URyAQLSN4wXJK,2026-06-13 18:44:10.547,0,,,,0,12,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1883,,TEst
+gen-1781376249-0v01acsAy4mMf78SSMZ9,2026-06-13 18:44:08.299,0,,,,0,382,72,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,746,350,Gemma Agent,TEst
+gen-1781376229-h8UBhkAM0LP8XElsI5gl,2026-06-13 18:43:49.763,0,,,,0,124954,1647,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,19884,1925,Zed Editor,zed
+gen-1781376215-GFtZtzxyq7gp2LxIA2P9,2026-06-13 18:43:34.789,0,,,,0,116837,495,526,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,12741,7104,Zed Editor,zed
+gen-1781375121-l9lf6Br7JgRisH4ZfPRR,2026-06-13 18:25:21.686,0,,,,0,111135,448,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,19095,11067,Zed Editor,zed
+gen-1781375102-RB9vWG0CM2HSuVwrsHhY,2026-06-13 18:25:02.100,0,,,,0,111061,61,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,4048,3024,Zed Editor,zed
+gen-1781375092-IFVjvnI8CnurGcpGtkcX,2026-06-13 18:24:52.724,0,,,,0,110619,156,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,3089,1440,Zed Editor,zed
+gen-1781375065-vrONYwsTwrKoqw8HibG7,2026-06-13 18:24:25.608,0,,,,0,110339,877,878,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,22976,14274,Zed Editor,zed
+gen-1781374958-nU4FNXIDCu9AWZ4VKv4Q,2026-06-13 18:22:38.687,0,,,,0,109608,457,317,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,7942,1690,Zed Editor,zed
+gen-1781374933-yPjOcXDjocs74HzLJyxr,2026-06-13 18:22:13.364,0,,,,0,109591,8,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,4151,4106,Zed Editor,zed
+gen-1781374829-qWRLz83mZyvEFdJcekZR,2026-06-13 18:20:29.141,0,,,,0,109232,352,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,6608,2722,Zed Editor,zed
+gen-1781374427-9gMfimmm2i4z8OV2EjXR,2026-06-13 18:13:46.880,0,,,,0,108672,303,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,4143,1251,Zed Editor,zed
+gen-1781374422-8D33hcpa8ozsnwS0NYqD,2026-06-13 18:13:42.166,0,,,,0,108391,118,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,4204,3706,Zed Editor,zed
+gen-1781374416-m88XAYRfiwfhXZLmsoGL,2026-06-13 18:13:35.873,0,,,,0,107712,330,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,5701,2576,Zed Editor,zed
+gen-1781374407-6f4ZsR50sRPhDjGBeZQ8,2026-06-13 18:13:26.965,0,,,,0,106828,633,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,8390,2062,Zed Editor,zed
+gen-1781374403-jo5d4tWGb8bhdIPXsm3R,2026-06-13 18:13:23.153,0,,,,0,106460,138,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,3281,1825,Zed Editor,zed
+gen-1781374393-HhCTSTx5MrCZs9JT3Yob,2026-06-13 18:13:12.915,0,,,,0,105593,616,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,9745,2829,Zed Editor,zed
+gen-1781374384-PR6y3WvkEcq47Jk9MJKG,2026-06-13 18:13:04.570,0,,,,0,104492,405,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,7299,3410,Zed Editor,zed
+gen-1781374380-FxFC4Q3yJDPmcWQMC8vC,2026-06-13 18:12:59.738,0,,,,0,102623,59,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,4234,3680,Zed Editor,zed
+gen-1781374372-NlB3zxp68POYs5kuCRHn,2026-06-13 18:12:51.952,0,,,,0,102165,407,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,7043,3149,Zed Editor,zed
+gen-1781374368-CqFYBCkgqkF3wZbRskJ6,2026-06-13 18:12:48.347,0,,,,0,101878,122,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,3070,1745,Zed Editor,zed
+gen-1781374360-62qV3TK7iP5eMbJVH7up,2026-06-13 18:12:39.830,0,,,,0,100337,472,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,8024,1262,Zed Editor,zed
+gen-1781374354-SRVu8Kuqy1fcvop4HSKM,2026-06-13 18:12:34.584,0,,,,0,99750,242,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,4635,2064,Zed Editor,zed
+gen-1781374345-oIB1sCPJL8EnESzgJnTH,2026-06-13 18:12:24.861,0,,,,0,96816,659,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,9178,1506,Zed Editor,zed
+gen-1781374340-S12CCfokoVAQopXNxiLn,2026-06-13 18:12:20.694,0,,,,0,96480,128,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,3397,2151,Zed Editor,zed
+gen-1781374334-lVtyOSe2TQJXvboDbNyv,2026-06-13 18:12:14.237,0,,,,0,95423,422,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,5880,1331,Zed Editor,zed
+gen-1781374330-LgiGcy2C1VNCXOuBIJK3,2026-06-13 18:12:09.920,0,,,,0,94705,239,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,3453,1241,Zed Editor,zed
+gen-1781374321-rXPYlQo9IIGrOTp2v8IA,2026-06-13 18:12:01.730,0,,,,0,93003,564,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,7573,1834,Zed Editor,zed
+gen-1781374313-YrAUTgDoVujqy8iwFayP,2026-06-13 18:11:53.070,0,,,,0,85973,527,275,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,8086,2007,Zed Editor,zed
+gen-1781374269-n9NyBkrZV9ipf6nougxR,2026-06-13 18:11:09.266,0,,,,0,85199,767,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,12187,3610,Zed Editor,zed
+gen-1781373990-yqD2xfQ6EXQ7LJZqaUCi,2026-06-13 18:06:30.168,0,,,,0,81386,961,385,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,30487,16113,Zed Editor,zed
+gen-1781373904-2bDS0nnnIrM60mzbsdVj,2026-06-13 18:05:04.145,0,,,,0,76830,4571,75,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,69534,4667,Zed Editor,zed
+gen-1781373882-5113F0mTpTJeqSpz37Xz,2026-06-13 18:04:42.544,0,,,,0,73810,743,122,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,11712,3535,Zed Editor,zed
+gen-1781373739-GG3rf3A5nWH3qislb4m8,2026-06-13 18:02:19.100,0,,,,0,73801,836,936,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,13907,5190,Zed Editor,zed
+gen-1781373731-6kiJW00qfmL9TPGsDKyQ,2026-06-13 18:02:11.502,0,,,,0,53744,400,120,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,6173,2274,Zed Editor,zed
+gen-1781373724-BfEA8JpEkWsaext58SnS,2026-06-13 18:02:04.335,0,,,,0,36671,407,159,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,5776,1724,Zed Editor,zed
+gen-1781373710-8bhYdm8hKCIOEICl4wpy,2026-06-13 18:01:50.115,0,,,,0,28208,527,287,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,12929,6876,Zed Editor,zed
+gen-1781373649-RiPUtCYOC1OEl1sVFesj,2026-06-13 18:00:49.238,0,,,,0,26450,1772,85,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,30122,1617,Zed Editor,zed
+gen-1781373640-ASmx3LAL1YkD5hIaHL87,2026-06-13 18:00:35.003,0,,,,0,26312,569,805,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,7032,2398,Zed Editor,zed
+gen-1781373627-6mjnnSjQESGIZuV0eMkg,2026-06-13 18:00:27.080,0,,,,0,15494,277,99,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,6867,4028,Zed Editor,zed
+gen-1781373619-95nLbOtrICONwyZNxwnt,2026-06-13 18:00:19.612,0,,,,0,11618,523,392,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,6664,866,Zed Editor,zed
+gen-1781373617-vkLlGgZbhxLixdvsVcqx,2026-06-13 18:00:16.938,0,,,,0,11123,70,122,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,tool_calls,tool_calls,1762,944,Zed Editor,zed
+gen-1781373556-dU3PDT0Bg50tBiBrp7bD,2026-06-13 17:59:16.036,0.00001,,,,0,89,4,0,0,google/gemini-2.5-flash-lite,Google,standard,false,true,,STOP,stop,221,193,Zed Editor,zed
+gen-1781373552-OsfU5tH2LclunZMxqLWl,2026-06-13 17:59:12.403,0,,,,0,11091,18,2,0,nex-agi/nex-n2-pro,Nex AGI,free,false,true,,stop,stop,2890,2852,Zed Editor,zed
+gen-1781373126-rhQk3rMkU0M74xttN2b1,2026-06-13 17:52:06.780,0.000352,,-0.000032,,0,823,1546,1116,411,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,24461,754,Gemma Agent,TEst
+gen-1781373117-j9foSpFsuGKQ0lCc5vLH,2026-06-13 17:51:57.404,0.000202,,-0.000073,,0,2351,228,179,940,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,2993,645,Gemma Agent,TEst
+gen-emb-1781373116-BMVRTfmqvIEp2t6LMTYp,2026-06-13 17:51:56.397,0.000001,,,,0,28,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,421,,TEst
+gen-1781373115-pvqaJfoLISJXNHDCZ4Et,2026-06-13 17:51:55.505,0,,,,0,686,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,332,141,Gemma Agent,TEst
+gen-1781373114-bGGwROoIxZoBSI4L2a9Q,2026-06-13 17:51:54.654,0,,,,0,385,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,140,140,Gemma Agent,TEst
+gen-1781373109-aOt1uJSHz4ZYnCxqJmfg,2026-06-13 17:51:49.736,0.000073,,-0.000005,,0,165,319,299,75,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3813,681,Gemma Agent,TEst
+gen-1781373102-B6Dw7RrOqWmIlsEPJwnl,2026-06-13 17:51:41.869,0.000297,,-0.000135,,0,3659,373,270,1719,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6928,771,Gemma Agent,TEst
+gen-emb-1781373099-xgz4I0TSA98lby0XUrVH,2026-06-13 17:51:39.290,0.000001,,,,0,28,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1861,,TEst
+gen-1781373098-Uk8h79yYG71dxyS2TQ9h,2026-06-13 17:51:38.233,0,,,,0,686,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,354,149,Gemma Agent,TEst
+gen-1781373097-vezcpe3Mn23BEq9hrwIX,2026-06-13 17:51:37.146,0,,,,0,385,25,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,488,336,Gemma Agent,TEst
+gen-1781370356-EnlGjuH6kZpfV87bx1dE,2026-06-13 17:05:56.412,0.000192,,-0.000088,,0,2302,278,139,1127,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5448,1227,Gemma Agent,TEst
+gen-emb-1781370355-IkkCdyHPISO0HH3AGhn4,2026-06-13 17:05:54.988,0.000001,,,,0,32,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,554,,TEst
+gen-1781370353-ob8JyMfF2XyR3Atqqp5T,2026-06-13 17:05:53.373,0,,,,0,697,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,981,158,Gemma Agent,TEst
+gen-1781370352-qcWFcLK9Y1UuOvB0ptW1,2026-06-13 17:05:52.582,0,,,,0,398,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,137,135,Gemma Agent,TEst
+gen-1781370351-wRjScMR3JZ8gBXEejLvK,2026-06-13 17:05:51.216,0,,,,0,398,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,340,340,Gemma Agent,TEst
+gen-1781370282-KmVtjZlfRYLvPVSLmmYc,2026-06-13 17:04:42.021,0.000289,,-0.000124,,0,3690,260,148,1586,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,3922,829,Gemma Agent,TEst
+gen-emb-1781370280-vKLl11VX6nc87KKQ0od7,2026-06-13 17:04:40.772,0.000001,,,,0,30,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,440,,TEst
+gen-1781370279-Vqm9XNWKsclITq3xPOzu,2026-06-13 17:04:39.708,0,,,,0,693,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,383,150,Gemma Agent,TEst
+gen-1781370278-zCqI5t5oOhQ6B9bWl4DK,2026-06-13 17:04:38.632,0,,,,0,394,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,398,176,Gemma Agent,TEst
+gen-1781370207-6TR1sdLjGtpzR5b0xeiT,2026-06-13 17:03:27.520,0.000415,,-0.00016,,0,4347,756,407,2043,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,13513,773,Gemma Agent,TEst
+gen-emb-1781370206-3YbMEYY6vyDmw6zc5OIF,2026-06-13 17:03:26.199,0.000001,,,,0,28,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,518,,TEst
+gen-1781370205-0p3Hfua7A48Kz3y9a6aS,2026-06-13 17:03:25.063,0,,,,0,695,35,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,341,160,Gemma Agent,TEst
+gen-1781370204-ho564L0voAnHqefm1ZPt,2026-06-13 17:03:23.999,0,,,,0,399,55,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,439,158,Gemma Agent,TEst
+gen-1781370188-P4Le2QP8susfiIXyEclM,2026-06-13 17:03:07.955,0.000227,,-0.00009,,0,2567,335,246,1155,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,4274,531,Gemma Agent,TEst
+gen-emb-1781370186-agN9bHvNDauh62DS0bNU,2026-06-13 17:03:06.268,0.000001,,,,0,33,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,911,,TEst
+gen-1781370185-rRqv8WEf7syPeTf7NSkg,2026-06-13 17:03:05.114,0,,,,0,697,37,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,373,157,Gemma Agent,TEst
+gen-1781370183-hlfzhUnhxwAGuksa82F7,2026-06-13 17:03:03.599,0,,,,0,395,58,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,775,417,Gemma Agent,TEst
+gen-1781370062-4lvHHEI59AJ3X0ODB6KA,2026-06-13 17:01:01.998,0.000242,,-0.0001,,0,2615,436,245,1281,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,5224,739,Gemma Agent,TEst
+gen-emb-1781370061-Ido0AOQMUnrfOWZRYbTn,2026-06-13 17:01:00.806,0.000001,,,,0,34,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,542,,TEst
+gen-1781370059-bcY8Pp268uQ51HWC6bFM,2026-06-13 17:00:59.707,0,,,,0,704,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,362,140,Gemma Agent,TEst
+gen-1781370059-a9MooJKPSd0yzvnZNZiR,2026-06-13 17:00:58.948,0,,,,0,413,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,159,159,Gemma Agent,TEst
+gen-1781369957-xoFkUDYaYIVyPQs7jwqj,2026-06-13 16:59:17.327,0.000231,,-0.000103,,0,2698,359,191,1322,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7413,656,Gemma Agent,TEst
+gen-emb-1781369953-nPzNapN0gSX0IG8JsXfI,2026-06-13 16:59:13.463,0.000002,,,,0,56,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,3182,,TEst
+gen-1781369952-WzJVojfUnl4dB8sG9SJR,2026-06-13 16:59:12.203,0,,,,0,755,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,328,142,Gemma Agent,TEst
+gen-1781369951-dtgFUiWxXQeb89LrYVq6,2026-06-13 16:59:10.936,0,,,,0,455,68,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,603,138,Gemma Agent,TEst
+gen-1781369950-B0qbCA9AUyHRfl1FGXsj,2026-06-13 16:59:09.754,0,,,,0,455,49,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,417,157,Gemma Agent,TEst
+gen-1781369268-raSPGYqCoPO7viqqSD1T,2026-06-13 16:47:48.693,0.000283,,-0.000087,,0,2361,707,266,1109,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9828,2045,Gemma Agent,TEst
+gen-emb-1781369267-yrBWYADQysMReveSEJBJ,2026-06-13 16:47:47.472,0.000001,,,,0,29,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,390,,TEst
+gen-1781369266-EJop7vvTCWFDOTIgXd5c,2026-06-13 16:47:46.217,0,,,,0,712,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,350,152,Gemma Agent,TEst
+gen-1781369265-QtV1TZBbou3FS0FUsfWC,2026-06-13 16:47:45.175,0,,,,0,440,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,370,370,Gemma Agent,TEst
+gen-1781369149-yNwkTHOfQ6DtASqegxZo,2026-06-13 16:45:49.420,0.000263,,-0.000069,,0,1830,776,332,878,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,13607,812,Gemma Agent,TEst
+gen-emb-1781369146-BFsSwXhIdHid4mysWvzD,2026-06-13 16:45:46.805,0,,,,0,11,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,2047,,TEst
+gen-1781369145-EMJKwUwe322mP6bnSqt2,2026-06-13 16:45:45.655,0,,,,0,683,34,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,399,157,Gemma Agent,TEst
+gen-1781369144-i3iWWOJPw0LwaakVNg2U,2026-06-13 16:45:44.071,0,,,,0,420,67,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,857,375,Gemma Agent,TEst
+gen-1781369117-5aL2MFhtAwH42lFMUp0G,2026-06-13 16:45:17.757,0.000258,,-0.000102,,0,2596,536,297,1298,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6848,999,Gemma Agent,TEst
+gen-emb-1781369116-tpgIXf1EnwSxDetwsdVF,2026-06-13 16:45:16.631,0,,,,0,11,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,470,,TEst
+gen-1781369115-K1zq8UTX7BSW2MCUxdZv,2026-06-13 16:45:14.788,0,,,,0,675,36,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,349,148,Gemma Agent,TEst
+gen-1781369110-dM6OF3cp7xAtoZu7vgaa,2026-06-13 16:45:10.776,0,,,,0,404,52,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,1225,659,Gemma Agent,TEst
+gen-emb-1781369093-JGDaSRJXd4PylURHI1tL,2026-06-13 16:44:53.394,0,,,,0,6,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,517,,TEst
+gen-1781369092-pykTkwP7PyHUKM5OWxSk,2026-06-13 16:44:52.279,0,,,,0,633,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,371,144,Gemma Agent,TEst
+gen-1781369091-ZlqmE6PulHbPsyVlGYuM,2026-06-13 16:44:51.463,0,,,,0,286,26,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,291,146,Gemma Agent,TEst
+gen-1781369059-4sKK9rvQgnEqDPbPXj0G,2026-06-13 16:44:18.929,0.00044,,-0.000025,,0,742,2000,2000,326,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,length,length,31392,696,Gemma Agent,TEst
+gen-emb-1781369016-5xE2I1v0HHNqkzdlZexk,2026-06-13 16:43:35.476,0,,,,0,4,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,486,,TEst
+gen-1781365973-J4BcGmPUHVuUzKZtBlsa,2026-06-13 15:52:53.573,0.000325,,-0.000104,,0,3097,641,507,1331,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,7135,596,Gemma Agent,TEst
+gen-emb-1781365972-BflqME4ZN8t0dYGb8gzm,2026-06-13 15:52:52.461,0,,,,0,12,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,468,,TEst
+gen-1781365970-mTkwUyNThhSXH93li9O0,2026-06-13 15:52:50.764,0,,,,0,688,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,369,143,Gemma Agent,TEst
+gen-1781365969-J1gAcaP91d6UiOfaecxG,2026-06-13 15:52:49.300,0,,,,0,421,94,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,878,341,Gemma Agent,TEst
+gen-1781365924-5yz0SlBoBvvnAYJ9bB2I,2026-06-13 15:52:03.814,0.000421,,-0.00011,,0,3259,1076,853,1401,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,18641,1723,Gemma Agent,TEst
+gen-emb-1781365922-uWeAHIcxqAJVpSZpkXdw,2026-06-13 15:52:02.521,0.000001,,,,0,40,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,573,,TEst
+gen-1781365921-UqBEuRQ5ffahjv5BD79G,2026-06-13 15:52:01.282,0,,,,0,718,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,389,181,Gemma Agent,TEst
+gen-1781365920-LN3wmHql6x4AtOxbMFjw,2026-06-13 15:51:59.967,0,,,,0,415,47,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,710,445,Gemma Agent,TEst
+gen-1781365918-6XSb5XGxZUXnemIjTRyK,2026-06-13 15:51:58.434,0,,,,0,415,56,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,791,467,Gemma Agent,TEst
+gen-1781365858-aJCiDKRIiGWONPhhk5oc,2026-06-13 15:50:57.912,0.000321,,-0.000132,,0,3527,546,395,1692,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,9374,755,Gemma Agent,TEst
+gen-emb-1781365856-1BXTYQhC72TbnNP4S1mJ,2026-06-13 15:50:56.251,0,,,,0,9,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,933,,TEst
+gen-1781365855-mqw3aFVw2kQcsAD1wTS8,2026-06-13 15:50:55.393,0,,,,0,416,1,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,182,182,Gemma Agent,TEst
+gen-1781365843-Ytgg0JK16pQeqKajTNis,2026-06-13 15:50:42.934,0.00026,,-0.000128,,0,3260,346,200,1630,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,6445,598,Gemma Agent,TEst
+gen-emb-1781365841-rkkiACewEU9H9uR1E2Jg,2026-06-13 15:50:40.840,0,,,,0,12,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,1433,,TEst
+gen-1781365838-ffkuzE3wFhzh7Ukww0bd,2026-06-13 15:50:38.409,0,,,,0,418,48,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,1534,485,Gemma Agent,TEst
+gen-1781365811-V7WpH1hIFovHs5weg59V,2026-06-13 15:50:10.943,0.000425,,-0.000142,,0,4224,779,457,1816,deepseek/deepseek-v4-flash-20260423,Baidu,standard,false,true,,stop,stop,8985,876,Gemma Agent,TEst
+gen-emb-1781365806-S37PC2IsBORlEXpZp9y0,2026-06-13 15:50:06.756,0.000001,,,,0,37,,,,qwen/qwen3-embedding-8b,SiliconFlow,standard,false,false,,,,0,3526,,TEst
+gen-1781365804-dBJKFGqgBStB2hIitmNP,2026-06-13 15:50:04.231,0,,,,0,715,38,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,1222,158,Gemma Agent,TEst
+gen-1781365803-A6tsIim7aIw0Mdrui6wf,2026-06-13 15:50:02.950,0,,,,0,412,66,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,586,147,Gemma Agent,TEst
+gen-1781365801-8MfIQXnZoS2f2TPPHdyK,2026-06-13 15:50:01.633,0,,,,0,412,66,0,0,liquid/lfm-2.5-1.2b-instruct-20260120,Liquid,free,false,true,,stop,stop,720,367,Gemma Agent,TEst
