@@ -242,6 +242,10 @@ run_setup() {
   bash "$_script_dir/agent_bootstrap.sh" "$BOT_DIR"
 }
 
+run_turn_contract_health() {
+  "$VENV_PY" "$BOT_DIR/scripts/turn_contract_health.py" --regression "$@"
+}
+
 run_security_audit() {
   "$VENV_PY" "$BOT_DIR/scripts/agent_security_audit.py" 2>/dev/null || \
     python3 "$BOT_DIR/scripts/agent_security_audit.py"
@@ -278,6 +282,7 @@ Commands:
   preflight     Check paths and venv
   setup         First-time install (agent_bootstrap.sh)
   security      Run agent_security_audit.py
+  turn-health   TurnContract gates + regression + fingerprint stall
   update        git pull + pip + restart
 EOF
 }
@@ -336,6 +341,7 @@ main() {
     preflight) preflight_bot; preflight_mem0 ;;
     setup) run_setup ;;
     security) run_security_audit ;;
+    turn-health) run_turn_contract_health ;;
     update) update_bot ;;
     *) err "Unknown: $cmd"; usage; exit 1 ;;
   esac

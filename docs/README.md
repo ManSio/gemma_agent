@@ -13,6 +13,7 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 | **GitHub About text** | [GITHUB_ABOUT.md](GITHUB_ABOUT.md) |
 | **Honest positioning (hub)** | [HONEST_POSITIONING.md](HONEST_POSITIONING.md) |
 | **Dev diary (агент: читать первым)** | [DEV_DIARY_RU.md](DEV_DIARY_RU.md) |
+| **Thread stability (TurnContract + forensic)** | [THREAD_STABILITY_INDEX_RU.md](THREAD_STABILITY_INDEX_RU.md) |
 | **Cursor agent** | [../.cursor/README.md](../.cursor/README.md) |
 
 ---
@@ -21,6 +22,10 @@ Wiki hub for the public Gemma Agent tree. Start here or use [index.md](index.md)
 
 | Doc | Topic |
 |-----|--------|
+| [THREAD_STABILITY_INDEX_RU.md](THREAD_STABILITY_INDEX_RU.md) | TurnContract + prod forensic hub |
+| [TURN_CONTRACT_PLAN_RU.md](TURN_CONTRACT_PLAN_RU.md) | Roadmap Phase 0–3 |
+| [TURN_CONTRACT_RUNBOOK_RU.md](TURN_CONTRACT_RUNBOOK_RU.md) | Deploy, gates, гигиена |
+| [PROD_PERSISTED_FORENSIC_RU.md](PROD_PERSISTED_FORENSIC_RU.md) | VPS persisted audit (Jun 14) |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Layers + Mermaid diagram |
 | [AGENT_LOOP.md](AGENT_LOOP.md) | Plan → Execute → Verify (honest defaults) |
 | [MEMORY.md](MEMORY.md) | STM / MTM / LTM tiers |

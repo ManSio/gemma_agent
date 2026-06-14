@@ -1,3 +1,88 @@
+## [2026-06-13] — v3.5.27: TurnContract close-out (0.3, 0.4, direct paths)
+
+- **0.3:** `turn_plan_finalize.py` + `_return_direct_plan` — все direct Plan paths: meaning, contract, hash.
+- **0.4:** `turn_fingerprint_alert.py` + `scripts/turn_contract_health.py` + `gemma_panel.sh turn-health`.
+- **Fix:** `execute_plan` — `plan_turn_hash` после загрузки trace_meta из input.
+- **Ops:** `docs/TURN_CONTRACT_RUNBOOK_RU.md`, `export_turn_regression_cases.py`.
+
+### Verify
+```bash
+python scripts/turn_contract_health.py --regression
+python -m pytest tests/test_turn_plan_finalize.py tests/test_turn_fingerprint_alert.py -q
+python -m pytest tests/ -q
+```
+
+---
+
+## [2026-06-13] — v3.5.26: TurnContract Phase 3 (lane ops, additive prompt, regression)
+
+- **Ops:** `turn_lane_ops.py` — DIALOGUE/FACT/DEEP в footer (`L=`), `/admin_turns`, `/admin_self` lane summary.
+- **Arch:** `turn_prompt_additive.py` — sticky prompt modules при profile hop / discourse stay (`TURN_PROMPT_ADDITIVE_ENABLED`).
+- **QA:** `turn_regression.py` + 20-case fixture; `replay_turn_thread.py --regression`.
+
+### Verify
+```bash
+python scripts/replay_turn_thread.py --regression
+python -m pytest tests/test_turn_contract_phase3.py tests/test_reply_mode_footer_lane.py -q
+python -m pytest tests/ -q
+```
+
+---
+
+## [2026-06-13] — v3.5.25: TurnContract Phase 2 (sticky lane, correction, hash drift)
+
+- **Arch:** `turn_lane_spine.py` — sticky lane/profile on discourse stay (`TURN_STICKY_LANE_ENABLED`).
+- **Arch:** `turn_correction_contract.py` — correction → `must_blocks` + `brain_force_full_prompt` (`TURN_CORRECTION_OVERRIDE_ENABLED`).
+- **Arch:** `short_circuit_registry.py` — unified shortcut → lane/intent + telemetry patch.
+- **Arch:** `turn_hash.py` — `plan_turn_hash` vs `brain_turn_hash` drift alert (`TURN_HASH_DRIFT_ENABLED`).
+- **Arch:** `topic_anchor` prompt module (Phase 1.5) in `prompt_modules.py`.
+- **Tool:** `scripts/replay_turn_thread.py` — structural replay from ops_trace/turns.jsonl.
+- **Wired:** `turn_decision_spine`, `hot_path`, `pipeline`, `turn_observer`, `turn_delivery_store`.
+
+### Verify
+```bash
+python -m pytest tests/test_turn_lane_spine.py tests/test_turn_correction_contract.py tests/test_short_circuit_registry.py tests/test_turn_hash.py tests/test_turn_contract_phase2.py tests/test_turn_contract_phase2_mutation.py tests/test_hot_path_correction_guard.py tests/test_replay_turn_thread.py -q
+python -m pytest tests/ -q   # 2840 passed, 4 skipped
+python scripts/replay_turn_thread.py --limit 5
+python scripts/release_guard.py --smoke
+```
+
+---
+
+## [2026-06-13] — v3.5.24: defer store until delivery (P0 close)
+
+- **Fix:** STM (`update_after_turn`) только после успешной доставки — нет ghost assistant при stale generation skip.
+- **Arch:** `core/turn_delivery_store.py` — pending_turn_store + finalize path (TG + HTTP API).
+- **Fix:** `facts_shortcut` больше не пишет store напрямую; unified `prepare_pending_turn_store`.
+- **Fix:** `patch_plan_meta_shortcut_from_step` — `short_circuit` в turn_contract для всех direct Plan returns.
+- **Env:** `TURN_DEFER_STORE_ENABLED` (default follows `TURN_CONTRACT_ENABLED`).
+
+### Verify
+```bash
+python -m pytest tests/test_turn_delivery_store.py tests/test_turn_contract.py tests/test_anti_echo_guard.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
+## [2026-06-13] — v3.5.23: TurnContract Phase 0+1 (thread stability)
+
+- **Arch:** `TurnContract` — generation token, lane, fingerprint, audit (`core/turn_contract.py`). Plan: `docs/TURN_CONTRACT_PLAN_RU.md`.
+- **Fix:** fresh `recent_messages` from disk before brain context (`refresh_dialogue_stm_from_disk`) — Jun 13 stale STM class.
+- **Fix:** `reconcile_sent_assistant_text` after `pre_send` + footer — send=store alignment.
+- **Fix:** `anti_echo_guard` — block wttr/weather template on identity/day/holiday questions.
+- **Fix:** `turn_generation` bump on inbound; stale send/store skip when newer message arrived.
+- **Telemetry:** `turn_generation`, `referent`, `lane`, `short_circuit`, `recent_fingerprint` in turns.jsonl.
+- **Env:** `TURN_CONTRACT_ENABLED`, `ANTI_ECHO_GUARD_ENABLED` (default true).
+
+### Verify
+```bash
+python -m pytest tests/test_turn_contract.py tests/test_anti_echo_guard.py -q
+python scripts/release_guard.py --smoke
+```
+
+---
+
 ## [2026-06-13] — v3.5.22: phantom article guard + clarify expects_reply (P0)
 
 - **Fix:** «Прочитай статью…» без paste → эллипсис «у них/проблемы» — честный ответ, не LLM-галлюцинация (`phantom_article_guard`).

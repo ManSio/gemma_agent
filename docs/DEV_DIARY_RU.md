@@ -20,6 +20,92 @@
 
 ---
 
+## 2026-06-14 — Документация: thread stability hub + prod forensic
+
+**Контекст:** параллельно TurnContract (трек A) и forensic persisted audit (трек B) на VPS.
+
+**Сделано:**
+- `docs/THREAD_STABILITY_INDEX_RU.md` — единый индекс, prod gap 3.5.22 vs 3.5.27.
+- `docs/PROD_PERSISTED_FORENSIC_RU.md` — формализованный отчёт Jun 14.
+- Обновлены: RUNBOOK, PLAN, README, scripts-cli, AGENTS, DAILY_OPS archive.
+- `release_guard` anti-regression: turn_contract test bundle.
+
+**Verify:** pytest 2859 passed; `release_guard --smoke`.
+
+**Prod:** deploy + `/new` + turn-health — pending.
+
+---
+
+## 2026-06-13 — v3.5.27: TurnContract close-out
+
+**Сделано:** 0.3 все direct paths; 0.4 fingerprint stall alert; health script + panel; runbook.
+
+**Verify:** `turn_contract_health --regression`; **full suite 2859 passed, 4 skipped**; smoke OK.
+
+---
+
+## 2026-06-13 — v3.5.26: TurnContract Phase 3
+
+**Сделано:**
+- `turn_lane_ops.py` — 3 lane в footer/admin/metrics.
+- `turn_prompt_additive.py` — additive-only modules при hop/stay.
+- `turn_regression.py` + 20 fixtures; `--regression` в replay script.
+- Env: `TURN_PROMPT_ADDITIVE_ENABLED`.
+
+**Verify:** regression 20/20; **full suite 2856 passed, 4 skipped**; smoke OK.
+
+---
+
+## 2026-06-13 — v3.5.25: TurnContract Phase 2
+
+**Контекст:** Phase 0+1 закрыли P0 (defer store); Phase 2 — стабилизация решений: sticky lane, correction override, SC registry, turn_hash drift, replay.
+
+**Сделано:**
+- `turn_lane_spine.py` — discourse stay удерживает lane/profile.
+- `turn_correction_contract.py` — correction → full prompt + `must_blocks`.
+- `short_circuit_registry.py` — единый реестр shortcuts + `record_short_circuit_use`.
+- `turn_hash.py` — drift plan vs brain; observer + pipeline.
+- `prompt_modules.py` — `topic_anchor` block.
+- `scripts/replay_turn_thread.py` — structural replay.
+- Env: `TURN_STICKY_LANE_ENABLED`, `TURN_CORRECTION_OVERRIDE_ENABLED`, `TURN_HASH_DRIFT_ENABLED`.
+
+**Verify:** targeted Phase 2 pytest + `replay_turn_thread.py --limit 5`; **full suite 2840 passed, 4 skipped**; smoke OK.
+
+---
+
+## 2026-06-13 — v3.5.24: defer store until delivery (P0 close)
+
+**Контекст:** v3.5.23 оставлял `update_after_turn` до send — ghost assistant при stale skip.
+
+**Сделано:**
+- `core/turn_delivery_store.py` — pending + `persist_turn_after_delivery` после send/API.
+- `orchestrator` — defer store; `prepare_pending_turn_store`; shortcut patch из `fallback_variant`.
+- `input_layer` — facts_shortcut унифицирован; `_finalize_turn_after_send`; убран pre-send store.
+- `api.py` — generation bump, pre_send, finalize store.
+- `facts_flow` — `refresh_dialogue_stm_from_disk`.
+
+**Verify:** `pytest tests/test_turn_delivery_store.py tests/test_turn_contract.py -q`; smoke.
+
+---
+
+## 2026-06-13 — v3.5.23: TurnContract Phase 0+1 (thread stability)
+
+**Контекст:** расследование потери нити — stale `recent_dialogue` (Jun 13), send≠store (8.2% mismatch), слепая телеметрия. План: `docs/TURN_CONTRACT_PLAN_RU.md`.
+
+**Сделано:**
+- `core/turn_contract.py` — generation, lane, fingerprint, audit dict.
+- `core/anti_echo_guard.py` — template echo (wttr на identity/day/holiday); `scenario_engine.apply_pre_send`.
+- `behavior_store` — `bump_turn_generation`, `refresh_dialogue_stm_from_disk`, `reconcile_sent_assistant_text`.
+- `orchestrator` — fresh STM перед `_assemble_brain_context`; contract в plan/emit; stale skip store.
+- `input_layer` — bump gen inbound; stale send skip; reconcile после pre_send+footer.
+- `turn_observer` — поля `turn_generation`, `referent`, `lane`, `short_circuit`, `recent_fingerprint`.
+
+**Verify:** `pytest tests/test_turn_contract.py tests/test_anti_echo_guard.py`; smoke.
+
+**Не гоняли:** full suite, prod deploy.
+
+---
+
 ## 2026-06-13 — v3.5.22: phantom article guard + clarify expects_reply (P0)
 
 **Контекст:** prod log — «Прочитай статью про ИИ 2026» → clarify без paste → «А какие у них реальные проблемы?» → generic HR-галлюцинация; повтор после коррекции. Root: `expects_reply=False` на коротком clarify без `?` → discourse `no_expects_reply` → referent=world; LLM без текста статьи.

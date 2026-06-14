@@ -1,0 +1,142 @@
+[
+  {
+    "id": "weather_direct",
+    "user_text": "какая погода в минске",
+    "short_circuit": "weather_direct",
+    "profile": "weather",
+    "expect": {"referent": "world", "lane": "FACT", "thread_action": "branch"}
+  },
+  {
+    "id": "news_direct",
+    "user_text": "какие новости в мире",
+    "short_circuit": "news_direct",
+    "profile": "news",
+    "expect": {"lane": "FACT", "thread_action": "branch"}
+  },
+  {
+    "id": "identity_nl",
+    "user_text": "как меня зовут",
+    "short_circuit": "user_facts_identity_nl",
+    "expect": {"lane": "FACT", "referent": "user"}
+  },
+  {
+    "id": "math_referential",
+    "user_text": "сколько будет 2+2",
+    "short_circuit": "referential_math",
+    "expect": {"lane": "FACT", "thread_action": "branch"}
+  },
+  {
+    "id": "general_question",
+    "user_text": "объясни квантовую запутанность простыми словами",
+    "profile": "standard",
+    "expect": {"referent": "world", "lane": "DIALOGUE", "thread_action": "branch"}
+  },
+  {
+    "id": "deep_profile",
+    "user_text": "сделай глубокий анализ рынка ИИ",
+    "profile": "research",
+    "expect": {"lane": "DEEP", "thread_action": "branch"}
+  },
+  {
+    "id": "thorough_profile",
+    "user_text": "разбери подробно этот договор",
+    "profile": "thorough",
+    "expect": {"lane": "DEEP"}
+  },
+  {
+    "id": "correction_ne_to",
+    "user_text": "не то, я про статью",
+    "recent_dialogue": [
+      {"role": "user", "text": "прочитай статью"},
+      {"role": "assistant", "text": "уточните ссылку"}
+    ],
+    "expect": {"referent": "thread", "thread_action": "correct", "lane": "DIALOGUE"}
+  },
+  {
+    "id": "stay_short_followup",
+    "user_text": "ещё",
+    "recent_dialogue": [
+      {"role": "user", "text": "расскажи про блокчейн"},
+      {"role": "assistant", "text": "блокчейн — распределённый реестр транзакций с криптографической защитой цепочки блоков"}
+    ],
+    "discourse_resolution": {"action": "stay", "inherit_profile": "standard"},
+    "expect": {"referent": "thread", "thread_action": "stay", "lane": "DIALOGUE"}
+  },
+  {
+    "id": "stay_continue",
+    "user_text": "продолжай",
+    "recent_dialogue": [
+      {"role": "user", "text": "расскажи про Python"},
+      {"role": "assistant", "text": "Python — язык программирования с простым синтаксисом и широкой экосистемой библиотек"}
+    ],
+    "discourse_resolution": {"action": "stay"},
+    "expect": {"thread_action": "stay", "referent": "thread"}
+  },
+  {
+    "id": "article_thread",
+    "user_text": "как ты думаешь правда?",
+    "short_circuit": "article_thread_followup_nl",
+    "recent_dialogue": [
+      {"role": "user", "text": "вот статья про ИИ ..."},
+      {"role": "assistant", "text": "кратко: статья про ИИ"}
+    ],
+    "expect": {"lane": "DIALOGUE", "referent": "agent"}
+  },
+  {
+    "id": "dialog_recall",
+    "user_text": "о чём мы говорили",
+    "short_circuit": "dialog_recall_nl",
+    "expect": {"lane": "DIALOGUE"}
+  },
+  {
+    "id": "session_meta_recall",
+    "user_text": "что я спрашивал раньше",
+    "short_circuit": "session_meta_recall_nl",
+    "expect": {"lane": "DIALOGUE"}
+  },
+  {
+    "id": "reminder_nl",
+    "user_text": "напомни через час позвонить",
+    "short_circuit": "nl_reminder",
+    "expect": {"lane": "FACT"}
+  },
+  {
+    "id": "geo_nearby",
+    "user_text": "что рядом со мной",
+    "short_circuit": "geo_nearby",
+    "expect": {"lane": "FACT"}
+  },
+  {
+    "id": "affirmative_search",
+    "user_text": "да, поищи",
+    "short_circuit": "affirmative_search",
+    "recent_dialogue": [
+      {"role": "assistant", "text": "хотите поиск?"}
+    ],
+    "expect": {"lane": "FACT"}
+  },
+  {
+    "id": "pre_llm_chitchat",
+    "user_text": "привет",
+    "short_circuit": "pre_llm",
+    "expect": {"lane": "DIALOGUE"}
+  },
+  {
+    "id": "code_deep",
+    "user_text": "напиши модуль на python",
+    "profile": "code",
+    "expect": {"lane": "DEEP"}
+  },
+  {
+    "id": "agent_deep",
+    "user_text": "составь план исследования",
+    "profile": "agent",
+    "expect": {"lane": "DEEP"}
+  },
+  {
+    "id": "world_fact_branch",
+    "user_text": "когда был запущен спутник",
+    "profile": "facts",
+    "expect": {"lane": "FACT", "referent": "world"}
+  }
+]

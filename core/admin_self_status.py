@@ -101,7 +101,9 @@ def _append_metrics_block(lines: List[str], root: Path) -> None:
         tp95 = format_ms(turns.get("latency_p95_ms"))
         t_n = int(turns.get("turns") or 0)
         t_iss = int(turns.get("issues") or 0)
-        lines.append(f"<code>turns n={t_n} iss={t_iss} p50={tp50} p95={tp95}</code>")
+        lane_s = str(turns.get("lane_summary_short") or "").strip()
+        lane_bit = f" lanes={lane_s}" if lane_s else ""
+        lines.append(f"<code>turns n={t_n} iss={t_iss} p50={tp50} p95={tp95}{lane_bit}</code>")
 
     lines.append("")
 

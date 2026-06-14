@@ -2,7 +2,7 @@
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/print_repo_stats.py` | Verifiable test/CI counts (430 files, 2718+ cases) |
+| `scripts/print_repo_stats.py` | Verifiable test/CI counts |
 | `scripts/pip_audit.sh` | Dependency CVE scan (`pip-audit`; `aiohttp<3.14` for aiogram — see `requirements.txt`) |
 | `scripts/generate_encryption_key.py` | Generate `ENCRYPTION_KEY` for memory at-rest encryption |
 | `scripts/agent_bootstrap.sh` | First-time install |
@@ -22,5 +22,9 @@
 | `scripts/metrics_period_report.py` | Daily agent vs LLM metrics + history JSONL |
 | `scripts/daily_server_digest.py` | DAILY_OPS archive digests |
 | `scripts/server_full_audit.py` | Weekly / dated server audit |
+| `scripts/turn_contract_health.py` | TurnContract gates + fingerprint stall + `--regression` |
+| `scripts/replay_turn_thread.py` | Structural replay turns/ops_trace |
+| `scripts/prod_persisted_impact_audit.py` | Forensic: persisted state vs bad turns |
+| `scripts/export_turn_regression_cases.py` | Export prod turns → regression fixture |
 
 Panel subcommands: [Panel](../user-guide/panel.md)

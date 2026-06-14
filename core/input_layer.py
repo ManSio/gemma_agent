@@ -1243,6 +1243,14 @@ class InputLayer:
                 logger.debug('%s optional failed: %s', 'input_layer', e, exc_info=True)
         input_data.meta["trace_id"] = trace.trace_id
         try:
+            from core.turn_contract import turn_contract_enabled
+
+            if turn_contract_enabled() and user_id and self.orchestrator.behavior_store:
+                _gen_in = self.orchestrator.behavior_store.bump_turn_generation(user_id, group_id)
+                input_data.meta["turn_generation"] = _gen_in
+        except Exception as e:
+            logger.debug("turn_generation bump: %s", e)
+        try:
             input_data.meta["telegram_is_admin"] = bool(self._admin_module.is_admin(user_id))
         except Exception:
             input_data.meta["telegram_is_admin"] = False
@@ -1815,33 +1823,14 @@ class InputLayer:
             if _facts_shortcut_outputs is not None:
                 outputs = _facts_shortcut_outputs
                 MONITOR.inc("brain_facts_confirm_lane_total")
-                try:
-                    _assist = "\n\n".join(
-                        str(o.payload or "").strip()
-                        for o in outputs
-                        if o.type == "text" and str(o.payload or "").strip()
-                    ).strip()
-                    _turn_meta: Dict[str, Any] = {}
-                    if isinstance(input_data.meta, dict) and input_data.meta.get("message_id") is not None:
-                        try:
-                            _turn_meta["telegram_message_id"] = int(input_data.meta.get("message_id"))
-                        except (TypeError, ValueError):
-                            pass
-                    if isinstance(input_data.meta, dict) and input_data.meta.get("telegram_message_date_unix") is not None:
-                        _turn_meta["telegram_message_date_unix"] = input_data.meta.get(
-                            "telegram_message_date_unix"
-                        )
-                    self.orchestrator.behavior_store.update_after_turn(
-                        user_id,
-                        group_id,
-                        _payload_str_plan,
-                        _assist,
-                        turn_meta=_turn_meta or None,
-                    )
-                except Exception as e:
-                    logger.debug("facts_confirm_lane persist: %s", e)
             else:
                 outputs = await self.orchestrator.execute_plan(plan, user_id, group_id)
+            try:
+                self.orchestrator.prepare_pending_turn_store(
+                    plan, outputs, user_id, group_id
+                )
+            except Exception as e:
+                logger.debug("prepare_pending_turn_store: %s", e)
             try:
                 _ctx0 = (plan.steps[0].args or {}).get("context") if plan.steps else {}
                 if isinstance(_ctx0, dict) and _ctx0.get("_outputs_finalized"):
@@ -1968,6 +1957,13 @@ class InputLayer:
                 if i == _last_text_idx:
                     meta_ut["_mode_footer"] = True
                     meta_ut.setdefault("trace_id", trace.trace_id)
+                    if isinstance(input_data.meta, dict):
+                        if input_data.meta.get("turn_generation") is not None:
+                            meta_ut["turn_generation"] = input_data.meta.get("turn_generation")
+                        if isinstance(input_data.meta.get("turn_contract"), dict):
+                            meta_ut.setdefault(
+                                "turn_contract", input_data.meta.get("turn_contract")
+                            )
                     if isinstance(input_data.meta, dict) and "telegram_is_admin" in input_data.meta:
                         meta_ut["telegram_is_admin"] = bool(input_data.meta.get("telegram_is_admin"))
                     # Для приватного чата group_id=None; важно для корректной загрузки слота/персиста в mode footer.
@@ -2399,6 +2395,44 @@ class InputLayer:
     # ============================================================
     #   SEND OUTPUT
     # ============================================================
+    async def _finalize_turn_after_send(
+        self,
+        message: Message,
+        output: Output,
+        sent_text: str,
+    ) -> None:
+        """Записать STM после успешной доставки (defer store path)."""
+        try:
+            from core.turn_delivery_store import finalize_delivery_from_output_meta
+
+            _uid = str(message.from_user.id) if message.from_user else ""
+            _gid = None
+            _om = output.meta if isinstance(output.meta, dict) else {}
+            if _om.get("group_id") is not None:
+                _gid = _om.get("group_id")
+            elif message.chat and message.chat.type != "private":
+                _gid = str(message.chat.id)
+            if not _uid or not (sent_text or "").strip():
+                return
+            ok = finalize_delivery_from_output_meta(
+                orchestrator=self.orchestrator,
+                user_id=_uid,
+                group_id=_gid,
+                sent_text=sent_text,
+                output_meta=_om,
+            )
+            if ok:
+                _tid = str(_om.get("trace_id") or "").strip()
+                if _tid:
+                    from core.turn_observer import enrich_turn_record_by_trace_id
+
+                    enrich_turn_record_by_trace_id(
+                        _tid,
+                        {"assistant_excerpt": (sent_text or "")[:480], "delivery_ok": True},
+                    )
+        except Exception as e:
+            logger.debug("finalize_turn_after_send: %s", e)
+
     async def _send_output(
         self,
         message: Message,
@@ -2666,6 +2700,38 @@ class InputLayer:
                     output.meta = _om_f
             except Exception as _mf_e:
                 logger.debug("reply_mode_footer: %s", _mf_e)
+            try:
+                from core.turn_contract import turn_contract_enabled
+
+                _uid_send = str(message.from_user.id) if message.from_user else ""
+                _gid_send = None
+                if isinstance(output.meta, dict) and output.meta.get("group_id") is not None:
+                    _gid_send = output.meta.get("group_id")
+                elif message.chat and message.chat.type != "private":
+                    _gid_send = str(message.chat.id)
+                _om_stale = output.meta if isinstance(output.meta, dict) else {}
+                _gen_send = 0
+                if turn_contract_enabled() and _uid_send:
+                    try:
+                        _gen_send = int(_om_stale.get("turn_generation") or 0)
+                    except (TypeError, ValueError):
+                        _gen_send = 0
+                    if _gen_send > 0:
+                        _cur_gen = self.orchestrator.behavior_store.get_turn_generation(
+                            _uid_send, _gid_send
+                        )
+                        if _cur_gen != _gen_send:
+                            from core.monitoring import MONITOR
+
+                            MONITOR.inc("turn_generation_stale_send_skip_total")
+                            logger.info(
+                                "[input_layer] stale turn_generation skip send gen=%s cur=%s",
+                                _gen_send,
+                                _cur_gen,
+                            )
+                            return progress_message_id is not None
+            except Exception as _st_e:
+                logger.debug("turn_generation stale send: %s", _st_e)
             if not txt:
                 uid = str(message.from_user.id) if message.from_user else ""
                 admin_tail = (
@@ -2703,6 +2769,7 @@ class InputLayer:
                         )
                     except Exception as e:
                         logger.debug("stream reply_markup: %s", e)
+                await self._finalize_turn_after_send(message, output, txt)
                 return progress_message_id is not None
             if progress_message_id is not None:
                 try:
@@ -2712,6 +2779,7 @@ class InputLayer:
                         message_id=progress_message_id,
                         reply_markup=reply_markup,
                     )
+                    await self._finalize_turn_after_send(message, output, txt)
                     return True
                 except Exception as e:
                     logger.debug("progress_edit_to_answer: %s", e)
@@ -2721,6 +2789,7 @@ class InputLayer:
                 reply_markup=reply_markup,
                 **_reply_to_user_kwargs(message),
             )
+            await self._finalize_turn_after_send(message, output, txt)
             return False
         except Exception as e:
             logger.error(f"Error sending output: {e}")

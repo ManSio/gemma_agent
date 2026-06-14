@@ -2661,6 +2661,34 @@ URL: {fetch_url}
         MONITOR.inc("brain_hot_path_slim_total")
         logger.debug("[brain] hot_path_slim prompt (user_chars=%s tools=%s)", len(user_text), len(tools_info))
 
+    try:
+        from core.turn_contract import lane_from_profile
+        from core.turn_hash import brain_turn_hash, check_and_record_drift
+
+        _tm_ref = ""
+        _tm = context.get("turn_meaning") if isinstance(context.get("turn_meaning"), dict) else {}
+        if _tm:
+            _tm_ref = str(_tm.get("referent") or "")
+        _bh = brain_turn_hash(
+            profile=str(_brain_profile or ""),
+            lane=lane_from_profile(str(_brain_profile or "")),
+            referent=_tm_ref,
+            hot_path_slim=bool(hot_path_slim),
+            chat_context_slim=bool(_chat_ctx_slim),
+        )
+        if isinstance(context, dict):
+            context["brain_turn_hash"] = _bh
+            _ph = str(context.get("plan_turn_hash") or "").strip()
+            if _ph:
+                _drift = check_and_record_drift(
+                    plan_hash=_ph,
+                    brain_hash=_bh,
+                    trace_id=str(context.get("trace_id") or context.get("request_id") or ""),
+                )
+                context["turn_hash_drift"] = _drift
+    except Exception as e:
+        logger.debug("brain_turn_hash: %s", e)
+
     _assembly_tier = brain_prompt_tier(use_slim_image=use_slim, hot_path_slim=hot_path_slim)
 
     vp_ctx = ""
@@ -2809,6 +2837,14 @@ URL: {fetch_url}
         logger.debug('%s optional failed: %s', 'pipeline', e, exc_info=True)
     # ── KV‑cache split: стабильный user_message + динамический tail ──
     _prompt_intent = str(dialogue_state.get("last_intent") or "general") if isinstance(dialogue_state, dict) else "general"
+    try:
+        from core.turn_prompt_additive import prepare_additive_context
+
+        prepare_additive_context(context, profile=_brain_profile)
+        if isinstance(dialogue_state, dict):
+            context["dialogue_state"] = dialogue_state
+    except Exception as e:
+        logger.debug("prepare_additive_context: %s", e)
     prompt, _kv_cache_tail, _pack_meta = assemble_split_with_budget(
         _assembly_tier, _prompt_parts,
         profile=_brain_profile, intent=_prompt_intent,

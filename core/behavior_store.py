@@ -25,6 +25,7 @@ from core.context_compression import (
     normalize_dialogue_message_rows,
     trim_dialogue_messages_paired,
 )
+from core.monitoring import MONITOR
 
 logger = logging.getLogger(__name__)
 
@@ -466,6 +467,125 @@ class BehaviorStore:
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(rec, f, ensure_ascii=False, indent=2)
             os.replace(tmp, path)
+
+    def get_turn_generation(self, user_id: str, group_id: Optional[str]) -> int:
+        """Текущий turn_generation из routing_prefs."""
+        rec = self.load(user_id, group_id)
+        rp = rec.get("routing_prefs") if isinstance(rec.get("routing_prefs"), dict) else {}
+        try:
+            return int(rp.get("turn_generation") or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    def bump_turn_generation(self, user_id: str, group_id: Optional[str]) -> int:
+        """Увеличить generation на inbound; защита от stale send/store."""
+        path = self._path(user_id, group_id)
+        with self._lock:
+            if os.path.isfile(path):
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        raw = json.load(f)
+                    rec = self._merge_defaults(raw) if isinstance(raw, dict) else self._defaults()
+                except Exception as e:
+                    logger.debug("bump_turn_generation load: %s", e)
+                    rec = self._defaults()
+            else:
+                rec = self._defaults()
+            rp = dict(rec.get("routing_prefs") or {})
+            try:
+                gen = int(rp.get("turn_generation") or 0) + 1
+            except (TypeError, ValueError):
+                gen = 1
+            rp["turn_generation"] = gen
+            rec["routing_prefs"] = rp
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(rec, f, ensure_ascii=False, indent=2)
+            os.replace(tmp, path)
+        MONITOR.inc("turn_generation_bump_total")
+        return gen
+
+    def refresh_dialogue_stm_from_disk(
+        self,
+        user_id: str,
+        group_id: Optional[str],
+        persisted: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Подтянуть recent_messages/summary с диска в in-flight persisted (fix stale STM)."""
+        fresh = self.load(user_id, group_id)
+        if not isinstance(fresh, dict):
+            return persisted
+        out = dict(persisted) if isinstance(persisted, dict) else {}
+        for key in ("recent_messages", "dialogue_summary"):
+            if key in fresh:
+                out[key] = fresh[key]
+        st_f = fresh.get("session_task")
+        st_o = out.get("session_task")
+        if isinstance(st_f, dict):
+            merged_st = dict(st_o) if isinstance(st_o, dict) else {}
+            for k in ("last_assistant_excerpt", "last_user_excerpt", "last_trace_id"):
+                if st_f.get(k):
+                    merged_st[k] = st_f[k]
+            out["session_task"] = merged_st
+        MONITOR.inc("dialogue_stm_refresh_total")
+        return out
+
+    def reconcile_sent_assistant_text(
+        self,
+        user_id: str,
+        group_id: Optional[str],
+        sent_text: str,
+        *,
+        generation: int = 0,
+    ) -> bool:
+        """Синхронизировать последнюю реплику assistant с текстом из Telegram."""
+        if generation > 0 and generation != self.get_turn_generation(user_id, group_id):
+            MONITOR.inc("turn_generation_stale_store_skip_total")
+            return False
+        text = (sent_text or "").strip()
+        if not text:
+            return False
+        path = self._path(user_id, group_id)
+        with self._lock:
+            if not os.path.isfile(path):
+                return False
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    raw = json.load(f)
+                rec = self._merge_defaults(raw) if isinstance(raw, dict) else self._defaults()
+            except Exception as e:
+                logger.debug("reconcile_sent_assistant load: %s", e)
+                return False
+            msgs = rec.get("recent_messages")
+            if not isinstance(msgs, list) or not msgs:
+                return False
+            patched = False
+            for i in range(len(msgs) - 1, -1, -1):
+                row = msgs[i]
+                if not isinstance(row, dict):
+                    continue
+                if str(row.get("role") or "").lower() != "assistant":
+                    continue
+                prev = str(row.get("text") or row.get("content") or "").strip()
+                if prev == text:
+                    return True
+                row["text"] = text[:8000]
+                patched = True
+                break
+            if not patched:
+                return False
+            rec["recent_messages"] = msgs
+            st = rec.get("session_task")
+            if isinstance(st, dict):
+                st["last_assistant_excerpt"] = text[:480]
+                rec["session_task"] = st
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(rec, f, ensure_ascii=False, indent=2)
+            os.replace(tmp, path)
+        MONITOR.inc("sent_assistant_reconcile_total")
+        return True
 
     def update_after_turn(
         self,

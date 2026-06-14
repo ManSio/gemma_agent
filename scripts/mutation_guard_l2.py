@@ -30,6 +30,27 @@ L2_TARGETS: Dict[str, List[str]] = {
         "tests/test_timezone_inference.py",
     ],
     "core/text_leak_scan.py": ["tests/test_text_leak_scan.py"],
+    "core/turn_hash.py": [
+        "tests/test_turn_hash.py",
+        "tests/test_turn_contract_phase2_mutation.py",
+    ],
+    "core/turn_lane_spine.py": [
+        "tests/test_turn_lane_spine.py",
+        "tests/test_turn_contract_phase2_mutation.py",
+    ],
+    "core/turn_correction_contract.py": [
+        "tests/test_turn_correction_contract.py",
+        "tests/test_turn_contract_phase2_mutation.py",
+    ],
+    "core/short_circuit_registry.py": ["tests/test_short_circuit_registry.py"],
+    "core/turn_lane_ops.py": [
+        "tests/test_turn_contract_phase3.py",
+        "tests/test_reply_mode_footer_lane.py",
+    ],
+    "core/turn_prompt_additive.py": ["tests/test_turn_contract_phase3.py"],
+    "core/turn_regression.py": ["tests/test_turn_contract_phase3.py"],
+    "core/turn_plan_finalize.py": ["tests/test_turn_plan_finalize.py"],
+    "core/turn_fingerprint_alert.py": ["tests/test_turn_fingerprint_alert.py"],
 }
 
 QUICK_TARGETS = ["core/brain/profile_route_guard.py"]

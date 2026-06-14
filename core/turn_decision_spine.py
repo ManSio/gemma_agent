@@ -45,6 +45,27 @@ def refresh_post_reconcile_payload(
     ctx["_post_reconcile_spine_v"] = _SPINE_VERSION
     if user_id:
         ctx.setdefault("user_id", user_id)
+    try:
+        from core.turn_lane_spine import apply_sticky_lane_and_profile
+
+        persisted = None
+        bs = ctx.get("_behavior_store")
+        uid = str(ctx.get("user_id") or user_id or "").strip()
+        gid = ctx.get("group_id")
+        if bs and uid and hasattr(bs, "load"):
+            try:
+                persisted = bs.load(uid, gid)
+            except Exception as e:
+                logger.debug("sticky lane load: %s", e)
+        apply_sticky_lane_and_profile(ctx, persisted=persisted if isinstance(persisted, dict) else None)
+    except Exception as e:
+        logger.debug("turn_lane_spine: %s", e)
+    try:
+        from core.turn_correction_contract import apply_correction_override
+
+        apply_correction_override(ctx)
+    except Exception as e:
+        logger.debug("correction_override: %s", e)
     MONITOR.inc("turn_decision_spine_refresh_total")
     return ctx
 

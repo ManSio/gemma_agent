@@ -11,6 +11,7 @@ from typing import Any, Dict, Mapping, Optional
 
 from core.dialogue_slots import SLOT_ARTICLE_THREAD, SLOT_SPATIAL_PROJECT, SLOT_WEATHER_CITY, get_active_slot
 from core.runtime_telegram_settings import effective_bool
+from core.turn_lane_ops import lane_from_meta, lane_label_ru, normalize_lane
 
 _TAG_RE = re.compile(r"\[gemma:mf[^\]]*\]\s*$", re.MULTILINE)
 
@@ -119,6 +120,7 @@ def build_mode_footer_fields(
     profile = str(om.get("brain_profile") or om.get("router_profile") or rc.get("route_profile") or "").strip()
     pre_llm = str(rc.get("route_pre_llm") or om.get("planner_bypass") or "").strip()
     skill = str(rc.get("route_skill") or om.get("skill") or "").strip()
+    lane = lane_from_meta(output_meta=om, route_context=rc)
 
     slot_kind = ""
     tsa = rc.get("turn_state_audit")
@@ -136,7 +138,9 @@ def build_mode_footer_fields(
         slot_kind = SLOT_SPATIAL_PROJECT
 
     human = _human_label(intent=intent, module=module, slot_kind=slot_kind, phase=phase, pre_llm=pre_llm)
-    if profile and human == "диалог":
+    if lane:
+        human = f"{lane_label_ru(lane)} · {human}"
+    elif profile and human == "диалог":
         human = f"диалог · {profile}"
 
     tag_parts = ["gemma:mf", "v1"]
@@ -152,6 +156,8 @@ def build_mode_footer_fields(
         tag_parts.append(f"b={_slug(pre_llm)}")
     if skill:
         tag_parts.append(f"k={_slug(skill)}")
+    if lane:
+        tag_parts.append(f"L={normalize_lane(lane)}")
     tid = _slug((trace_id or str(om.get("trace_id") or ""))[:12], max_len=12)
     if tid:
         tag_parts.append(f"t={tid}")

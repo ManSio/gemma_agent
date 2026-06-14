@@ -340,6 +340,23 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
         row["last_feedback_applied"] = [str(x)[:40] for x in _lfa[:8]]
     if _otg_list:
         row["outbound_thread_guard_issues"] = _otg_list
+    _tca = payload.get("turn_contract_audit")
+    if isinstance(_tca, dict) and _tca:
+        if _tca.get("generation") is not None:
+            row["turn_generation"] = int(_tca.get("generation") or 0)
+        for _k in ("referent", "lane", "short_circuit", "recent_fingerprint", "topic_anchor"):
+            if _tca.get(_k):
+                row[_k] = str(_tca.get(_k))[:120 if _k == "topic_anchor" else 48]
+        if _tca.get("must_blocks"):
+            row["must_blocks"] = [str(x)[:32] for x in _tca.get("must_blocks")[:8]]
+    _ph = payload.get("plan_turn_hash")
+    _bh = payload.get("brain_turn_hash")
+    if _ph:
+        row["plan_turn_hash"] = str(_ph)[:16]
+    if _bh:
+        row["brain_turn_hash"] = str(_bh)[:16]
+    if payload.get("turn_hash_drift") is True:
+        row["turn_hash_drift"] = True
     append_turn_record(row)
 
 
@@ -502,7 +519,14 @@ def format_turns_admin_html(
         ts = esc(str(row.get("ts") or "")[:19])
         oc = esc(str(row.get("outcome") or "?"))
         prof = esc(str(row.get("profile") or ""))
-        lane = esc(str(row.get("dialogue_lane") or ""))
+        lane_raw = str(row.get("lane") or row.get("dialogue_lane") or "").strip()
+        try:
+            from core.turn_lane_ops import lane_from_turn_row, lane_label_ru
+
+            lane_code = lane_from_turn_row(row)
+            lane = esc(f"{lane_code} ({lane_label_ru(lane_code)})")
+        except Exception:
+            lane = esc(lane_raw)
         lat = row.get("latency_ms")
         pt = row.get("prompt_tokens_est")
         issues = row.get("issues") if isinstance(row.get("issues"), list) else []
@@ -513,6 +537,9 @@ def format_turns_admin_html(
         intent = esc(str(row.get("intent") or "")[:16])
         lat_ms = int(lat) if lat is not None else 0
         lane_bit = f" <code>{lane}</code>" if lane else ""
+        fp = esc(str(row.get("recent_fingerprint") or "")[:16])
+        fp_bit = f" fp=<code>{fp}</code>" if fp else ""
+        drift_bit = " drift" if row.get("turn_hash_drift") else ""
         tok_bit = f" pt≈{int(pt)}" if pt else ""
         mod_bit = f" <i>{mod}</i>" if mod else ""
         topic = esc(str(row.get("topic_current") or row.get("topic_snippet") or "")[:48])
@@ -528,7 +555,7 @@ def format_turns_admin_html(
                 gate_bit += f" · {br}"
         topic_bit = f"\n  topic: <code>{topic}</code>" if topic else ""
         lines.append(
-            f"• <code>{ts}</code> <b>{oc}</b> <code>{prof}</code>{mod_bit}{lane_bit} "
+            f"• <code>{ts}</code> <b>{oc}</b> <code>{prof}</code>{mod_bit}{lane_bit}{fp_bit}{drift_bit} "
             f"<b>{lat_ms}ms</b>{tok_bit}"
             f"\n  intent: <code>{intent or '—'}</code> · issues: <code>{esc(iss_s)}</code>"
             f"{topic_bit}{gate_bit}"

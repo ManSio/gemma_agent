@@ -206,6 +206,7 @@ def summarize_turns_window(
 
     cutoff = datetime.now(timezone.utc) - timedelta(hours=max(0.5, hours))
     latencies: List[float] = []
+    lane_rows: List[Dict[str, Any]] = []
 
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
         line = line.strip()
@@ -225,9 +226,21 @@ def summarize_turns_window(
         out["turns"] += 1
         if row.get("issues"):
             out["issues"] += 1
+        if row.get("type") not in ("scenario", "pre_send"):
+            lane_rows.append(row)
         lat = _row_latency_ms(row)
         if lat is not None:
             latencies.append(lat)
+
+    try:
+        from core.turn_lane_ops import format_lane_summary_short, summarize_lane_distribution
+
+        lane_summary = summarize_lane_distribution(lane_rows)
+        out["lane_summary"] = lane_summary
+        out["lane_summary_short"] = format_lane_summary_short(lane_summary)
+    except Exception:
+        out["lane_summary"] = {}
+        out["lane_summary_short"] = ""
 
     out["available"] = out["turns"] > 0
     out["latency_p50_ms"] = _p50(latencies)

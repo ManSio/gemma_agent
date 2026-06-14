@@ -309,9 +309,22 @@ async def _chat_via_orchestrator(
     meta["request_id"] = ensure_request_id(
         str(meta.get("request_id") or meta.get("relay_request_id") or rid or "").strip() or None
     )
+    try:
+        from core.turn_contract import turn_contract_enabled
+
+        if turn_contract_enabled() and orchestrator.behavior_store:
+            meta["turn_generation"] = orchestrator.behavior_store.bump_turn_generation(
+                user_id, group_id
+            )
+    except Exception as e:
+        logger.debug("api turn_generation bump: %s", e)
     input_data = Input(type="text", payload=message, meta=meta)
     plan = orchestrator.plan(input_data, user_id, group_id)
     outputs = await orchestrator.execute_plan(plan, user_id, group_id)
+    try:
+        orchestrator.prepare_pending_turn_store(plan, outputs, user_id, group_id)
+    except Exception as e:
+        logger.debug("api prepare_pending_turn_store: %s", e)
     response_text = "Response from assistant"
     all_texts: List[str] = []
     if outputs:
@@ -324,6 +337,42 @@ async def _chat_via_orchestrator(
             response_text = str(outputs[0].payload)
         else:
             response_text = "Empty response"
+    try:
+        from core.scenario_engine import apply_pre_send
+
+        _om: Dict[str, Any] = {
+            "user_id": user_id,
+            "group_id": group_id,
+            "user_text": message,
+            "trace_id": str(meta.get("trace_id") or meta.get("request_id") or ""),
+            "turn_generation": meta.get("turn_generation"),
+        }
+        if outputs and isinstance(outputs[0].meta, dict):
+            for _k in ("turn_contract", "pending_turn_store", "trace_id", "turn_generation"):
+                if outputs[0].meta.get(_k) is not None:
+                    _om[_k] = outputs[0].meta.get(_k)
+        response_text, _ = apply_pre_send(response_text, user_text=message, output_meta=_om)
+    except Exception as e:
+        logger.debug("api apply_pre_send: %s", e)
+        _om = {
+            "user_id": user_id,
+            "group_id": group_id,
+            "turn_generation": meta.get("turn_generation"),
+        }
+        if outputs and isinstance(outputs[0].meta, dict):
+            _om["pending_turn_store"] = outputs[0].meta.get("pending_turn_store")
+    try:
+        from core.turn_delivery_store import finalize_delivery_from_output_meta
+
+        finalize_delivery_from_output_meta(
+            orchestrator=orchestrator,
+            user_id=user_id,
+            group_id=group_id,
+            sent_text=response_text,
+            output_meta=_om if isinstance(_om, dict) else None,
+        )
+    except Exception as e:
+        logger.debug("api finalize_turn_store: %s", e)
     md: Dict[str, Any] = {
         "channel": channel,
         "group_id": group_id,

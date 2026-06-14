@@ -47,15 +47,38 @@ def build_dynamic_tail(
     """Собрать динамический хвост из модулей с predicate=True."""
     cfg = get_profile(profile)
     segments: List[str] = []
+    force: set[str] = set()
+    raw_force = ctx.get("_force_prompt_modules")
+    if isinstance(raw_force, (list, tuple, set)):
+        force.update(str(x).strip() for x in raw_force if str(x).strip())
+    else:
+        try:
+            from core.turn_prompt_additive import resolve_force_modules
+
+            force.update(resolve_force_modules(ctx, profile=profile))
+        except Exception as e:
+            logger.debug("resolve_force_modules: %s", e)
+    active: List[str] = []
     for name, pred, fn in _MODULES:
         try:
-            if not pred(parts, cfg, intent, ctx):
+            include = name in force or pred(parts, cfg, intent, ctx)
+            if not include:
                 continue
             content = fn(parts, cfg)
             if content:
                 segments.append(content)
+                active.append(name)
+            elif name in force:
+                active.append(name)
         except Exception as e:
             logger.debug("[prompt_modules] module %s error: %s", name, e)
+    parts["_prompt_modules_active"] = active
+    try:
+        from core.turn_prompt_additive import record_active_modules
+
+        record_active_modules(ctx, active)
+    except Exception as e:
+        logger.debug("record_active_modules: %s", e)
     return "\n".join(segments)
 
 
@@ -782,6 +805,47 @@ def _active_thread_content(parts, cfg: ProfileConfig) -> str:
 
 
 register_module("active_thread", _active_thread_pred, _active_thread_content)
+
+
+# =====================================================================
+# Модуль: topic_anchor (TurnContract / discourse)
+# =====================================================================
+
+def _topic_anchor_pred(parts, cfg: ProfileConfig, intent, ctx) -> bool:
+    anchor = topic_anchor_from_parts(parts, ctx)
+    if anchor:
+        parts["topic_anchor"] = anchor
+    return bool(anchor)
+
+
+def topic_anchor_from_parts(parts: Dict[str, Any], ctx: Optional[Dict[str, Any]]) -> str:
+    """Текст anchor из turn_contract или discourse."""
+    c = ctx if isinstance(ctx, dict) else {}
+    tc = c.get("turn_contract")
+    if isinstance(tc, dict):
+        a = str(tc.get("topic_anchor") or "").strip()
+        if a:
+            return a
+    try:
+        from core.turn_contract import topic_anchor_from_context
+
+        return topic_anchor_from_context(
+            turn_meaning=c.get("turn_meaning"),
+            persisted=None,
+            user_text=str(c.get("user_text") or ""),
+        )
+    except Exception:
+        return ""
+
+
+def _topic_anchor_content(parts, cfg: ProfileConfig) -> str:
+    anchor = str(parts.get("topic_anchor") or "").strip()
+    if not anchor:
+        return ""
+    return _fmt_block("Thread anchor", f"Текущая нить диалога: {anchor}")
+
+
+register_module("topic_anchor", _topic_anchor_pred, _topic_anchor_content)
 
 __all__ = [
     "build_dynamic_tail",

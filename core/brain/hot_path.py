@@ -67,6 +67,11 @@ def _brain_slim_shared_rejects(
         return True
     if str(context.get("telegram_reply_context") or "").strip():
         return True
+    if context.get("correction_turn") or context.get("brain_force_full_prompt"):
+        return True
+    must = context.get("turn_contract_must_blocks")
+    if isinstance(must, list) and must:
+        return True
     doc = context.get("document_intake")
     if isinstance(doc, dict) and doc:
         return True

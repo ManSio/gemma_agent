@@ -1125,6 +1125,51 @@ def apply_pre_send(
         logger.debug("outbound_thread_guard pre_send: %s", e)
 
     try:
+        from core.anti_echo_guard import (
+            detect_template_echo_issues,
+            recover_template_echo_reply,
+        )
+
+        _ae_last = ""
+        if output_meta:
+            _ae_last = str(output_meta.get("last_assistant_excerpt") or "").strip()
+            if not _ae_last:
+                _uid_ae = str(output_meta.get("user_id") or "").strip()
+                if _uid_ae:
+                    try:
+                        from core.behavior_store import BehaviorStore
+
+                        _rec_ae = BehaviorStore().load(_uid_ae, output_meta.get("group_id"))
+                        for _row in reversed(_rec_ae.get("recent_messages") or []):
+                            if not isinstance(_row, dict):
+                                continue
+                            if str(_row.get("role") or "").lower() == "assistant":
+                                _ae_last = str(
+                                    _row.get("text") or _row.get("content") or ""
+                                ).strip()
+                                break
+                    except Exception as e:
+                        logger.debug('%s optional failed: %s', 'scenario_engine', e, exc_info=True)
+        _ae_issues = detect_template_echo_issues(ut, txt, _ae_last)
+        if _ae_issues:
+            hits.append(
+                ScenarioHit(
+                    id="pre_send_anti_echo",
+                    phase="pre_send",
+                    severity="critical",
+                    action="replace_fallback",
+                    reason=f"anti_echo:{','.join(_ae_issues)}",
+                )
+            )
+            _ae_fixed = recover_template_echo_reply(ut, _ae_issues)
+            if _ae_fixed:
+                txt = _ae_fixed
+            if output_meta is not None and isinstance(output_meta, dict):
+                output_meta["anti_echo_issues"] = list(_ae_issues)
+    except Exception as e:
+        logger.debug("anti_echo pre_send: %s", e)
+
+    try:
         from core.input_layer import _reply_suspect_incomplete
 
         if _reply_suspect_incomplete(txt) and _TRUNCATION_NOTE not in txt:

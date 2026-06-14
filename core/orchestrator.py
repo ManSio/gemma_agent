@@ -989,6 +989,11 @@ class Orchestrator:
             ctx["affect_state"] = dict(persisted.get("affect_state") or {})
         if isinstance(persisted.get("self_model"), dict):
             ctx["self_model"] = dict(persisted.get("self_model") or {})
+        _meta_in = normalized_input.get("meta") if isinstance(normalized_input.get("meta"), dict) else {}
+        if _meta_in.get("plan_turn_hash"):
+            ctx["plan_turn_hash"] = str(_meta_in.get("plan_turn_hash") or "")
+        if isinstance(_meta_in.get("turn_contract"), dict):
+            ctx.setdefault("turn_contract", dict(_meta_in["turn_contract"]))
         dialogue_state = dict(persisted.get("dialogue_state") or {})
         dialogue_state.update(dict(ctx.get("dialogue_state") or {}))
         _prev_tier_raw = str(dialogue_state.get("task_tier") or "").strip()
@@ -1331,6 +1336,49 @@ class Orchestrator:
                     normalized_input["payload"] = text_stripped
         except Exception as e:
             logger.debug("normalize_capital_query_typos: %s", e)
+        if isinstance(input_meta, dict):
+            if user_id:
+                input_meta.setdefault("user_id", str(user_id))
+            if group_id is not None:
+                input_meta.setdefault("group_id", group_id)
+        if user_id and self.behavior_store:
+            try:
+                _persisted_plan = self.behavior_store.load(user_id, group_id) or {}
+            except Exception as e:
+                logger.debug("plan persisted load: %s", e)
+        _plan_meaning = None
+        _plan_gate_ctx: Dict[str, Any] = {}
+        if user_id and isinstance(_persisted_plan, dict):
+            try:
+                from core.turn_shortcut_gate import prepare_plan_turn_gate
+
+                _plan_meaning, _plan_gate_ctx = prepare_plan_turn_gate(
+                    text_stripped,
+                    str(user_id),
+                    group_id,
+                    _persisted_plan,
+                )
+                if isinstance(input_meta, dict):
+                    input_meta["plan_turn_meaning"] = _plan_meaning.to_dict()
+            except Exception as e:
+                logger.debug("plan_turn_gate: %s", e)
+        if isinstance(input_meta, dict):
+            try:
+                from core.turn_contract import build_turn_contract, turn_contract_enabled
+
+                if turn_contract_enabled():
+                    _tc_plan = build_turn_contract(
+                        trace_id=str(input_meta.get("trace_id") or ""),
+                        generation=int(input_meta.get("turn_generation") or 0),
+                        turn_meaning=_plan_meaning,
+                        persisted=_persisted_plan if isinstance(_persisted_plan, dict) else None,
+                        user_text=text_stripped,
+                        input_meta=input_meta,
+                        context=_plan_gate_ctx if isinstance(_plan_gate_ctx, dict) else None,
+                    )
+                    input_meta["turn_contract"] = _tc_plan.to_dict()
+            except Exception as e:
+                logger.debug("turn_contract plan: %s", e)
         _tl_early = (
             input_meta.get("telegram_location") if isinstance(input_meta, dict) else None
         )
@@ -1427,29 +1475,14 @@ class Orchestrator:
                 )
             _obs_mark(input_meta, "plan_decide")
             _obs_mark(input_meta, "plan_done")
-            if self._resilience.is_enabled() and self._resilience.is_safe_mode():
-                return Plan(steps=steps_fast, mode="degraded")
-            return Plan(steps=steps_fast, mode="full")
-
-        if user_id and self.behavior_store:
-            _persisted_plan = self.behavior_store.load(user_id, group_id)
-
-        _plan_meaning = None
-        _plan_gate_ctx: Dict[str, Any] = {}
-        if user_id and text_stripped and isinstance(_persisted_plan, dict):
-            try:
-                from core.turn_shortcut_gate import prepare_plan_turn_gate
-
-                _plan_meaning, _plan_gate_ctx = prepare_plan_turn_gate(
-                    text_stripped,
-                    str(user_id),
-                    group_id,
-                    _persisted_plan,
-                )
-                if isinstance(input_meta, dict):
-                    input_meta["plan_turn_meaning"] = _plan_meaning.to_dict()
-            except Exception as e:
-                logger.debug("plan_turn_gate: %s", e)
+            _mode_fast = "degraded" if self._resilience.is_enabled() and self._resilience.is_safe_mode() else "full"
+            return self._return_direct_plan(
+                Plan(steps=steps_fast, mode=_mode_fast),
+                input_meta=input_meta,
+                user_text="",
+                plan_meaning=_plan_meaning,
+                persisted=_persisted_plan,
+            )
 
         if user_id and text_stripped and not str(text_stripped).lstrip().startswith("/"):
             try:
@@ -1487,7 +1520,8 @@ class Orchestrator:
                     MONITOR.inc("planner_decisions_total")
                     MONITOR.inc("pre_llm_plan_direct_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1500,6 +1534,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except Exception as e:
                 logger.debug("pre_llm_direct_plan: %s", e)
@@ -1527,7 +1566,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="reminder", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1540,6 +1580,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except Exception as e:
                 logger.debug("reminder_nl cancel: %s", e)
@@ -1565,7 +1610,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="schedule", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1578,6 +1624,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except Exception as e:
                 logger.debug("schedule_nl: %s", e)
@@ -1620,7 +1671,13 @@ class Orchestrator:
                             )
                         ]
                         _obs_mark(input_meta, "plan_done")
-                        return Plan(steps=_steps_nl, mode="full")
+                        return self._return_direct_plan(
+                            Plan(steps=_steps_nl, mode="full"),
+                            input_meta=input_meta,
+                            user_text=text_stripped,
+                            plan_meaning=_plan_meaning,
+                            persisted=_persisted_plan,
+                        )
             except Exception as e:
                 logger.debug("nl_reminder plan: %s", e)
 
@@ -1672,7 +1729,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="geo", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1685,6 +1743,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except Exception as e:
                 logger.debug("telegram_location plan: %s", e)
@@ -1723,7 +1786,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="geo", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1736,6 +1800,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except RuntimeError:
                 from core.brain_own_turn import record_planner_semantic_deferred
@@ -1826,7 +1895,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="weather", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1839,6 +1909,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except RuntimeError:
                 from core.brain_own_turn import record_planner_semantic_deferred
@@ -1883,7 +1958,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="math", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1896,6 +1972,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except Exception as e:
                 logger.debug("referential_math plan: %s", e)
@@ -1939,7 +2020,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="search", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -1952,6 +2034,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except RuntimeError as e:
                 if str(e) != "facts_confirm_pending":
@@ -2002,7 +2089,8 @@ class Orchestrator:
                     record_usage(text=text_stripped, intent="news", module="__fallback__")
                     MONITOR.inc("planner_decisions_total")
                     _obs_mark(input_meta, "plan_done")
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -2018,6 +2106,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except RuntimeError:
                 from core.brain_own_turn import record_planner_semantic_deferred
@@ -2083,7 +2176,8 @@ class Orchestrator:
                         if isinstance(_rd.get("dialogue_state"), dict)
                         else {}
                     )
-                    return Plan(
+                    return self._return_direct_plan(
+                        Plan(
                         steps=[
                             PlanStep(
                                 module_name="__fallback__",
@@ -2100,6 +2194,11 @@ class Orchestrator:
                             )
                         ],
                         mode="full",
+                        ),
+                        input_meta=input_meta,
+                        user_text=text_stripped,
+                        plan_meaning=_plan_meaning,
+                        persisted=_persisted_plan,
                     )
             except RuntimeError as _news_skip:
                 _skip_reason = str(_news_skip)
@@ -2140,7 +2239,8 @@ class Orchestrator:
                             record_usage(text=text_stripped, intent="news", module="__fallback__")
                             MONITOR.inc("planner_decisions_total")
                             _obs_mark(input_meta, "plan_done")
-                            return Plan(
+                            return self._return_direct_plan(
+                                Plan(
                                 steps=[
                                     PlanStep(
                                         module_name="__fallback__",
@@ -2153,6 +2253,11 @@ class Orchestrator:
                                     )
                                 ],
                                 mode="full",
+                                ),
+                                input_meta=input_meta,
+                                user_text=text_stripped,
+                                plan_meaning=_plan_meaning,
+                                persisted=_persisted_plan,
                             )
                     except Exception as e:
                         logger.debug("news_web_search plan: %s", e)
@@ -2220,7 +2325,27 @@ class Orchestrator:
                 ensure_timezone_in_user_facts(_uf_tz)
         except Exception as e:
             logger.debug("%s optional failed: %s", 'orchestrator', e, exc_info=True)
+        if user_id and self.behavior_store:
+            try:
+                from core.turn_contract import recent_dialogue_fingerprint, turn_contract_enabled
+
+                if turn_contract_enabled():
+                    persisted = self.behavior_store.refresh_dialogue_stm_from_disk(
+                        user_id,
+                        group_id,
+                        persisted if isinstance(persisted, dict) else {},
+                    )
+                    if isinstance(input_meta, dict) and isinstance(input_meta.get("turn_contract"), dict):
+                        _tc_rf = dict(input_meta["turn_contract"])
+                        _tc_rf["recent_fingerprint"] = recent_dialogue_fingerprint(
+                            persisted.get("recent_messages") if isinstance(persisted, dict) else None
+                        )
+                        input_meta["turn_contract"] = _tc_rf
+            except Exception as e:
+                logger.debug("refresh_dialogue_stm: %s", e)
         pre_ctx = self._assemble_brain_context(user_id, group_id, persisted=persisted)
+        if isinstance(input_meta, dict) and isinstance(input_meta.get("turn_contract"), dict):
+            pre_ctx["turn_contract"] = dict(input_meta["turn_contract"])
         try:
             from core.turn_shortcut_gate import inject_plan_meaning_into_context
 
@@ -2432,7 +2557,10 @@ class Orchestrator:
             except Exception as e:
                 logger.debug("scenario_engine pre_plan: %s", e)
             if facts_flow:
-                persisted = self.behavior_store.load(user_id, group_id)
+                _loaded_ff = self.behavior_store.load(user_id, group_id)
+                persisted = self.behavior_store.refresh_dialogue_stm_from_disk(
+                    user_id, group_id, _loaded_ff if isinstance(_loaded_ff, dict) else {}
+                )
                 pre_ctx = self._assemble_brain_context(user_id, group_id, persisted=persisted)
                 ingested_rows = self._knowledge_engine.ingest_context_sources(context=pre_ctx)
                 MONITOR.inc("knowledge_rows_ingested_total", max(0, int(ingested_rows)))
@@ -2644,9 +2772,59 @@ class Orchestrator:
 
         if self._resilience.is_enabled() and self._resilience.is_safe_mode():
             _obs_mark(input_meta, "plan_done")
-            return Plan(steps=steps, mode="degraded")
+            return self._return_direct_plan(
+                Plan(steps=steps, mode="degraded"),
+                input_meta=input_meta,
+                user_text=text_stripped,
+                plan_meaning=_plan_meaning,
+                persisted=_persisted_plan,
+            )
+        _plan_out = Plan(steps=steps, mode="full")
+        self._return_direct_plan(
+            _plan_out,
+            input_meta=input_meta,
+            user_text=text_stripped,
+            plan_meaning=_plan_meaning,
+            persisted=_persisted_plan,
+        )
         _obs_mark(input_meta, "plan_done")
-        return Plan(steps=steps, mode="full")
+        return _plan_out
+
+    def _stamp_plan_turn_hash(self, input_meta: Any, plan: Plan) -> None:
+        """Записать plan_turn_hash в input meta для drift-check в brain."""
+        if not isinstance(input_meta, dict):
+            return
+        try:
+            from core.turn_hash import plan_turn_hash_from_meta
+
+            input_meta["plan_turn_hash"] = plan_turn_hash_from_meta(input_meta, plan)
+        except Exception as e:
+            logger.debug("stamp_plan_turn_hash: %s", e)
+
+    def _return_direct_plan(
+        self,
+        plan: Plan,
+        *,
+        input_meta: Any,
+        user_text: str = "",
+        plan_meaning: Any = None,
+        persisted: Any = None,
+    ) -> Plan:
+        """Финализировать direct Plan: meaning, contract, hash (Phase 0.3)."""
+        if isinstance(input_meta, dict):
+            try:
+                from core.turn_plan_finalize import finalize_direct_plan
+
+                finalize_direct_plan(
+                    plan,
+                    input_meta,
+                    user_text=user_text,
+                    persisted=persisted if isinstance(persisted, dict) else None,
+                    plan_meaning=plan_meaning,
+                )
+            except Exception as e:
+                logger.debug("_return_direct_plan: %s", e)
+        return plan
 
     def _route_command(self, text: str, allowed: set) -> Optional[str]:
         raw = text.split()[0]
@@ -2911,6 +3089,63 @@ class Orchestrator:
         logger.info(f"[SELECT] intent={intent} -> no module found")
         return None
 
+    def prepare_pending_turn_store(
+        self,
+        plan: Plan,
+        outputs: List[Output],
+        user_id: Optional[str],
+        group_id: Optional[str],
+    ) -> None:
+        """Прикрепить pending_turn_store к outputs (facts_shortcut / paths без execute)."""
+        try:
+            from core.turn_delivery_store import (
+                attach_pending_to_outputs,
+                build_pending_turn_store,
+                defer_turn_store_enabled,
+                patch_plan_meta_shortcut_from_step,
+            )
+
+            if not defer_turn_store_enabled() or not user_id or not plan.steps or not outputs:
+                return
+            for o in outputs:
+                m = getattr(o, "meta", None) or {}
+                if isinstance(m, dict) and m.get("pending_turn_store"):
+                    return
+            patch_plan_meta_shortcut_from_step(plan)
+            inp0 = (plan.steps[0].args or {}).get("input") or {}
+            user_payload = str(inp0.get("payload") or "") if isinstance(inp0, dict) else ""
+            combined = " ".join(str(o.payload) for o in outputs if o.payload)[:4000]
+            pre_ctx = (plan.steps[0].args or {}).get("context") or {}
+            if not isinstance(pre_ctx, dict):
+                pre_ctx = {}
+            trace_meta = inp0.get("meta") if isinstance(inp0, dict) else {}
+            if not isinstance(trace_meta, dict):
+                trace_meta = {}
+            ds = pre_ctx.get("dialogue_state") if isinstance(pre_ctx.get("dialogue_state"), dict) else {}
+            args0 = plan.steps[0].args or {}
+            pending = build_pending_turn_store(
+                user_payload=user_payload,
+                draft_assistant=combined,
+                dialogue_patch={
+                    "last_intent": ds.get("last_intent"),
+                    "planned_module": ds.get("planned_module"),
+                },
+                group_patch={"last_turn_has_payload": bool(user_payload)},
+                telegram_is_admin=bool(pre_ctx.get("telegram_is_admin")),
+                pre_ctx=pre_ctx,
+                trace_meta=trace_meta,
+                ds_exec=ds,
+                recent_before=pre_ctx.get("recent_dialogue") or pre_ctx.get("recent_messages") or [],
+                plan_steps=[s.module_name for s in plan.steps],
+                plan_fallback_variant=str(args0.get("fallback_variant") or ""),
+                news_digest_context=args0.get("news_digest_context")
+                if isinstance(args0.get("news_digest_context"), dict)
+                else None,
+            )
+            attach_pending_to_outputs(outputs, pending)
+        except Exception as e:
+            logger.debug("prepare_pending_turn_store: %s", e)
+
     async def execute_plan(self, plan: Plan, user_id: str = None, group_id: str = None) -> List[Output]:
         outputs: List[Output] = []
         user_payload = ""
@@ -2919,11 +3154,21 @@ class Orchestrator:
         trace_meta: Dict[str, Any] = {}
         inp0: Dict[str, Any] = {}
         _exec_start_ts = time.monotonic()
+        try:
+            from core.turn_delivery_store import patch_plan_meta_shortcut_from_step
+
+            patch_plan_meta_shortcut_from_step(plan)
+        except Exception as e:
+            logger.debug("patch_plan_meta_shortcut: %s", e)
         if plan.steps:
             inp0 = (plan.steps[0].args or {}).get("input") or {}
             if not isinstance(inp0, dict):
                 inp0 = {}
             trace_meta = inp0.get("meta") or {}
+            if not isinstance(trace_meta, dict):
+                trace_meta = {}
+        if isinstance(trace_meta, dict):
+            self._stamp_plan_turn_hash(trace_meta, plan)
         _obs_mark(trace_meta, "exec_start")
         if plan.steps and user_id:
             _early_pl = str(inp0.get("payload", "") or "").strip()
@@ -3711,6 +3956,30 @@ class Orchestrator:
                     ),
                 }
                 try:
+                    _tca_emit = None
+                    if isinstance(trace_meta, dict):
+                        _tca_emit = trace_meta.get("turn_contract")
+                    if not _tca_emit and plan.steps:
+                        _in_em = (plan.steps[0].args or {}).get("input") or {}
+                        _m_em = _in_em.get("meta") if isinstance(_in_em, dict) else {}
+                        if isinstance(_m_em, dict):
+                            _tca_emit = _m_em.get("turn_contract")
+                    if not _tca_emit and isinstance(pre_ctx, dict):
+                        _tca_emit = pre_ctx.get("turn_contract")
+                    if isinstance(_tca_emit, dict) and _tca_emit:
+                        from core.turn_contract import contract_audit_dict
+
+                        _turn_payload["turn_contract_audit"] = contract_audit_dict(_tca_emit)
+                    if isinstance(trace_meta, dict) and trace_meta.get("plan_turn_hash"):
+                        _turn_payload["plan_turn_hash"] = trace_meta.get("plan_turn_hash")
+                    if isinstance(pre_ctx, dict):
+                        if pre_ctx.get("brain_turn_hash"):
+                            _turn_payload["brain_turn_hash"] = pre_ctx.get("brain_turn_hash")
+                        if pre_ctx.get("turn_hash_drift"):
+                            _turn_payload["turn_hash_drift"] = bool(pre_ctx.get("turn_hash_drift"))
+                except Exception as e:
+                    logger.debug("turn_contract emit: %s", e)
+                try:
                     from core.turn_reconcile import turn_state_audit_for_emit
 
                     _tsa_emit = turn_state_audit_for_emit(pre_ctx, plan)
@@ -3853,6 +4122,8 @@ class Orchestrator:
         if user_id and self.behavior_store and plan.steps:
             combined = " ".join(str(o.payload) for o in outputs if o.payload)[:4000]
             try:
+                from core.turn_delivery_store import defer_turn_store_enabled
+
                 _patch_st: Dict[str, Any] = {
                     "last_user_excerpt": (user_payload or "")[:240],
                     "last_intent": str(_ds_exec.get("last_intent") or ""),
@@ -3865,11 +4136,12 @@ class Orchestrator:
                     _tid_st = str(trace_meta.get("trace_id") or "").strip()
                     if _tid_st:
                         _patch_st["last_trace_id"] = _tid_st[:64]
-                self.behavior_store.patch_session_task(
-                    user_id,
-                    group_id,
-                    _patch_st,
-                )
+                if not defer_turn_store_enabled():
+                    self.behavior_store.patch_session_task(
+                        user_id,
+                        group_id,
+                        _patch_st,
+                    )
             except Exception as e:
                 logger.debug("patch_session_task route: %s", e)
             dialogue_patch = {}
@@ -3903,132 +4175,200 @@ class Orchestrator:
                             turn_meta["telegram_message_id"] = int(m0.get("message_id"))
                         except (TypeError, ValueError):
                             pass
+            _skip_store = False
+            _defer_store = False
             try:
-                rec, pending_dc = self.behavior_store.update_after_turn(
-                    user_id,
-                    group_id,
-                    user_payload,
-                    combined,
-                    dialogue_patch=dialogue_patch,
-                    group_patch={"last_turn_has_payload": bool(user_payload)},
-                    blended_style=pre_ctx.get("blended_style_stable"),
-                    micro_emotion=micro,
-                    telegram_is_admin=tg_admin,
-                    turn_meta=turn_meta if turn_meta else None,
+                from core.turn_delivery_store import (
+                    build_pending_turn_store,
+                    defer_turn_store_enabled,
+                    attach_pending_to_outputs,
                 )
-                # rec уже получен из update_after_turn — второй load не нужен
-                if isinstance(pre_ctx.get("cdc_policy"), dict):
-                    rec["cdc_policy"] = dict(pre_ctx.get("cdc_policy") or {})
-                if isinstance(pre_ctx.get("affect_state"), dict):
-                    rec["affect_state"] = dict(pre_ctx.get("affect_state") or {})
-                if isinstance(pre_ctx.get("self_model"), dict):
-                    rec["self_model"] = dict(pre_ctx.get("self_model") or {})
-                if _cdc_policy_patch:
-                    rec["cdc_policy"] = _cdc_policy_patch
-                goals_patch = self._goal_engine.update_after_turn(
-                    persisted=rec,
-                    user_text=user_payload,
-                    assistant_text=combined,
-                )
-                rec.update(goals_patch)
-                try:
-                    from core.user_agent_impression import update_user_agent_impression_in_record
+                from core.turn_contract import turn_contract_enabled
 
-                    update_user_agent_impression_in_record(
-                        rec,
-                        user_id=str(user_id),
-                        user_text=user_payload or "",
+                _defer_store = defer_turn_store_enabled()
+                if turn_contract_enabled() and plan.steps:
+                    _in_tc = (plan.steps[0].args or {}).get("input") or {}
+                    _meta_tc = _in_tc.get("meta") if isinstance(_in_tc, dict) else {}
+                    _gen_tc = 0
+                    if isinstance(_meta_tc, dict):
+                        try:
+                            _gen_tc = int(
+                                _meta_tc.get("turn_generation")
+                                or (_meta_tc.get("turn_contract") or {}).get("generation")
+                                or 0
+                            )
+                        except (TypeError, ValueError):
+                            _gen_tc = 0
+                    if _gen_tc > 0 and _gen_tc != self.behavior_store.get_turn_generation(
+                        user_id, group_id
+                    ):
+                        _skip_store = True
+            except Exception as e:
+                logger.debug("turn_generation store check: %s", e)
+            try:
+                rec = None
+                pending_dc = None
+                if _defer_store and not _skip_store:
+                    _args0 = plan.steps[0].args or {} if plan.steps else {}
+                    _pending = build_pending_turn_store(
+                        user_payload=user_payload,
+                        draft_assistant=combined,
+                        dialogue_patch=dialogue_patch,
+                        group_patch={"last_turn_has_payload": bool(user_payload)},
+                        blended_style=pre_ctx.get("blended_style_stable"),
+                        micro_emotion=micro,
                         telegram_is_admin=tg_admin,
-                    )
-                except Exception as e:
-                    logger.debug("user_agent_impression: %s", e)
-                # Очищаем инструментальные артефакты перед сохранением —
-                # last_tool должен жить только в пределах одного хода (счётчик в impression уже обновлён выше)
-                st = rec.get("session_task")
-                if isinstance(st, dict):
-                    st["last_tool"] = ""
-                    st["last_tool_ok"] = None
-                    st["last_tool_error"] = ""
-                try:
-                    if plan.steps:
-                        _a_save = getattr(plan.steps[0], "args", None) or {}
-                        if isinstance(_a_save, dict) and _a_save.get("fallback_variant") == "news_direct":
-                            _ndc = _a_save.get("news_digest_context")
-                            if isinstance(_ndc, dict):
-                                _ds_save = rec.get("dialogue_state")
-                                if not isinstance(_ds_save, dict):
-                                    _ds_save = {}
-                                    rec["dialogue_state"] = _ds_save
-                                if isinstance(_ndc.get("items"), list) and _ndc["items"]:
-                                    _ds_save["last_news_digest_items"] = _ndc["items"]
-                                if isinstance(_ndc.get("meta"), dict) and _ndc["meta"]:
-                                    _ds_save["last_news_digest_meta"] = _ndc["meta"]
-                except Exception as e:
-                    logger.debug("news_digest_context persist: %s", e)
-                try:
-                    if combined and re.search(r"(?m)^\d+\.\s+\S", combined):
-                        from core.news_reply import stash_parsed_digest_from_assistant
-
-                        stash_parsed_digest_from_assistant(rec, combined)
-                except Exception as e:
-                    logger.debug("stash_parsed_digest_from_assistant: %s", e)
-                self.behavior_store.save(user_id, group_id, rec)
-                if pending_dc:
-                    spawn_logged(
-                        self._dialogue_compact_llm_apply(pending_dc),
-                        label="dialogue_compact_llm",
-                    )
-                try:
-                    from core.message_archive import items_for_prompt
-                    from core.ops_trace import record_ops_turn
-
-                    _ch = "telegram"
-                    if isinstance(trace_meta, dict):
-                        _ch = str(
-                            trace_meta.get("channel")
-                            or trace_meta.get("source")
-                            or _ch
-                        )
-                    _rs_ops: Dict[str, Any] = {}
-                    if plan.steps:
-                        _cx_ops = (plan.steps[0].args or {}).get("context") or {}
-                        if isinstance(_cx_ops, dict):
-                            _raw_rs = _cx_ops.get("reasoning_state")
-                            if isinstance(_raw_rs, dict):
-                                _rs_ops = {
-                                    "intent": _raw_rs.get("intent"),
-                                    "mode": _raw_rs.get("mode"),
-                                    "reason": _raw_rs.get("reason"),
-                                }
-                    _rb_ops = (
-                        pre_ctx.get("recent_dialogue")
-                        or pre_ctx.get("recent_messages")
-                        or []
-                    )
-                    record_ops_turn(
-                        user_id=str(user_id),
-                        group_id=group_id,
-                        channel=_ch,
-                        user_text=user_payload or "",
-                        assistant_text=combined or "",
-                        recent_before=_rb_ops,
-                        recent_after=rec.get("recent_messages") or [],
-                        archive_tail=items_for_prompt(str(user_id), group_id),
+                        turn_meta=turn_meta if turn_meta else None,
+                        pre_ctx=pre_ctx if isinstance(pre_ctx, dict) else None,
+                        cdc_policy_patch=_cdc_policy_patch,
+                        outcome_all=outcome_all,
+                        skill_name=_skill_name_exec,
+                        patch_session_task=_patch_st,
+                        plan_fallback_variant=str(_args0.get("fallback_variant") or ""),
+                        news_digest_context=_args0.get("news_digest_context")
+                        if isinstance(_args0.get("news_digest_context"), dict)
+                        else None,
+                        trace_meta=trace_meta if isinstance(trace_meta, dict) else None,
+                        ds_exec=_ds_exec if isinstance(_ds_exec, dict) else None,
+                        recent_before=(
+                            pre_ctx.get("recent_dialogue")
+                            or pre_ctx.get("recent_messages")
+                            or []
+                        ),
                         plan_steps=[s.module_name for s in plan.steps] if plan.steps else [],
-                        reasoning=_rs_ops,
-                        trace_id=str(trace_meta.get("trace_id") or "") if isinstance(trace_meta, dict) else "",
-                        latency_ms=int(_ds_exec.get("total_latency_ms") or 0) if isinstance(_ds_exec, dict) else None,
-                        extra={
-                            "profile": str(
-                                _ds_exec.get("brain_profile")
-                                or _ds_exec.get("router_profile")
-                                or ""
-                            ),
-                            "outcome": str(outcome_all or ""),
-                        },
                     )
-                except Exception as e:
-                    logger.debug("ops_trace record: %s", e)
+                    attach_pending_to_outputs(outputs, _pending)
+                elif _skip_store:
+                    rec = None
+                    pending_dc = None
+                else:
+                    rec, pending_dc = self.behavior_store.update_after_turn(
+                        user_id,
+                        group_id,
+                        user_payload,
+                        combined,
+                        dialogue_patch=dialogue_patch,
+                        group_patch={"last_turn_has_payload": bool(user_payload)},
+                        blended_style=pre_ctx.get("blended_style_stable"),
+                        micro_emotion=micro,
+                        telegram_is_admin=tg_admin,
+                        turn_meta=turn_meta if turn_meta else None,
+                    )
+                if not _defer_store and not _skip_store and rec is not None:
+                    # rec уже получен из update_after_turn — второй load не нужен
+                    if isinstance(pre_ctx.get("cdc_policy"), dict):
+                        rec["cdc_policy"] = dict(pre_ctx.get("cdc_policy") or {})
+                    if isinstance(pre_ctx.get("affect_state"), dict):
+                        rec["affect_state"] = dict(pre_ctx.get("affect_state") or {})
+                    if isinstance(pre_ctx.get("self_model"), dict):
+                        rec["self_model"] = dict(pre_ctx.get("self_model") or {})
+                    if _cdc_policy_patch:
+                        rec["cdc_policy"] = _cdc_policy_patch
+                    goals_patch = self._goal_engine.update_after_turn(
+                        persisted=rec,
+                        user_text=user_payload,
+                        assistant_text=combined,
+                    )
+                    rec.update(goals_patch)
+                    try:
+                        from core.user_agent_impression import update_user_agent_impression_in_record
+
+                        update_user_agent_impression_in_record(
+                            rec,
+                            user_id=str(user_id),
+                            user_text=user_payload or "",
+                            telegram_is_admin=tg_admin,
+                        )
+                    except Exception as e:
+                        logger.debug("user_agent_impression: %s", e)
+                    # Очищаем инструментальные артефакты перед сохранением —
+                    # last_tool должен жить только в пределах одного хода (счётчик в impression уже обновлён выше)
+                    st = rec.get("session_task")
+                    if isinstance(st, dict):
+                        st["last_tool"] = ""
+                        st["last_tool_ok"] = None
+                        st["last_tool_error"] = ""
+                    try:
+                        if plan.steps:
+                            _a_save = getattr(plan.steps[0], "args", None) or {}
+                            if isinstance(_a_save, dict) and _a_save.get("fallback_variant") == "news_direct":
+                                _ndc = _a_save.get("news_digest_context")
+                                if isinstance(_ndc, dict):
+                                    _ds_save = rec.get("dialogue_state")
+                                    if not isinstance(_ds_save, dict):
+                                        _ds_save = {}
+                                        rec["dialogue_state"] = _ds_save
+                                    if isinstance(_ndc.get("items"), list) and _ndc["items"]:
+                                        _ds_save["last_news_digest_items"] = _ndc["items"]
+                                    if isinstance(_ndc.get("meta"), dict) and _ndc["meta"]:
+                                        _ds_save["last_news_digest_meta"] = _ndc["meta"]
+                    except Exception as e:
+                        logger.debug("news_digest_context persist: %s", e)
+                    try:
+                        if combined and re.search(r"(?m)^\d+\.\s+\S", combined):
+                            from core.news_reply import stash_parsed_digest_from_assistant
+
+                            stash_parsed_digest_from_assistant(rec, combined)
+                    except Exception as e:
+                        logger.debug("stash_parsed_digest_from_assistant: %s", e)
+                    self.behavior_store.save(user_id, group_id, rec)
+                    if pending_dc:
+                        spawn_logged(
+                            self._dialogue_compact_llm_apply(pending_dc),
+                            label="dialogue_compact_llm",
+                        )
+                if not _defer_store and not _skip_store and rec is not None:
+                    try:
+                        from core.message_archive import items_for_prompt
+                        from core.ops_trace import record_ops_turn
+
+                        _ch = "telegram"
+                        if isinstance(trace_meta, dict):
+                            _ch = str(
+                                trace_meta.get("channel")
+                                or trace_meta.get("source")
+                                or _ch
+                            )
+                        _rs_ops: Dict[str, Any] = {}
+                        if plan.steps:
+                            _cx_ops = (plan.steps[0].args or {}).get("context") or {}
+                            if isinstance(_cx_ops, dict):
+                                _raw_rs = _cx_ops.get("reasoning_state")
+                                if isinstance(_raw_rs, dict):
+                                    _rs_ops = {
+                                        "intent": _raw_rs.get("intent"),
+                                        "mode": _raw_rs.get("mode"),
+                                        "reason": _raw_rs.get("reason"),
+                                    }
+                        _rb_ops = (
+                            pre_ctx.get("recent_dialogue")
+                            or pre_ctx.get("recent_messages")
+                            or []
+                        )
+                        record_ops_turn(
+                            user_id=str(user_id),
+                            group_id=group_id,
+                            channel=_ch,
+                            user_text=user_payload or "",
+                            assistant_text=combined or "",
+                            recent_before=_rb_ops,
+                            recent_after=rec.get("recent_messages") or [],
+                            archive_tail=items_for_prompt(str(user_id), group_id),
+                            plan_steps=[s.module_name for s in plan.steps] if plan.steps else [],
+                            reasoning=_rs_ops,
+                            trace_id=str(trace_meta.get("trace_id") or "") if isinstance(trace_meta, dict) else "",
+                            latency_ms=int(_ds_exec.get("total_latency_ms") or 0) if isinstance(_ds_exec, dict) else None,
+                            extra={
+                                "profile": str(
+                                    _ds_exec.get("brain_profile")
+                                    or _ds_exec.get("router_profile")
+                                    or ""
+                                ),
+                                "outcome": str(outcome_all or ""),
+                            },
+                        )
+                    except Exception as e:
+                        logger.debug("ops_trace record: %s", e)
             except Exception as e:
                 logger.debug("behavior_store update: %s", e)
             try:
@@ -4134,6 +4474,36 @@ class Orchestrator:
                                 break
         except Exception as e:
             logger.debug("correction_ack prepend: %s", e)
+        try:
+            from core.turn_contract import turn_contract_enabled
+
+            if turn_contract_enabled() and plan.steps and outputs:
+                _a_tc = plan.steps[0].args or {}
+                _in_tc = _a_tc.get("input") or {}
+                _m_tc = _in_tc.get("meta") if isinstance(_in_tc, dict) else {}
+                if isinstance(_m_tc, dict):
+                    _tc_out = _m_tc.get("turn_contract")
+                    _gen_out = _m_tc.get("turn_generation")
+                    _tid_out = _m_tc.get("trace_id")
+                    for _oi, _o in enumerate(outputs):
+                        _meta_o = dict(getattr(_o, "meta", None) or {})
+                        if _tc_out:
+                            _meta_o["turn_contract"] = _tc_out
+                        if _gen_out is not None:
+                            _meta_o["turn_generation"] = _gen_out
+                        if _tid_out and not _meta_o.get("trace_id"):
+                            _meta_o["trace_id"] = _tid_out
+                        if user_id and not _meta_o.get("user_id"):
+                            _meta_o["user_id"] = str(user_id)
+                        if group_id is not None and "group_id" not in _meta_o:
+                            _meta_o["group_id"] = group_id
+                        outputs[_oi] = Output(
+                            type=_o.type,
+                            payload=_o.payload,
+                            meta=_meta_o,
+                        )
+        except Exception as e:
+            logger.debug("turn_contract output meta: %s", e)
         _obs_mark(trace_meta, "exec_done")
         return outputs
 
