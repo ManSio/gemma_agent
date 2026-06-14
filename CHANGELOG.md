@@ -1,3 +1,17 @@
+## [2026-06-14] — TurnContract gate0 telemetry fix
+
+- **Fix:** `turn_observer` now backfills `recent_fingerprint` from `fp` when `turn_contract_audit` is absent, so TurnContract health does not report a false gate0 red on rows that only had the legacy `fp` field.
+- **Ops:** `scripts/turn_contract_health.py` reports `recent_fingerprint_pct` separately from `fingerprint_pct` and counts `fp_fallback_rows` for legacy logs.
+- **Tests:** added observer telemetry tests and gate0 fallback tests.
+
+### Verify
+```bash
+python -m py_compile core/turn_observer.py scripts/turn_contract_health.py tests/test_turn_observer_telemetry.py tests/test_turn_contract_health.py
+PYTHONPATH=. pytest tests/test_turn_observer_telemetry.py tests/test_turn_contract_health.py tests/test_turn_contract.py tests/test_turn_contract_phase3.py -q
+```
+
+---
+
 ## [2026-06-14] — v3.5.28: privacy hygiene, pre-commit gate, CodeQL hardening
 
 - **Security:** `ops_trace` / `llm_usage_store` / `ephemeral_autolearn` — disk/logs via `sensitive_export` (hashes, whitelist).

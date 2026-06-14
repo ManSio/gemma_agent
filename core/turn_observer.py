@@ -349,6 +349,8 @@ def record_from_turn_outcome(payload: Dict[str, Any]) -> None:
                 row[_k] = str(_tca.get(_k))[:120 if _k == "topic_anchor" else 48]
         if _tca.get("must_blocks"):
             row["must_blocks"] = [str(x)[:32] for x in _tca.get("must_blocks")[:8]]
+    if not row.get("recent_fingerprint") and fp:
+        row["recent_fingerprint"] = fp[:48]
     _ph = payload.get("plan_turn_hash")
     _bh = payload.get("brain_turn_hash")
     if _ph:

@@ -20,6 +20,19 @@
 
 ---
 
+## 2026-06-14 — TurnContract gate0 telemetry fix
+
+**Контекст:** post-deploy prod на `3.5.28 / 201d4ab` показал gate0 красный при `fp=6.2%` и `recent_fingerprint=6.2%`: `turn_observer` писал `fp`, а `turn_contract_health` проверял только `recent_fingerprint`.
+
+**Сделано:**
+- `core/turn_observer.py` — если `turn_contract_audit` отсутствует, observer backfill-ит `recent_fingerprint=fp[:48]`.
+- `scripts/turn_contract_health.py` — gate0 считает `recent_fingerprint_pct` и `fingerprint_pct` раздельно, чтобы legacy-строки с `fp` не красили gate0.
+- Добавлены тесты observer-телеметрии и gate0 fallback.
+
+**Verify:** targeted pytest + py_compile.
+
+---
+
 ## 2026-06-14 — v3.5.28: privacy pre-commit + CodeQL hardening + life-sim tests
 
 **Контекст:** CI падал на `check_public_privacy` (telegram id в docs); CodeQL — clear-text в ops_trace/llm_usage/autolearn.

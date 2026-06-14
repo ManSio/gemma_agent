@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Health-check TurnContract gates + fingerprint stall alert (Phase 0.4)."""
+
 from __future__ import annotations
 
 import argparse
@@ -33,20 +34,24 @@ def _load_turn_rows(path: Path, *, limit: int = 1000) -> List[Dict[str, Any]]:
 
 
 def gate0_referent_fingerprint(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Gate 0: доля ходов с referent + recent_fingerprint."""
+    """Gate 0: доля ходов с referent + fingerprint coverage."""
     total = len(rows)
     if not total:
         return {"ok": False, "reason": "no_rows", "total": 0}
     with_ref = sum(1 for r in rows if str(r.get("referent") or "").strip())
-    with_fp = sum(1 for r in rows if str(r.get("recent_fingerprint") or "").strip())
+    recent = sum(1 for r in rows if str(r.get("recent_fingerprint") or "").strip())
+    with_fp = sum(1 for r in rows if str(r.get("recent_fingerprint") or r.get("fp") or "").strip())
     ref_pct = round(100.0 * with_ref / total, 1)
+    recent_pct = round(100.0 * recent / total, 1)
     fp_pct = round(100.0 * with_fp / total, 1)
     ok = ref_pct >= 90.0 and fp_pct >= 90.0
     return {
         "ok": ok,
         "total": total,
         "referent_pct": ref_pct,
+        "recent_fingerprint_pct": recent_pct,
         "fingerprint_pct": fp_pct,
+        "fp_fallback_rows": with_fp - recent,
     }
 
 
@@ -86,8 +91,8 @@ def main(argv: List[str] | None = None) -> int:
     ap.add_argument("--regression", action="store_true", help="Also run structural regression 20")
     args = ap.parse_args(argv)
 
-    from core.turn_observer import log_path
     from core.turn_fingerprint_alert import scan_fingerprint_stalls
+    from core.turn_observer import log_path
 
     turns_path = Path(args.turns) if args.turns else log_path()
     rows = _load_turn_rows(turns_path, limit=args.limit)
@@ -127,7 +132,11 @@ def main(argv: List[str] | None = None) -> int:
     else:
         print(f"turns={report['rows']} path={turns_path}")
         g0 = report["gate0"]
-        print(f"gate0 referent={g0.get('referent_pct')}% fp={g0.get('fingerprint_pct')}% ok={g0.get('ok')}")
+        print(
+            f"gate0 referent={g0.get('referent_pct')}% "
+            f"recent_fp={g0.get('recent_fingerprint_pct')}% "
+            f"fp={g0.get('fingerprint_pct')}% ok={g0.get('ok')}"
+        )
         g1 = report["gate1"]
         print(f"gate1 issues={g1.get('issues_pct')}% ok={g1.get('ok')}")
         g2 = report["gate2"]
