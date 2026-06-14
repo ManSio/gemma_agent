@@ -14,6 +14,7 @@ from core.sensitive_export import (
     mem0_check_public_view,
     mem0_log_facets,
     mem0_path_log_facets,
+    ops_trace_jsonl_line,
     render_audit_counts_md,
     sanitize_ops_trace_row_for_disk,
     scan_counts_payload,
@@ -22,10 +23,8 @@ from core.sensitive_export import (
     security_audit_public_json_text,
     security_audit_public_report,
     security_audit_stdout_json,
-    write_audit_document_json,
     write_audit_counts_md_from_json,
-    llm_usage_jsonl_line,
-    ops_trace_jsonl_line,
+    write_audit_document_json,
 )
 
 
@@ -160,9 +159,17 @@ def test_scan_summary_log_line_counts_only():
 
 def test_render_audit_counts_md_uses_labels():
     md = render_audit_counts_md(
-        hosts=[{"turns_count": 5, "incomplete_count": 1, "long_q_short_a": 0,
-                "brain_recent_limit_turns": 0, "archive_leaks": 0, "archive_messages": 10,
-                "errors_count": 0}],
+        hosts=[
+            {
+                "turns_count": 5,
+                "incomplete_count": 1,
+                "long_q_short_a": 0,
+                "brain_recent_limit_turns": 0,
+                "archive_leaks": 0,
+                "archive_messages": 10,
+                "errors_count": 0,
+            }
+        ],
         host_labels=("local",),
         stamp_day="2026-06-13",
     )
@@ -277,6 +284,25 @@ def test_llm_usage_row_for_disk_whitelist():
     assert "user_id" not in row
     assert "query" not in row
     assert row["total_tokens"] == 10
+
+
+def test_llm_usage_row_for_disk_keeps_telemetry_labels():
+    row = llm_usage_row_for_disk(
+        {
+            "ts": "2026-06-13T00:00:00Z",
+            "kind": "brain",
+            "tag": "brain_first",
+            "telemetry_tag": "brain_first",
+            "telemetry_kind": "brain",
+            "error": "secret error",
+        }
+    )
+    assert row["kind"] == "brain"
+    assert row["kind_code"] == 2
+    assert row["tag"] == "brain_first"
+    assert row["telemetry_tag"] == "brain_first"
+    assert row["telemetry_kind"] == "brain"
+    assert "secret error" not in json.dumps(row, ensure_ascii=False)
 
 
 def test_autolearn_log_facets_hashes_user():

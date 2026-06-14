@@ -669,6 +669,10 @@ def llm_usage_row_for_disk(row: Dict[str, Any]) -> Dict[str, Any]:
             continue
         if key == "kind":
             out["kind_code"] = _kind_code(val)
+            out[key] = str(val)
+            continue
+        if key in {"tag", "telemetry_tag", "telemetry_kind"}:
+            out[key] = str(val)
             continue
         if key == "error":
             out[key] = hash_sensitive_text(val) or ""
