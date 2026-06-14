@@ -3,12 +3,22 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else "/srv/gemma_bot")
+_PROBE_UID = (os.environ.get("GEMMA_PROBE_USER_ID") or "").strip()
+
+
+def _behavior_path() -> Path:
+    """Путь к behavior JSON на VPS; uid только из env (не в git)."""
+    uid = _PROBE_UID
+    if not uid:
+        raise SystemExit("Set GEMMA_PROBE_USER_ID for behavior probe")
+    return ROOT / "data/users/behavior" / f"{uid}__dm.json"
 
 
 def main() -> int:
@@ -49,10 +59,14 @@ def main() -> int:
     print("top_triggers:", hit_by_trig.most_common(15))
 
     # pending_correction consumption estimate
-    beh = json.loads((ROOT / "data/users/behavior/591226766__dm.json").read_text(encoding="utf-8"))
-    pc = (beh.get("routing_prefs") or {}).get("pending_correction")
-    print("\n=== pending_correction now ===")
-    print(json.dumps(pc, ensure_ascii=False, indent=2))
+    beh_path = _behavior_path()
+    if beh_path.is_file():
+        beh = json.loads(beh_path.read_text(encoding="utf-8"))
+        pc = (beh.get("routing_prefs") or {}).get("pending_correction")
+        print("\n=== pending_correction now ===")
+        print(json.dumps(pc, ensure_ascii=False, indent=2))
+    else:
+        print("\n=== pending_correction: behavior file missing (set GEMMA_PROBE_USER_ID) ===")
 
     return 0
 

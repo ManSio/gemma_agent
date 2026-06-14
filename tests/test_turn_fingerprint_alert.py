@@ -10,6 +10,9 @@ from pathlib import Path
 from core.turn_fingerprint_alert import scan_fingerprint_stalls
 
 
+from tests.fixtures.telegram_test_ids import TEST_USER_UID
+
+
 class TestTurnFingerprintAlert(unittest.TestCase):
     def test_detects_stall(self) -> None:
         now = datetime.now(timezone.utc)
@@ -19,7 +22,7 @@ class TestTurnFingerprintAlert(unittest.TestCase):
             rows.append(
                 {
                     "ts": (now - timedelta(minutes=10 - i * 2)).isoformat(),
-                    "user_id": "591226766",
+                    "user_id": TEST_USER_UID,
                     "recent_fingerprint": fp,
                     "trace_id": f"t{i}",
                 }

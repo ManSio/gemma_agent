@@ -28,7 +28,7 @@ venv/bin/python3 scripts/prod_persisted_impact_audit.py --days 14 --json-out /tm
 | Ходы с ephemeral в prompt | **58 (17%)** |
 | Плохие ходы | **48 (~14%)** |
 | Topic mismatch (эвристика) | **16 (9.4%)** — погода 5, статья 10 |
-| Активных behavior-сессий | 1 (`591226766`) |
+| Активных behavior-сессий | 1 (ID заменён в публичной копии: `900000001`) |
 | Bad rate до/после 13 июня | 7.9% (17/215) → 10.7% (13/122) — **n мало** |
 
 **Версия на момент аудита:** `3.5.22` (git snapshot ~`7a485ae`).
@@ -47,7 +47,7 @@ venv/bin/python3 scripts/prod_persisted_impact_audit.py --days 14 --json-out /tm
 
 ### P1 — `pending_correction` (живое состояние)
 
-В `591226766__dm.json`:
+В `900000001__dm.json` (имя файла на VPS — реальный uid, в git не публикуется):
 
 ```json
 {

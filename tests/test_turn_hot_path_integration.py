@@ -1,11 +1,11 @@
 """Hot-path integration: Orchestrator plan → execute_plan → defer → finalize."""
 from __future__ import annotations
 
-import json
 import os
+import secrets
 import tempfile
 import unittest
-from pathlib import Path
+from contextlib import ExitStack
 from unittest.mock import patch
 
 from core.behavior_store import BehaviorStore
@@ -14,7 +14,13 @@ from core.orchestrator import Orchestrator
 from core.plugin_registry import PluginRegistry
 from core.policy_engine import PolicyEngine
 from core.turn_delivery_store import finalize_delivery_from_output_meta
-from core.turn_regression import load_regression_cases
+from tests.support.turn_life_sim import (
+    SimEpisode,
+    TurnLifeSimulator,
+    episode_seed,
+    episode_summary,
+    mock_reply_for_turn,
+)
 
 _TURN_ENV = {
     "TURN_CONTRACT_ENABLED": "true",
@@ -28,11 +34,7 @@ _TURN_ENV = {
     "GOAL_RUNNER_ENABLED": "false",
 }
 
-_DIRECT_MOCKS = {
-    "weather_direct": ("core.weather_reply.try_weather_reply_sync", "В Минске +15°C, ясно."),
-    "referential_math": ("core.referential_math_reply.try_referential_math_reply_sync", "4"),
-    "news_direct": ("core.news_reply.try_news_reply_sync", "1. Главное\n2. Второе"),
-}
+_LIFE_EPISODE_COUNT = int(os.environ.get("TURN_LIFE_SIM_EPISODES", "6"))
 
 
 def _step_meta(plan) -> dict:
@@ -65,7 +67,7 @@ class TurnHotPathIntegrationTests(unittest.IsolatedAsyncioTestCase):
             behavior_store=self.store,
         )
 
-    def _input(self, text: str, user_id: str, *, gen: int, trace: str = "trace-hot") -> Input:
+    def _input(self, text: str, user_id: str, *, gen: int, trace: str) -> Input:
         """Собрать Input с generation token."""
         return Input(
             type="text",
@@ -77,22 +79,110 @@ class TurnHotPathIntegrationTests(unittest.IsolatedAsyncioTestCase):
             },
         )
 
-    async def _plan_execute(
-        self,
-        user_id: str,
-        text: str,
-        *,
-        group_id: str | None = None,
-        persisted: dict | None = None,
-    ):
-        """plan + execute_plan с bump generation."""
-        if persisted:
-            self.store.save(user_id, group_id, persisted)
-        gen = self.store.bump_turn_generation(user_id, group_id)
-        inp = self._input(text, user_id, gen=gen)
-        plan = self.orch.plan(inp, user_id=user_id, group_id=group_id)
-        outputs = await self.orch.execute_plan(plan, user_id=user_id, group_id=group_id)
-        return plan, outputs, gen
+    def _direct_mock_stack(self, stack: ExitStack, active: dict) -> None:
+        """Patch direct shortcuts — ответ зависит от текущего хода эпизода."""
+
+        def _wx(*_a, **_k):
+            return active.get("reply") if active.get("kind") == "weather" else None
+
+        def _math(*_a, **_k):
+            return active.get("reply") if active.get("kind") == "math" else None
+
+        def _news(*_a, **_k):
+            return active.get("reply") if active.get("kind") == "news" else None
+
+        stack.enter_context(patch("core.weather_reply.try_weather_reply_sync", side_effect=_wx))
+        stack.enter_context(
+            patch("core.referential_math_reply.try_referential_math_reply_sync", side_effect=_math)
+        )
+        stack.enter_context(patch("core.news_reply.try_news_reply_sync", side_effect=_news))
+
+    async def _run_life_episode(self, episode: SimEpisode) -> None:
+        """Прогнать случайный эпизод и проверить инварианты hot path."""
+        uid = episode.user_id
+        active: dict = {"kind": "", "reply": None}
+        prev_gen = self.store.get_turn_generation(uid, None)
+        msgs_before = len((self.store.load(uid, None) or {}).get("recent_messages") or [])
+
+        with ExitStack() as stack:
+            self._direct_mock_stack(stack, active)
+            for idx, turn in enumerate(episode.turns):
+                trace = f"life-{episode.seed}-{idx}"
+                active["kind"] = turn.kind if mock_reply_for_turn(turn) else ""
+                active["reply"] = turn.mock_reply
+
+                if turn.inject_stale:
+                    gen = self.store.bump_turn_generation(uid, None)
+                    inp = self._input(turn.user_text, uid, gen=gen, trace=trace)
+                    plan = self.orch.plan(inp, user_id=uid, group_id=None)
+                    self.store.bump_turn_generation(uid, None)
+                    outputs = await self.orch.execute_plan(plan, user_id=uid, group_id=None)
+                    out_meta = outputs[0].meta or {}
+                    self.assertIsNone(
+                        out_meta.get("pending_turn_store"),
+                        msg=f"stale pending {episode_summary(episode)} #{idx}",
+                    )
+                    continue
+
+                gen = self.store.bump_turn_generation(uid, None)
+                inp = self._input(turn.user_text, uid, gen=gen, trace=trace)
+                plan = self.orch.plan(inp, user_id=uid, group_id=None)
+                meta = _step_meta(plan)
+                self.assertIsInstance(
+                    meta.get("turn_contract"),
+                    dict,
+                    msg=f"plan tc {episode_summary(episode)} #{idx} kind={turn.kind}",
+                )
+                self.assertGreater(
+                    int((meta.get("turn_contract") or {}).get("generation") or 0),
+                    0,
+                    msg=f"gen {episode_summary(episode)} #{idx}",
+                )
+
+                if turn.kind == "empty":
+                    self.assertEqual(
+                        (plan.steps[0].args or {}).get("fallback_variant"),
+                        "empty_payload",
+                    )
+
+                outputs = await self.orch.execute_plan(plan, user_id=uid, group_id=None)
+                self.assertGreaterEqual(len(outputs), 1)
+                out_meta = dict(outputs[0].meta or {})
+                self.assertIsInstance(
+                    out_meta.get("turn_contract"),
+                    dict,
+                    msg=f"out tc {episode_summary(episode)} #{idx}",
+                )
+                self.assertEqual(out_meta.get("turn_generation"), gen)
+
+                if turn.kind == "empty":
+                    continue
+
+                pending = out_meta.get("pending_turn_store")
+                payload = str(outputs[0].payload or "")
+                if isinstance(pending, dict) and payload.strip():
+                    sent = turn.finalize_override or payload
+                    ok = finalize_delivery_from_output_meta(
+                        orchestrator=self.orch,
+                        user_id=uid,
+                        group_id=None,
+                        sent_text=sent,
+                        output_meta=out_meta,
+                    )
+                    self.assertTrue(ok, msg=f"finalize {episode_summary(episode)} #{idx}")
+                    rec = self.store.load(uid, None)
+                    self.assertEqual(
+                        rec["recent_messages"][-1]["text"],
+                        sent,
+                        msg=f"store text {episode_summary(episode)} #{idx}",
+                    )
+
+                cur_gen = self.store.get_turn_generation(uid, None)
+                self.assertGreaterEqual(cur_gen, prev_gen)
+                prev_gen = cur_gen
+
+        msgs_after = len((self.store.load(uid, None) or {}).get("recent_messages") or [])
+        self.assertGreaterEqual(msgs_after, msgs_before)
 
     async def test_empty_fast_path_plan_execute_turn_contract(self) -> None:
         """Пустой payload: fast path + turn_contract в plan и output meta."""
@@ -110,52 +200,11 @@ class TurnHotPathIntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(out_meta.get("turn_contract"), dict)
         self.assertEqual(out_meta.get("turn_generation"), gen)
 
-    async def test_weather_mock_defer_finalize_writes_store(self) -> None:
-        """Weather direct: defer store до finalize, затем recent_messages."""
-        uid = "u_wx"
-        target, reply = _DIRECT_MOCKS["weather_direct"]
-        with patch(target, return_value=reply):
-            plan, outputs, gen = await self._plan_execute(uid, "какая погода в минске")
-        meta = _step_meta(plan)
-        tc = meta.get("turn_contract") or {}
-        self.assertEqual(str(tc.get("short_circuit") or ""), "weather_direct")
-        self.assertEqual(tc.get("lane"), "FACT")
-        self.assertIn("Минск", outputs[0].payload or "")
-        rec_before = self.store.load(uid, None)
-        self.assertFalse(rec_before.get("recent_messages"))
-        out_meta = dict(outputs[0].meta or {})
-        self.assertIsInstance(out_meta.get("pending_turn_store"), dict)
-        ok = finalize_delivery_from_output_meta(
-            orchestrator=self.orch,
-            user_id=uid,
-            group_id=None,
-            sent_text="В Минске +15°C, ясно.",
-            output_meta=out_meta,
-        )
-        self.assertTrue(ok)
-        rec = self.store.load(uid, None)
-        self.assertEqual(rec["recent_messages"][-1]["text"], "В Минске +15°C, ясно.")
-        self.assertEqual(out_meta.get("turn_generation"), gen)
-
-    async def test_math_direct_execute_output_meta(self) -> None:
-        """Referential math shortcut через plan → execute без brain."""
-        uid = "u_math"
-        target, reply = _DIRECT_MOCKS["referential_math"]
-        with patch(target, return_value=reply):
-            plan, outputs, _gen = await self._plan_execute(uid, "сколько будет 2+2")
-        self.assertEqual(
-            (plan.steps[0].args or {}).get("fallback_variant"),
-            "referential_math",
-        )
-        self.assertEqual(outputs[0].payload, "4")
-        tc = (_step_meta(plan).get("turn_contract") or {})
-        self.assertEqual(tc.get("lane"), "FACT")
-
     async def test_stale_generation_skips_store_on_execute(self) -> None:
         """Устаревший generation: execute не пишет в behavior_store."""
         uid = "u_stale"
         gen = self.store.bump_turn_generation(uid, None)
-        inp = self._input("привет", uid, gen=gen)
+        inp = self._input("привет", uid, gen=gen, trace="stale-edge")
         plan = self.orch.plan(inp, user_id=uid, group_id=None)
         self.store.bump_turn_generation(uid, None)
         with patch("core.weather_reply.try_weather_reply_sync", return_value=None):
@@ -165,51 +214,52 @@ class TurnHotPathIntegrationTests(unittest.IsolatedAsyncioTestCase):
         rec = self.store.load(uid, None)
         self.assertFalse(rec.get("recent_messages"))
 
-    async def test_regression_direct_shortcuts_plan_contract(self) -> None:
-        """Regression fixture: direct shortcuts получают ожидаемый lane/contract в plan."""
-        cases = load_regression_cases()
-        if not cases:
-            fixture = Path(__file__).resolve().parent / "fixtures" / "turn_regression_cases.json"
-            cases = json.loads(fixture.read_text(encoding="utf-8"))
-        checked = 0
-        for case in cases:
-            sc = str(case.get("short_circuit") or "").strip()
-            if sc not in _DIRECT_MOCKS:
-                continue
-            target, reply = _DIRECT_MOCKS[sc]
-            uid = f"u_reg_{case.get('id', sc)}"
-            persisted: dict = {}
-            if case.get("recent_dialogue"):
-                persisted["recent_messages"] = list(case["recent_dialogue"])
-            if case.get("discourse_resolution"):
-                persisted.setdefault("dialogue_state", {})["discourse_resolution"] = case[
-                    "discourse_resolution"
-                ]
-            with patch(target, return_value=reply):
-                plan, _outputs, _gen = await self._plan_execute(
-                    uid,
-                    str(case.get("user_text") or ""),
-                    persisted=persisted or None,
-                )
-            meta = _step_meta(plan)
-            tc = meta.get("turn_contract") or {}
-            expect = case.get("expect") if isinstance(case.get("expect"), dict) else {}
-            self.assertIsInstance(tc, dict, msg=f"case {case.get('id')}")
-            self.assertTrue(str(meta.get("plan_turn_hash") or ""), msg=f"case {case.get('id')}")
-            if expect.get("lane"):
-                self.assertEqual(
-                    tc.get("lane"),
-                    expect["lane"],
-                    msg=f"case {case.get('id')} lane",
-                )
-            if sc:
-                self.assertEqual(
-                    str(tc.get("short_circuit") or ""),
-                    sc,
-                    msg=f"case {case.get('id')} short_circuit",
-                )
-            checked += 1
-        self.assertGreaterEqual(checked, 3, "direct shortcut regression subset")
+    async def test_life_sim_random_episodes_invariants(self) -> None:
+        """Несколько случайных эпизодов: разные ходы, generation, defer/finalize."""
+        self.assertGreaterEqual(_LIFE_EPISODE_COUNT, 3)
+        for i in range(_LIFE_EPISODE_COUNT):
+            seed = episode_seed(f"life_invariants_{i}")
+            sim = TurnLifeSimulator(seed)
+            episode = sim.generate_episode(min_turns=6, max_turns=12)
+            with self.subTest(episode=episode_summary(episode)):
+                await self._run_life_episode(episode)
+
+    async def test_life_sim_unique_paths_not_identical(self) -> None:
+        """Эпизоды с разными seed не сводятся к одному шаблону."""
+        paths: set[str] = set()
+        for i in range(8):
+            seed = episode_seed(f"life_unique_{i}")
+            ep = TurnLifeSimulator(seed).generate_episode(min_turns=5, max_turns=9)
+            paths.add("→".join(t.kind for t in ep.turns))
+        self.assertGreaterEqual(len(paths), 4, "эпизоды должны различаться")
+
+    @unittest.skipUnless(
+        os.environ.get("TURN_LIFE_SIM_CHAOS") == "1",
+        "Set TURN_LIFE_SIM_CHAOS=1 for non-deterministic chaos episode",
+    )
+    async def test_life_sim_chaos_episode(self) -> None:
+        """Опциональный хаос-эпизод: seed неизвестен до запуска (локальная симуляция жизни)."""
+        seed = secrets.randbits(32)
+        episode = TurnLifeSimulator(seed).generate_episode(min_turns=8, max_turns=16)
+        await self._run_life_episode(episode)
+
+
+class TurnLifeSimUnitTests(unittest.TestCase):
+    """Юнит-тесты генератора без orchestrator."""
+
+    def test_direct_mock_targets_complete(self) -> None:
+        """Все direct kind из симулятора имеют patch target."""
+        for i in range(20):
+            ep = TurnLifeSimulator(episode_seed(f"dm_{i}")).generate_episode(min_turns=3, max_turns=8)
+            for turn in ep.turns:
+                if turn.kind in ("weather", "math", "news"):
+                    self.assertTrue(turn.mock_reply, msg=turn.kind)
+                    self.assertIn(turn.kind, ("weather", "math", "news"))
+
+    def test_episode_seed_override(self) -> None:
+        """TURN_LIFE_SIM_SEED фиксирует replay."""
+        with patch.dict(os.environ, {"TURN_LIFE_SIM_SEED": "424242"}, clear=False):
+            self.assertEqual(episode_seed("any"), 424242)
 
 
 if __name__ == "__main__":

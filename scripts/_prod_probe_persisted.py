@@ -3,20 +3,29 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else "/srv/gemma_bot")
+_PROBE_UID = (os.environ.get("GEMMA_PROBE_USER_ID") or "").strip()
+
+
+def _behavior_path() -> Path | None:
+    """Путь к behavior JSON на VPS; uid только из env."""
+    if not _PROBE_UID:
+        return None
+    return ROOT / "data/users/behavior" / f"{_PROBE_UID}__dm.json"
 
 
 def main() -> int:
-    beh_path = ROOT / "data/users/behavior/591226766__dm.json"
-    if beh_path.is_file():
+    beh_path = _behavior_path()
+    if beh_path and beh_path.is_file():
         d = json.loads(beh_path.read_text(encoding="utf-8"))
         rp = d.get("routing_prefs") or {}
-        print("=== BEHAVIOR 591226766__dm ===")
+        print(f"=== BEHAVIOR {_PROBE_UID}__dm ===")
         print("pending_correction:", json.dumps(rp.get("pending_correction"), ensure_ascii=False)[:300])
         print("dialogue_slot:", rp.get("dialogue_slot"))
         print("recent_n:", len(d.get("recent_messages") or []))

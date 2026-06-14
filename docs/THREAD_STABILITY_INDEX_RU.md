@@ -65,7 +65,7 @@ venv/bin/python3 scripts/prod_persisted_impact_audit.py --days 14 --json-out /tm
 
 1. **Commit + push** TurnContract + forensic scripts  
 2. **`gemma_panel.sh update`** на VPS  
-3. **`/new`** или сброс `pending_correction` для `591226766`  
+3. **`/new`** или сброс `pending_correction` для затронутого пользователя (на prod — через panel/behavior, ID не в git)  
 4. **48h** `turn_contract_health` → Gate 0  
 5. **Код (отдельный PR):** переписать `experience_rules` — не contains(intent) в тексте  
 

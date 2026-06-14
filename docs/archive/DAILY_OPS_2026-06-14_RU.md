@@ -9,7 +9,7 @@
 - **Bad rate:** ~14% (48 ходов); до/после Jun13: 7.9% → 10.7% (n мал)
 - **Ephemeral active:** 88 (experience_rules 42)
 - **Ephemeral hits:** 58 ходов (17%)
-- **pending_correction:** активен у `591226766`, turns_left=4
+- **pending_correction:** активен у `900000001` (ID в публичной копии заменён), turns_left=4
 - **Jun13 weather cluster:** 5 ходов — **код**, fix в 3.5.23+
 
 ## Действия
