@@ -160,9 +160,13 @@ def append_ops_record(row: Dict[str, Any]) -> None:
         return
     path = log_path()
     try:
-        from core.sensitive_export import write_ops_trace_jsonl
+        from core.sensitive_export import ops_trace_jsonl_line
 
-        write_ops_trace_jsonl(path, row)
+        line = ops_trace_jsonl_line(row)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(line)
+            f.flush()
     except OSError as e:
         logger.debug("ops_trace append: %s", e)
 

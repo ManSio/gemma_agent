@@ -25,7 +25,7 @@ from core.sensitive_export import (
     write_audit_document_json,
     write_audit_counts_md_from_json,
     llm_usage_jsonl_line,
-    write_ops_trace_jsonl,
+    ops_trace_jsonl_line,
 )
 
 
@@ -287,10 +287,10 @@ def test_autolearn_log_facets_hashes_user():
 
 def test_write_ops_trace_jsonl_redacts(tmp_path):
     path = tmp_path / "ops.jsonl"
-    write_ops_trace_jsonl(
-        path,
+    line = ops_trace_jsonl_line(
         {"user_id": "u-secret", "user_text": "секрет", "assistant_text": "ok"},
     )
+    path.write_text(line, encoding="utf-8")
     blob = path.read_text(encoding="utf-8")
     assert "u-secret" not in blob
     assert "секрет" not in blob

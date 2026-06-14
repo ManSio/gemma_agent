@@ -707,16 +707,6 @@ def llm_usage_jsonl_line(row: Dict[str, Any]) -> str:
     return json.dumps(safe_row, ensure_ascii=False, default=str) + "\n"
 
 
-def write_ops_trace_jsonl(path: Union[str, Path], row: Dict[str, Any]) -> None:
-    """Append one redacted ops_trace JSONL row (CodeQL clear-text-storage barrier)."""
-    line = ops_trace_jsonl_line(row)
-    p = Path(path)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    with open(p, "a", encoding="utf-8") as f:
-        f.write(line)
-        f.flush()
-
-
 def ephemeral_pending_auto_promoted_log_line(*, distinct_users: int = 0) -> str:
     """One pending auto-promote log line (counts only, CodeQL logging barrier)."""
     return "ephemeral pending auto-promoted distinct_users=%d" % max(0, int(distinct_users or 0))
